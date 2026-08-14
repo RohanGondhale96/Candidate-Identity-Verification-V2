@@ -1,6 +1,6 @@
 # Candidate Identity Verification (V2)
 
-RH Shield — joining-day face verification. A recruiter uploads a photo of the person who
+Joining-day face verification. A recruiter uploads a photo of the person who
 turned up to join, and it is compared against every photo captured during the candidate's
 application and interviews. Each photo is scored independently by **Google Gemini**
 (`gemini-2.5-flash`); scores are never averaged.
