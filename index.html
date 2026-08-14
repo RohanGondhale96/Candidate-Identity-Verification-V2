@@ -453,7 +453,7 @@ function render(){
     if(!s.photo){
       html += '<div ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" style="border:1.5px dashed '+(s.drag?'#0076FB':'#C6C6C6')+';border-radius:6px;padding:30px 20px;text-align:center;background:'+(s.drag?'#EBF5FF':'#F7F8FA')+'">'+
         '<svg viewBox="25 25 22 22" width="28" height="28" fill="#929292" style="margin-bottom:6px"><path d="M32.7143 40.2353H38.2857V34.5882H42L35.5 28L29 34.5882H32.7143V40.2353ZM29 42.1176H42V44H29V42.1176Z"></path></svg>'+
-        '<p style="margin:0 0 16px;font-size:13.5px;color:#747474">Take a photo, or choose one from this device</p>'+
+        '<p style="margin:0 0 16px;font-size:13.5px;color:#747474">'+(s.hasCamera?'Take a photo, or choose one from this device':'Choose one from this device')+'</p>'+
         '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">'+
           (s.hasCamera?'<button class="rh-btn secondary sm" onclick="openCamera()">Take photo</button>':'')+
           '<button class="rh-btn secondary sm" onclick="openPicker()">Choose file</button>'+
