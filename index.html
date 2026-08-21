@@ -328,7 +328,7 @@ function topnav(){
 }
 function pageheader(){
   // back arrow only when a candidate is selected; it returns to the search step
-  var back = state.cand ? '<button type="button" class="rh-back" onclick="changeCandidate()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Back</button>' : '';
+  var back = state.cand ? '<button type="button" class="rh-back" onclick="changeCandidate()" aria-label="Back to candidate search"><svg viewBox="-5 0 110 100" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="m31.395 20.535c1.9141-1.9922 5.082-2.0547 7.0703-0.14062 1.9922 1.9141 2.0547 5.082 0.14062 7.0703l-16.859 17.535h68.254c2.7617 0 5 2.2383 5 5s-2.2383 5-5 5h-68.254l16.859 17.535c1.9141 1.9883 1.8516 5.1562-0.14062 7.0703-1.9883 1.9141-5.1562 1.8516-7.0703-0.14062l-25-26c-1.8594-1.9336-1.8594-4.9961 0-6.9297z"/></svg></button>' : '';
   return '<div class="rh-ph">'+
     back+
     '<div><h1>Verify identity</h1><div class="sub">Joining-day identity check</div></div>'+
