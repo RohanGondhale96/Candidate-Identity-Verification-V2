@@ -169,7 +169,7 @@ var state = {
   rows:[], open:null, running:false, done:false, shared:[],
   upErr:'', drag:false, showShare:false, picked:[], pickQ:'',
   toast:'', roundsConfigured:true, lightbox:null, history:[], hasCamera:true, deepMiss:null,
-  _refocus:null
+  confirmReshoot:false, _refocus:null
 };
 var _tt=null, _steptimers=[];
 
@@ -510,7 +510,7 @@ function render(){
           '<span style="display:block;font-size:12.5px;color:#747474;margin-top:3px">'+h(c.rhid+' · '+c.req)+'</span>'+
           '<span style="display:block;font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · 12 Aug 2026, 09:41 IST</span></div>'+
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
-          '<button class="rh-btn secondary sm" onclick="retake()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Use a different photo</button>'+
+          '<button class="rh-btn secondary sm" onclick="askReshoot()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Use a different photo</button>'+
           '<button class="rh-iconbtn" title="Download PDF" onclick="downloadPdf()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M29 44H42.1765V42.1176H29V44ZM42.1765 33.6471H38.4118V28H32.7647V33.6471H29L35.5882 40.2353L42.1765 33.6471Z"></path></svg></button>'+
           '<button class="rh-iconbtn" title="Share report" onclick="openShare()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M40.6667 39.3092C40.0756 39.3092 39.5467 39.5502 39.1422 39.9277L33.5967 36.5944C33.6356 36.4096 33.6667 36.2249 33.6667 36.0321C33.6667 35.8394 33.6356 35.6546 33.5967 35.4699L39.08 32.1687C39.5 32.5703 40.0522 32.8193 40.6667 32.8193C41.9578 32.8193 43 31.743 43 30.4096C43 29.0763 41.9578 28 40.6667 28C39.3756 28 38.3333 29.0763 38.3333 30.4096C38.3333 30.6024 38.3644 30.7871 38.4033 30.9719L32.92 34.2731C32.5 33.8715 31.9478 33.6225 31.3333 33.6225C30.0422 33.6225 29 34.6988 29 36.0321C29 37.3655 30.0422 38.4418 31.3333 38.4418C31.9478 38.4418 32.5 38.1928 32.92 37.7912L38.4578 41.1325C38.4189 41.3012 38.3956 41.4779 38.3956 41.6546C38.3956 42.9478 39.4144 44 40.6667 44C41.9189 44 42.9378 42.9478 42.9378 41.6546C42.9378 40.3614 41.9189 39.3092 40.6667 39.3092Z"></path></svg></button>'+
         '</div></div>';
@@ -607,6 +607,15 @@ function render(){
     '</div></div>';
   }
 
+  /* RESHOOT CONFIRM */
+  if(s.confirmReshoot){
+    html += '<div class="rh-scrim" onclick="scrimReshoot(event)"><div class="rh-dialog" style="width:420px">'+
+      '<header><h2>Use a different photo?</h2><button class="x" onclick="cancelReshoot()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
+      '<div class="dbody"><p style="margin:0;font-size:13.5px;color:#747474;line-height:1.55">This will close the current result and let you upload a new joining-day photo. The result stays saved under <b style="color:#333;font-weight:600">Checks you ran today</b>.</p></div>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn tertiary sm" onclick="cancelReshoot()">Cancel</button><button class="rh-btn primary sm" onclick="doReshoot()">Use a different photo</button></footer>'+
+    '</div></div>';
+  }
+
   /* TOAST */
   if(s.toast){ html += '<div role="status" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2A2A2A;color:#fff;padding:11px 18px;border-radius:4px;font-size:13.5px;z-index:60;box-shadow:0 3px 6px rgba(0,0,0,.2)">'+h(s.toast)+'</div>'; }
 
@@ -625,6 +634,10 @@ function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click
 function openPicker(){ var el=document.getElementById('rh-file'); if(el) el.click(); }
 function onFileInput(e){ handleFile(e.target.files[0]); }
 function retake(){ clearTimers(); _runToken++; setState({photo:null, consent:false, upErr:'', done:false, running:false, rows:[], open:null}); }
+function askReshoot(){ setState({confirmReshoot:true}); }
+function cancelReshoot(){ setState({confirmReshoot:false}); }
+function doReshoot(){ setState({confirmReshoot:false}); retake(); window.scrollTo({top:0,behavior:'smooth'}); }
+function scrimReshoot(e){ if(e.target===e.currentTarget) cancelReshoot(); }
 function toggleConsent(){ setState({consent:!state.consent}); }
 function dragOver(e){ e.preventDefault(); if(!state.drag) setState({drag:true}); }
 function dragLeave(e){ e.preventDefault(); setState({drag:false}); }
