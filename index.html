@@ -46,7 +46,9 @@
 
   /* ===== PageHeader ===== */
   .rh-ph{background:#fff;border-bottom:1px solid var(--divider);height:65px;display:flex;align-items:center;gap:12px;padding:0 24px}
-  .rh-ph .shield{width:26px;height:26px;border-radius:6px;background:#0076FB;display:grid;place-items:center;color:#fff}
+  .rh-back{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;border:1px solid #DDD;background:#fff;color:#333;cursor:pointer;flex-shrink:0;padding:0}
+  .rh-back:hover{background:#F2F2F2;border-color:#C6C6C6}
+  .rh-back svg{display:block}
   .rh-ph h1{margin:0;font-size:18px;font-weight:600;line-height:1.4}
   .rh-ph .sub{color:var(--rh-text-secondary);font-size:12.5px}
 
@@ -325,8 +327,10 @@ function topnav(){
   '</div><div class="rh-accent"></div>';
 }
 function pageheader(){
+  // back arrow only when a candidate is selected; it returns to the search step
+  var back = state.cand ? '<button type="button" class="rh-back" onclick="changeCandidate()" aria-label="Back to candidate search"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>' : '';
   return '<div class="rh-ph">'+
-    '<span class="shield"><svg viewBox="0 0 24 24" width="15" height="15" fill="#fff"><path d="M12 2l7 3v6c0 4.4-3 8.4-7 9-4-.6-7-4.6-7-9V5z"/></svg></span>'+
+    back+
     '<div><h1>Verify identity</h1><div class="sub">Joining-day identity check</div></div>'+
   '</div>';
 }
@@ -412,13 +416,7 @@ function render(){
     }
   }
 
-  /* SELECTED LINE */
-  if(c && !s.searchOpen){
-    html += '<div class="rh-card" style="padding:12px 16px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
-      '<span style="font-size:14px;color:#747474">Verifying</span><span style="font-size:14px;font-weight:600">'+h(c.name)+'</span><span style="font-size:13px;color:#747474">'+h(c.rhid)+'</span>'+
-      '<button type="button" onclick="changeCandidate()" style="margin-left:auto;border:0;background:none;padding:4px 2px;color:#0076FB;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px">Change candidate</button>'+
-    '</div></div>';
-  }
+  /* (context band removed - back arrow in the page header returns to search) */
 
   /* 2. CANDIDATE CARD */
   if(c){
@@ -492,7 +490,6 @@ function render(){
         '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
           '<button class="rh-iconbtn" title="Download PDF" onclick="downloadPdf()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M29 44H42.1765V42.1176H29V44ZM42.1765 33.6471H38.4118V28H32.7647V33.6471H29L35.5882 40.2353L42.1765 33.6471Z"></path></svg></button>'+
           '<button class="rh-iconbtn" title="Share report" onclick="openShare()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M40.6667 39.3092C40.0756 39.3092 39.5467 39.5502 39.1422 39.9277L33.5967 36.5944C33.6356 36.4096 33.6667 36.2249 33.6667 36.0321C33.6667 35.8394 33.6356 35.6546 33.5967 35.4699L39.08 32.1687C39.5 32.5703 40.0522 32.8193 40.6667 32.8193C41.9578 32.8193 43 31.743 43 30.4096C43 29.0763 41.9578 28 40.6667 28C39.3756 28 38.3333 29.0763 38.3333 30.4096C38.3333 30.6024 38.3644 30.7871 38.4033 30.9719L32.92 34.2731C32.5 33.8715 31.9478 33.6225 31.3333 33.6225C30.0422 33.6225 29 34.6988 29 36.0321C29 37.3655 30.0422 38.4418 31.3333 38.4418C31.9478 38.4418 32.5 38.1928 32.92 37.7912L38.4578 41.1325C38.4189 41.3012 38.3956 41.4779 38.3956 41.6546C38.3956 42.9478 39.4144 44 40.6667 44C41.9189 44 42.9378 42.9478 42.9378 41.6546C42.9378 40.3614 41.9189 39.3092 40.6667 39.3092Z"></path></svg></button>'+
-          '<button class="rh-btn tertiary sm" onclick="verifyAnother()">Verify another candidate</button>'+
         '</div></div>';
       if(s.shared.length){
         html += '<div style="padding:12px 20px;border-bottom:1px solid #E0E0E0;background:#F7F8FA;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:13px;color:#747474">Shared with</span>';
