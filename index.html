@@ -551,8 +551,8 @@ function render(){
         '</button>';
       if(s.done && s.open===i){
         html += '<div style="padding:0 20px 18px;background:#F7F8FA"><div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+
-          '<div><div style="font-size:13px;color:#747474;margin-bottom:6px">Photo taken today</div><div style="width:100%;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+uploadedImg('contain')+'</div></div>'+
           '<div><div style="font-size:13px;color:#747474;margin-bottom:6px">'+h(r.label)+'</div><div style="width:100%;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+photoTile(r,(c?c.id:'')+r.label,'contain')+'</div></div>'+
+          '<div><div style="font-size:13px;color:#747474;margin-bottom:6px">Photo taken today</div><div style="width:100%;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+uploadedImg('contain')+'</div></div>'+
         '</div></div>';
       }
       html += '</div>';
