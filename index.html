@@ -46,8 +46,8 @@
 
   /* ===== PageHeader ===== */
   .rh-ph{background:#fff;border-bottom:1px solid var(--divider);height:65px;display:flex;align-items:center;gap:12px;padding:0 24px}
-  .rh-back{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;border:1px solid #DDD;background:#fff;color:#333;cursor:pointer;flex-shrink:0;padding:0}
-  .rh-back:hover{background:#F2F2F2;border-color:#C6C6C6}
+  .rh-back{display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:0;color:#2A2A2A;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;flex-shrink:0}
+  .rh-back:hover{color:#0076FB}
   .rh-back svg{display:block}
   .rh-ph h1{margin:0;font-size:18px;font-weight:600;line-height:1.4}
   .rh-ph .sub{color:var(--rh-text-secondary);font-size:12.5px}
@@ -328,7 +328,7 @@ function topnav(){
 }
 function pageheader(){
   // back arrow only when a candidate is selected; it returns to the search step
-  var back = state.cand ? '<button type="button" class="rh-back" onclick="changeCandidate()" aria-label="Back to candidate search"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>' : '';
+  var back = state.cand ? '<button type="button" class="rh-back" onclick="changeCandidate()"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Back</button>' : '';
   return '<div class="rh-ph">'+
     back+
     '<div><h1>Verify identity</h1><div class="sub">Joining-day identity check</div></div>'+
