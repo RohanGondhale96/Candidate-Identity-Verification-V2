@@ -49,6 +49,7 @@
   .rh-back{display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:0;color:#2A2A2A;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;flex-shrink:0}
   .rh-back:hover{color:#0076FB}
   .rh-back svg{display:block}
+  .rh-histrow:hover{background:#F7F8FA}
   .rh-ph h1{margin:0;font-size:18px;font-weight:600;line-height:1.4}
   .rh-ph .sub{color:var(--rh-text-secondary);font-size:12.5px}
 
@@ -119,6 +120,8 @@
     .rpt-head{display:none !important}
     .rpt-row{flex-wrap:wrap !important;align-items:flex-start !important;column-gap:12px !important;row-gap:6px !important;padding:12px 16px !important}
     .rpt-row .rpt-cap{order:5;flex:0 0 100% !important;width:auto !important;padding-left:56px}
+    .rh-histrow{padding:12px 16px !important}
+    .rh-histtime{display:none}
   }
 </style>
 </head>
@@ -338,6 +341,22 @@ function pageheader(){
 /* score bands: >80 green, 50-80 amber, <50 red */
 function scoreColor(s){ return s>80 ? '#1a8a3a' : s>=50 ? '#B7791F' : '#EB4040'; }
 
+/* overall verdict for a completed run, based on the lowest photo score */
+function runVerdict(rows){
+  var scored = (rows||[]).filter(function(r){ return r.status==='done' && typeof r.score==='number'; });
+  if(!scored.length) return {label:'Incomplete', pct:null, color:'#5F5E5A', bg:'#F1EFE8'};
+  var low = Math.min.apply(null, scored.map(function(r){ return r.score; }));
+  if(low>80) return {label:'Match', pct:low, color:'#1a8a3a', bg:'#E7F4EC'};
+  if(low>=50) return {label:'Review', pct:low, color:'#B7791F', bg:'#FBF1DE'};
+  return {label:'No match', pct:low, color:'#D93025', bg:'#FDECEC'};
+}
+function verdictBadge(rows){
+  var v = runVerdict(rows);
+  var txt = v.pct==null ? v.label : v.label+' · '+v.pct+'%';
+  return '<span style="display:inline-flex;align-items:center;gap:6px;background:'+v.bg+';color:'+v.color+';border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">'+
+    '<span style="width:6px;height:6px;border-radius:50%;background:'+v.color+';flex-shrink:0"></span>'+h(txt)+'</span>';
+}
+
 function render(){
   var s = state, c = s.cand;
   var hits = searchHits(), ok = hits.ok;
@@ -401,16 +420,19 @@ function render(){
 
     /* CHECKS RUN TODAY */
     if(s.history.length){
-      html += '<div class="rh-card" style="padding:14px 20px"><div style="font-size:14px;font-weight:600;margin-bottom:8px">Checks you ran today</div>'+
-        '<div style="margin:0 -20px -14px">'+
-        '<div style="display:flex;align-items:center;gap:14px;padding:10px 20px;background:#F7F8FA;border-top:1px solid #E0E0E0;border-bottom:1px solid #DDD;font-size:12.5px;font-weight:600;color:#747474"><span style="flex:1">Candidate</span><span style="width:180px;flex-shrink:0">Requisition</span><span style="width:80px;flex-shrink:0">Run at</span><span style="width:88px;flex-shrink:0;text-align:right">Report</span></div>';
+      html += '<div class="rh-card" style="padding:0"><div style="border-radius:8px;overflow:hidden">'+
+        '<div style="padding:14px 20px 8px"><div style="font-size:14px;font-weight:600">Checks you ran today</div>'+
+          '<div style="font-size:12px;color:#747474;margin-top:2px">'+s.history.length+(s.history.length===1?' check':' checks')+'</div></div>';
       s.history.forEach(function(hh,idx){
-        html += '<div style="display:flex;align-items:center;gap:14px;padding:11px 20px;border-bottom:1px solid #E0E0E0;font-size:13.5px">'+
-          '<span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-weight:600">'+h(hh.cand.name)+'</span><span style="font-size:12.5px;color:#747474">'+h(hh.cand.rhid)+'</span></span>'+
-          '<span style="width:180px;flex-shrink:0;color:#747474">'+h(hh.cand.req)+'</span>'+
-          '<span style="width:80px;flex-shrink:0;color:#747474">'+h(hh.at)+'</span>'+
-          '<button type="button" onclick="openHistory('+idx+')" style="width:88px;flex-shrink:0;text-align:right;border:0;background:none;padding:0;color:#0076FB;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px">View report</button>'+
-        '</div>';
+        html += '<button type="button" class="rh-histrow" onclick="openHistory('+idx+')" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 20px;border:0;border-top:1px solid #E0E0E0;background:none;text-align:left;font-family:inherit;cursor:pointer">'+
+          avatar(hh.cand.name,34)+
+          '<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">'+
+            '<span style="font-size:14px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(hh.cand.name)+'</span>'+
+            '<span style="font-size:12px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(hh.cand.rhid+' · '+hh.cand.req)+'</span></span>'+
+          verdictBadge(hh.rows)+
+          '<span class="rh-histtime" style="font-size:12px;color:#747474;flex-shrink:0;white-space:nowrap">'+h(hh.at)+'</span>'+
+          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg>'+
+        '</button>';
       });
       html += '</div></div>';
     }
