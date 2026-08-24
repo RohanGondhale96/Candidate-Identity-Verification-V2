@@ -170,6 +170,10 @@ var USERS = [
   { id:'u6', name:'Tarun Rao',      role:'Client HR — Acme Systems',     email:'tarun.rao@acmesystems.in',     tier:'view' }
 ];
 
+/* Feature flags — hidden for now; flip to true to bring these back */
+var SHOW_STAGE_BADGE = false;     // candidate "stage" pill (e.g. Onboarding) on the candidate card
+var SHOW_REPORT_ACTIONS = false;  // Download PDF + Share report buttons in the report header
+
 var state = {
   q:'', searchOpen:true, cand:null, photo:null, consent:false,
   rows:[], open:null, running:false, done:false, shared:[],
@@ -474,7 +478,7 @@ function render(){
     html += '<div class="rh-card">'+
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">'+avatar(c.name,40)+
         '<div style="min-width:0"><div style="font-size:16px;font-weight:600;line-height:1.4">'+h(c.name)+'</div><div style="font-size:13px;color:#747474;line-height:1.4">'+h(c.rhid+' · '+c.req)+'</div></div>'+
-        '<span class="rh-chip chip-stage" style="margin-left:auto">'+h(c.stage)+'</span>'+
+        (SHOW_STAGE_BADGE ? '<span class="rh-chip chip-stage" style="margin-left:auto">'+h(c.stage)+'</span>' : '')+
       '</div>'+
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px 20px">'+
         [{k:'Email',v:c.email},{k:'Phone',v:c.phone},{k:'Joining date',v:c.joining||'—'}].map(function(f){
@@ -540,15 +544,14 @@ function render(){
       html += '<div style="display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid #E0E0E0;font-size:13px;color:#747474"><span style="width:14px;height:14px;border:2px solid #E0E0E0;border-top-color:#0076FB;border-radius:50%;animation:rh-spin .7s linear infinite;flex-shrink:0"></span>'+h('Comparing against '+c.photos.length+' photos on file…')+'</div>';
     }
     if(s.done){
-      html += '<div><div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;padding:18px 20px;border-bottom:1px solid #E0E0E0">'+
-        '<div style="width:52px;height:64px;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;flex-shrink:0;position:relative">'+uploadedImg()+'</div>'+
-        '<div style="flex:1 1 180px;min-width:0"><b style="display:block;font-size:16px;font-weight:600">'+h(c.name)+'</b>'+
-          '<span style="display:block;font-size:12.5px;color:#747474;margin-top:3px">'+h(c.rhid+' · '+c.req)+'</span>'+
-          '<span style="display:block;font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · 12 Aug 2026, 09:41 IST</span></div>'+
+      html += '<div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid #E0E0E0">'+
+        '<div style="width:48px;height:60px;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;flex-shrink:0;position:relative">'+uploadedImg()+'</div>'+
+        '<div style="flex:1 1 180px;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.4">Photo taken today</div>'+
+          '<div style="font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · 12 Aug 2026, 09:41 IST</div></div>'+
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
           (!s.viewingHistory ? '<button class="rh-btn secondary sm" onclick="askReshoot()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Use a different photo</button>' : '')+
-          '<button class="rh-iconbtn" title="Download PDF" onclick="downloadPdf()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M29 44H42.1765V42.1176H29V44ZM42.1765 33.6471H38.4118V28H32.7647V33.6471H29L35.5882 40.2353L42.1765 33.6471Z"></path></svg></button>'+
-          '<button class="rh-iconbtn" title="Share report" onclick="openShare()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M40.6667 39.3092C40.0756 39.3092 39.5467 39.5502 39.1422 39.9277L33.5967 36.5944C33.6356 36.4096 33.6667 36.2249 33.6667 36.0321C33.6667 35.8394 33.6356 35.6546 33.5967 35.4699L39.08 32.1687C39.5 32.5703 40.0522 32.8193 40.6667 32.8193C41.9578 32.8193 43 31.743 43 30.4096C43 29.0763 41.9578 28 40.6667 28C39.3756 28 38.3333 29.0763 38.3333 30.4096C38.3333 30.6024 38.3644 30.7871 38.4033 30.9719L32.92 34.2731C32.5 33.8715 31.9478 33.6225 31.3333 33.6225C30.0422 33.6225 29 34.6988 29 36.0321C29 37.3655 30.0422 38.4418 31.3333 38.4418C31.9478 38.4418 32.5 38.1928 32.92 37.7912L38.4578 41.1325C38.4189 41.3012 38.3956 41.4779 38.3956 41.6546C38.3956 42.9478 39.4144 44 40.6667 44C41.9189 44 42.9378 42.9478 42.9378 41.6546C42.9378 40.3614 41.9189 39.3092 40.6667 39.3092Z"></path></svg></button>'+
+          (SHOW_REPORT_ACTIONS ? ('<button class="rh-iconbtn" title="Download PDF" onclick="downloadPdf()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M29 44H42.1765V42.1176H29V44ZM42.1765 33.6471H38.4118V28H32.7647V33.6471H29L35.5882 40.2353L42.1765 33.6471Z"></path></svg></button>'+
+          '<button class="rh-iconbtn" title="Share report" onclick="openShare()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M40.6667 39.3092C40.0756 39.3092 39.5467 39.5502 39.1422 39.9277L33.5967 36.5944C33.6356 36.4096 33.6667 36.2249 33.6667 36.0321C33.6667 35.8394 33.6356 35.6546 33.5967 35.4699L39.08 32.1687C39.5 32.5703 40.0522 32.8193 40.6667 32.8193C41.9578 32.8193 43 31.743 43 30.4096C43 29.0763 41.9578 28 40.6667 28C39.3756 28 38.3333 29.0763 38.3333 30.4096C38.3333 30.6024 38.3644 30.7871 38.4033 30.9719L32.92 34.2731C32.5 33.8715 31.9478 33.6225 31.3333 33.6225C30.0422 33.6225 29 34.6988 29 36.0321C29 37.3655 30.0422 38.4418 31.3333 38.4418C31.9478 38.4418 32.5 38.1928 32.92 37.7912L38.4578 41.1325C38.4189 41.3012 38.3956 41.4779 38.3956 41.6546C38.3956 42.9478 39.4144 44 40.6667 44C41.9189 44 42.9378 42.9478 42.9378 41.6546C42.9378 40.3614 41.9189 39.3092 40.6667 39.3092Z"></path></svg></button>') : '')+
         '</div></div>';
       if(s.shared.length){
         html += '<div style="padding:12px 20px;border-bottom:1px solid #E0E0E0;background:#F7F8FA;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:13px;color:#747474">Shared with</span>';
