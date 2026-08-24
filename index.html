@@ -469,7 +469,7 @@ function render(){
   if(c && c.photos.length && !s.done){
     html += '<div class="rh-card">'+
       '<div style="font-size:16px;font-weight:600;line-height:1.5;margin-bottom:2px">Upload joining day photo</div>'+
-      '<p style="margin:0 0 16px;font-size:14px;color:#747474;line-height:1.55">Frame the photo from the chest up, with the face clearly visible and looking at the camera.</p>';
+      '<p style="margin:0 0 16px;font-size:14px;color:#747474;line-height:1.55">'+(s.hasCamera?'Frame the photo from the chest up, with the face clearly visible and looking at the camera.':'Choose a clear, front-facing photo with the face fully visible.')+'</p>';
     if(!s.photo){
       html += '<div ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" style="border:1.5px dashed '+(s.drag?'#0076FB':'#C6C6C6')+';border-radius:6px;padding:30px 20px;text-align:center;background:'+(s.drag?'#EBF5FF':'#F7F8FA')+'">'+
         '<svg viewBox="25 25 22 22" width="28" height="28" fill="#929292" style="margin-bottom:6px"><path d="M32.7143 40.2353H38.2857V34.5882H42L35.5 28L29 34.5882H32.7143V40.2353ZM29 42.1176H42V44H29V42.1176Z"></path></svg>'+
