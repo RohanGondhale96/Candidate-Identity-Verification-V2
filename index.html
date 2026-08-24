@@ -468,7 +468,7 @@ function render(){
   /* 3. UPLOAD (hidden once a report is shown; re-open via "Use a different photo") */
   if(c && c.photos.length && !s.done){
     html += '<div class="rh-card">'+
-      '<div style="font-size:16px;font-weight:600;line-height:1.5;margin-bottom:2px">Joining day photo</div>'+
+      '<div style="font-size:16px;font-weight:600;line-height:1.5;margin-bottom:2px">Upload joining day photo</div>'+
       '<p style="margin:0 0 16px;font-size:14px;color:#747474;line-height:1.55">Frame the photo from the chest up, with the face clearly visible and looking at the camera.</p>';
     if(!s.photo){
       html += '<div ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" style="border:1.5px dashed '+(s.drag?'#0076FB':'#C6C6C6')+';border-radius:6px;padding:30px 20px;text-align:center;background:'+(s.drag?'#EBF5FF':'#F7F8FA')+'">'+
