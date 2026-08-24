@@ -119,7 +119,7 @@
     /* report table: hide the column header and let each row reflow */
     .rpt-head{display:none !important}
     .rpt-row{flex-wrap:wrap !important;align-items:flex-start !important;column-gap:12px !important;row-gap:6px !important;padding:12px 16px !important}
-    .rpt-row .rpt-cap{order:5;flex:0 0 100% !important;width:auto !important;padding-left:56px}
+    .rpt-row .rpt-cap{order:5;flex:0 0 100% !important;width:auto !important;padding-left:74px}
     .rh-histrow{padding:12px 16px !important}
     .rh-histtime{display:none}
   }
@@ -485,7 +485,8 @@ function render(){
           return '<div><div style="font-size:13px;color:#747474;margin-bottom:3px">'+h(f.k)+'</div><div style="font-size:14px;font-weight:600;word-break:break-word">'+h(f.v)+'</div></div>';
         }).join('')+
       '</div>';
-    if(c.photos.length){
+    if(c.photos.length && !s.done){
+      // once a report is shown below, this strip is redundant, so hide it after a run
       html += '<div style="margin-top:18px;padding-top:16px;border-top:1px solid #E0E0E0;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><div style="display:flex;gap:8px;flex-wrap:wrap">';
       var faceIdx = []; c.photos.forEach(function(p,i){ if(p.src!=='document') faceIdx.push(i); });
       faceIdx.slice(0,6).forEach(function(i){ var p=c.photos[i];
@@ -499,7 +500,7 @@ function render(){
       if(intN) parts.push(intN+' interview');
       if(docN) parts.push(docN+' document'+(docN>1?'s':''));
       html += '</div><div style="font-size:13px;color:#747474">'+h(c.photos.length+' on file — '+parts.join(', '))+'</div></div>';
-    } else {
+    } else if(!c.photos.length){
       html += '<div class="note" style="margin-top:18px">No photos on file for this candidate. Identity verification needs at least one photo captured during application or interview.</div>';
     }
     html += '</div>';
@@ -585,7 +586,7 @@ function render(){
         var opacity = r.status==='waiting' ? 0.38 : 1;
         html += '<div style="border-bottom:1px solid #E0E0E0;opacity:'+opacity+'">'+
           '<button type="button" class="rpt-row" onclick="toggleRow('+i+')" style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 20px;background:none;border:0;text-align:left;font-family:inherit;cursor:'+(s.done?'pointer':'default')+'">'+
-            '<span style="width:44px;height:54px;border-radius:6px;overflow:hidden;position:relative;flex-shrink:0;background:#EFEFEF;border:1px solid #DDD">'+photoTile(r,(c?c.id:'')+r.label,'contain')+
+            '<span style="width:60px;height:74px;border-radius:6px;overflow:hidden;position:relative;flex-shrink:0;background:#EFEFEF;border:1px solid #DDD">'+photoTile(r,(c?c.id:'')+r.label,'contain')+
               (r.status==='running'?'<span style="position:absolute;left:0;right:0;height:34%;background:linear-gradient(180deg,rgba(0,118,251,0) 0%,rgba(0,118,251,.55) 55%,rgba(0,118,251,0) 100%);animation:rh-sweep 1.05s ease-in-out infinite"></span>':'')+
             '</span>'+
             '<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:600;line-height:1.35">'+h(r.label)+'</span>'+
