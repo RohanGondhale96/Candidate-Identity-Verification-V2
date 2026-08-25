@@ -45,19 +45,23 @@ Notes on those:
   Review or reject a Match.
 - The verdict appears in **two places on purpose**: the big banner at the top of the report
   (headline first), and a **compact recap chip** inside the decision bar (e.g. *"Match · 8 of
-  8 · strongest 96%"*) right above Accept/Reject — so the conclusion is in view at the moment
-  of deciding, without scrolling back up. Not a bug; it's deliberate.
+  8"*) right above Accept/Reject — so the conclusion is in view at the moment of deciding,
+  without scrolling back up. Not a bug; it's deliberate.
 - The "by A. Sharma" name and timestamps are **hard-coded placeholders** — in production
   they'd come from the logged-in user and server clock.
 
 ## Landing screen — tabbed worklist
 
 - Two tabs: **Joining today** (default) and **Checks you ran today**.
-- **Joining today** is a worklist: candidates split into **To verify** (with a Verify action)
-  and **Done**. Each row shows a status badge reflecting the furthest state reached —
+- **Joining today** is a worklist: candidates split into **To verify** and **Done** (sentence-
+  case group headers). Each row shows a status badge reflecting the furthest state reached —
   *To verify* → the *verdict* (Match/Review/No match) → the *decision* (Accepted/Rejected).
+  The whole row is clickable (To-verify → starts the check, Done → opens the report); there's
+  no separate "Verify" button — it was redundant with the clickable row.
 - **Checks you ran today** = "Your checks today" (your run history) + a **Shared with you**
   section.
+- **Tab style** is the **segmented control** (the beige pill with a white active tab), kept on
+  purpose — an underline-tab variant was tried and reverted. Don't "fix" it back to underline.
 - Kept small for the demo; at real-company volume this is where you'd add filtering / paging.
 
 ## What is mocked / in-session only (needs a backend)
