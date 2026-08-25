@@ -380,11 +380,12 @@ function verdictBadge(rows){
 }
 function _pill(txt,color,bg){ return '<span style="display:inline-flex;align-items:center;gap:6px;background:'+bg+';color:'+color+';border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap"><span style="width:6px;height:6px;border-radius:50%;background:'+color+';flex-shrink:0"></span>'+h(txt)+'</span>'; }
 function todoBadge(){ return _pill('To verify','#5F5E5A','#ECEEF1'); }
+function pendingBadge(){ return _pill('Decision pending','#B7791F','#FBF1DE'); }
 function decisionBadge(dec){ return dec.action==='accept' ? _pill('Accepted','#1a8a3a','#E7F4EC') : _pill('Rejected','#D93025','#FDECEC'); }
 /* most recent check (history entry) for a candidate id, or null */
 function latestCheck(candId){ for(var i=state.history.length-1;i>=0;i--){ if(state.history[i].cand.id===candId) return {idx:i, hh:state.history[i]}; } return null; }
 /* worklist status badge: decision > verdict > to-verify */
-function worklistBadge(candId){ var lc=latestCheck(candId); if(!lc) return todoBadge(); if(lc.hh.decision) return decisionBadge(lc.hh.decision); return verdictBadge(lc.hh.rows); }
+function worklistBadge(candId){ var lc=latestCheck(candId); if(!lc) return todoBadge(); if(lc.hh.decision) return decisionBadge(lc.hh.decision); return pendingBadge(); }
 
 /* big verdict banner at the top of the report */
 function verdictIcon(state, color){
@@ -465,7 +466,7 @@ function render(){
           html += '<div style="padding:18px 20px;font-size:13.5px;color:#747474">No candidates at onboarding join today.</div>';
         } else {
           var todo=[], donel=[];
-          joiningToday.forEach(function(x){ (latestCheck(x.id)?donel:todo).push(x); });
+          joiningToday.forEach(function(x){ var lc=latestCheck(x.id); ((lc && lc.hh.decision)?donel:todo).push(x); });
           html += '<div style="padding:16px 20px 6px"><div style="font-size:16px;font-weight:600;line-height:1.4">Joining today</div>'+
             '<div style="font-size:12.5px;color:#747474;margin-top:2px">'+joiningToday.length+' candidate'+(joiningToday.length===1?'':'s')+' · '+todo.length+' to verify, '+donel.length+' done</div></div>';
           var section = function(title,list,isTodo){
@@ -473,7 +474,7 @@ function render(){
             html += '<div style="padding:11px 20px 6px;border-top:1px solid #E0E0E0;font-size:12px;font-weight:600;color:#747474">'+title+'</div>';
             list.forEach(function(x){
               var lc = latestCheck(x.id);
-              var onclick = isTodo ? ('pick(\''+x.id+'\')') : ('openHistory('+lc.idx+')');
+              var onclick = lc ? ('openHistory('+lc.idx+')') : ('pick(\''+x.id+'\')');
               html += '<div role="button" tabindex="0" onclick="'+onclick+'" style="display:flex;align-items:center;gap:12px;padding:12px 20px;border-top:1px solid #E0E0E0;cursor:pointer">'+
                 avatar(x.name,34)+
                 '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(x.name)+'</div><div style="font-size:12.5px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(x.rhid+' · '+x.req)+'</div></div>'+
@@ -664,14 +665,14 @@ function render(){
     if(_done){
       if(s.decision){
         var dec = s.decision, dok = dec.action==='accept';
-        var dcol = dok ? '#1a8a3a' : '#D93025', dbg = dok ? '#E7F4EC' : '#FDECEC';
-        html += '<div style="display:flex;align-items:center;gap:12px;border-top:1px solid #E0E0E0;padding:14px 20px;background:'+dbg+'">'+
-          '<span style="width:30px;height:30px;border-radius:50%;background:#fff;border:1px solid '+dcol+'40;display:grid;place-items:center;flex-shrink:0">'+
+        var dcol = dok ? '#1a8a3a' : '#D93025';
+        html += '<div style="display:flex;align-items:center;gap:12px;border-top:1px solid #E0E0E0;padding:14px 20px;background:#fff">'+
+          '<span style="width:30px;height:30px;border-radius:50%;background:'+(dok?'#E7F4EC':'#FDECEC')+';display:grid;place-items:center;flex-shrink:0">'+
             (dok?'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="'+dcol+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
                 :'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="'+dcol+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10M17 7L7 17"/></svg>')+
           '</span>'+
           '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;color:'+dcol+'">'+(dok?'Accepted':'Rejected')+'</div>'+
-            '<div style="font-size:12px;color:'+dcol+';word-break:break-word">by '+h(dec.by)+' · '+h(dec.at)+(dec.note?' · “'+h(dec.note)+'”':'')+'</div></div>'+
+            '<div style="font-size:12px;color:#747474;word-break:break-word">by '+h(dec.by)+' · '+h(dec.at)+(dec.note?' · “'+h(dec.note)+'”':'')+'</div></div>'+
           (s.viewingHistory?'':'<button type="button" onclick="changeDecision()" style="border:0;background:none;padding:4px 2px;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;flex-shrink:0">Change</button>')+
         '</div>';
       } else {

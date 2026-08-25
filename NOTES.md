@@ -48,6 +48,12 @@ Notes on those:
 - Below the report, the recruiter makes the final call — **Accept** or **Reject**. The
   machine only *advises* (the verdict); the human decides. The verdict subtly suggests an
   action but never auto-decides.
+- **Deciding is not hard-mandatory** (no blocking modal). Instead it's enforced softly: an
+  undecided check keeps the candidate in **To verify** (see the worklist), so unfinished work
+  stays visible rather than being forced.
+- The decided **record is neutral-styled** (white row, small coloured icon + label) on purpose
+  — it sits directly under the coloured verdict banner, so a filled green/red bar there would
+  clash or merge with the banner.
 - A **reason is required when rejecting** (optional note on accept). Once decided, the bar
   collapses to a record: *"Accepted/Rejected by A. Sharma · &lt;when&gt; · &lt;note&gt;"* with a
   **Change** link (logged). The decision is separate from the verdict — you can accept a
@@ -64,10 +70,12 @@ Notes on those:
 
 - Two tabs: **Joining today** (default) and **Checks you ran today**.
 - **Joining today** is a worklist: candidates split into **To verify** and **Done** (sentence-
-  case group headers). Each row shows a status badge reflecting the furthest state reached —
-  *To verify* → the *verdict* (Match/Review/No match) → the *decision* (Accepted/Rejected).
-  The whole row is clickable (To-verify → starts the check, Done → opens the report); there's
-  no separate "Verify" button — it was redundant with the clickable row.
+  case group headers). A candidate is only **Done once a recruiter has decided** (Accepted /
+  Rejected). Running the check alone does **not** move them off the list. Row badge by state:
+  **To verify** (never run) → **Decision pending** (run, but no Accept/Reject yet — stays in
+  the To-verify group) → **Accepted / Rejected** (decided → Done).
+- The whole row is clickable, no separate "Verify" button: a never-run row starts a fresh
+  check; a row that's already been run reopens its report (to decide or review).
 - **Checks you ran today** = "Your checks today" (your run history) + a **Shared with you**
   section.
 - **Tab style** is the **segmented control** (the beige pill with a white active tab), kept on
