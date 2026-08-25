@@ -66,6 +66,19 @@ Nothing here persists to a server — it lives in the browser session and resets
   needs users, notifications, and shared state.
 - **Run history** ("Checks you ran today") — resets on reload.
 
+## Copy / microcopy
+
+- The UI copy went through a light "humanize" pass — plainer, more direct, active voice.
+  Notable wording: the search intro ("Compare the person who showed up today…"), the empty /
+  no-round notes say what to do ("Ask your RippleHire admin to add one"), the decision hint
+  ("Suggested: Accept/Reject", "Mixed result — your call"), and the report footer.
+- The **consent line** was left precise on purpose ("I have the candidate's consent to take
+  and submit this photo for identity verification") — consent copy favours clarity over brevity.
+- **Editing copy — watch the quotes.** Most strings are built as single-quoted JavaScript, so
+  any apostrophe inside copy must be escaped: write `candidate\'s`, not `candidate's`. An
+  unescaped apostrophe breaks the whole script (blank page). After changing copy, sanity-check
+  by loading the page or running the render smoke-test in the scratchpad.
+
 ## Sample identity documents
 
 - The Aadhaar / PAN / driving-licence entries are **composited SAMPLE mock cards**, not real
