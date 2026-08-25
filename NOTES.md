@@ -30,6 +30,38 @@ Notes on those:
   documents pass at **60%+** (they're older/lower-resolution). Change these in the
   `photoBar()` function.
 
+## Recruiter Accept / Reject decision
+
+- Below the report, the recruiter makes the final call — **Accept** or **Reject**. The
+  machine only *advises* (the verdict); the human decides. The verdict subtly suggests an
+  action but never auto-decides.
+- A **reason is required when rejecting** (optional note on accept). Once decided, the bar
+  collapses to a record: *"Accepted/Rejected by A. Sharma · &lt;when&gt; · &lt;note&gt;"* with a
+  **Change** link (logged). The decision is separate from the verdict — you can accept a
+  Review or reject a Match.
+- The "by A. Sharma" name and timestamps are **hard-coded placeholders** — in production
+  they'd come from the logged-in user and server clock.
+
+## Landing screen — tabbed worklist
+
+- Two tabs: **Joining today** (default) and **Checks you ran today**.
+- **Joining today** is a worklist: candidates split into **To verify** (with a Verify action)
+  and **Done**. Each row shows a status badge reflecting the furthest state reached —
+  *To verify* → the *verdict* (Match/Review/No match) → the *decision* (Accepted/Rejected).
+- **Checks you ran today** = "Your checks today" (your run history) + a **Shared with you**
+  section.
+- Kept small for the demo; at real-company volume this is where you'd add filtering / paging.
+
+## What is mocked / in-session only (needs a backend)
+
+Nothing here persists to a server — it lives in the browser session and resets on reload:
+
+- **Decisions** (Accept/Reject) and their audit trail — stored in-session on the check record.
+- **Share report** and the **"Shared with you"** list — the shared row (Vikram Singh, "from
+  Priya Nair") is hard-coded illustrative data; clicking it just shows a toast. Real sharing
+  needs users, notifications, and shared state.
+- **Run history** ("Checks you ran today") — resets on reload.
+
 ## Sample identity documents
 
 - The Aadhaar / PAN / driving-licence entries are **composited SAMPLE mock cards**, not real
@@ -52,3 +84,6 @@ Notes on those:
 - To show the **Review** / **No match** states, upload a *different* person as the joining
   photo (or one candidate's photo against the other).
 - Rahul's document cards use his real headshot, so a genuine Rahul joining photo matches them.
+- Full loop to demo: **Joining today** → **Verify** a candidate → upload a photo → run →
+  **Accept/Reject** → go back; the candidate moves to **Done** with the decision badge, and
+  also appears under **Checks you ran today**.
