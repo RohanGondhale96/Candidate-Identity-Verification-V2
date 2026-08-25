@@ -39,6 +39,10 @@ Notes on those:
   collapses to a record: *"Accepted/Rejected by A. Sharma · &lt;when&gt; · &lt;note&gt;"* with a
   **Change** link (logged). The decision is separate from the verdict — you can accept a
   Review or reject a Match.
+- The verdict appears in **two places on purpose**: the big banner at the top of the report
+  (headline first), and a **compact recap chip** inside the decision bar (e.g. *"Match · 8 of
+  8 · strongest 96%"*) right above Accept/Reject — so the conclusion is in view at the moment
+  of deciding, without scrolling back up. Not a bug; it's deliberate.
 - The "by A. Sharma" name and timestamps are **hard-coded placeholders** — in production
   they'd come from the logged-in user and server clock.
 
