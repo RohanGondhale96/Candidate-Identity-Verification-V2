@@ -675,8 +675,11 @@ function render(){
         var suggest = dv.state==='match' ? 'Result suggests: Accept' : dv.state==='nomatch' ? 'Result suggests: Reject' : 'Mixed result — needs your review';
         html += '<div style="border-top:1px solid #E0E0E0;background:#FBFBFA;padding:16px 20px">'+
           '<div style="font-size:14px;font-weight:600">Your decision</div>'+
-          '<div style="font-size:12.5px;color:#747474;margin:2px 0 3px">You have the final say — confirm or reject this candidate\'s identity to complete the check.</div>'+
-          '<div style="font-size:12px;color:#747474;margin-bottom:11px">'+h(suggest)+'</div>'+
+          '<div style="font-size:12.5px;color:#747474;margin:2px 0 10px">You have the final say — confirm or reject this candidate\'s identity to complete the check.</div>'+
+          '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">'+
+            '<span style="display:inline-flex;align-items:center;gap:6px;background:'+dv.bg+';color:'+dv.color+';border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:'+dv.color+';flex-shrink:0"></span>'+h(dv.total?(dv.label+' · '+dv.matched+' of '+dv.total+(dv.best!=null?' · strongest '+dv.best+'%':'')):dv.label)+'</span>'+
+            '<span style="font-size:12.5px;color:#747474">'+h(suggest)+'</span>'+
+          '</div>'+
           '<textarea id="rh-decision-note" placeholder="Add a note (required when rejecting)" style="width:100%;box-sizing:border-box;min-height:52px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid #DDD;border-radius:8px;background:#fff;margin-bottom:'+(s.decisionErr?'6px':'12px')+'"></textarea>'+
           (s.decisionErr?'<div style="font-size:12.5px;color:#EB4040;margin-bottom:12px">'+h(s.decisionErr)+'</div>':'')+
           '<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">'+
