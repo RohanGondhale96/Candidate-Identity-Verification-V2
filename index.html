@@ -409,7 +409,7 @@ function render(){
 
   // note
   var noteBold='', noteRest='';
-  if(!s.roundsConfigured){ noteBold='Hired round not configured.'; noteRest='Identity verification needs an onboarding or hired round set up for this account. Contact your RippleHire administrator.'; }
+  if(!s.roundsConfigured){ noteBold='No hired round set up.'; noteRest='This check needs an onboarding or hired round on the account. Ask your RippleHire admin to add one.'; }
   else if(s.deepMiss && !typed){ noteBold=s.deepMiss+' could not be opened.'; noteRest='Search for the candidate by name, RHID or email to run the check.'; }
   else if(typed && !ok.length){ noteRest='No candidates at onboarding match that search.'; }
 
@@ -426,7 +426,7 @@ function render(){
   if(s.searchOpen){
     html += '<div class="rh-card">'+
       '<div style="font-size:16px;font-weight:600;line-height:1.5;margin-bottom:2px">Identity check</div>'+
-      '<p style="margin:0 0 20px;font-size:14px;color:#747474;line-height:1.55">Check the person joining today against every photo captured during their application and interviews.</p>'+
+      '<p style="margin:0 0 20px;font-size:14px;color:#747474;line-height:1.55">Compare the person who showed up today against the candidate's application and interview photos.</p>'+
       '<label for="rh-q" style="font-size:14px;font-weight:600;color:#555">Search candidate</label>'+
       '<div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid #A5A5A5;padding:6px 0">'+searchIcon()+
         '<input id="rh-q" type="search" placeholder="Search by name, RHID or email" autocomplete="off" value="'+h(s.q)+'" '+(s.roundsConfigured?'':'disabled')+' oninput="onQuery(this.value)" style="flex:1;min-width:0;border:0;outline:0;background:none;font-family:inherit;font-size:14px;font-weight:500;color:#2A2A2A">'+
@@ -535,7 +535,7 @@ function render(){
         }).join('')+
       '</div>';
     if(!c.photos.length){
-      html += '<div class="note" style="margin-top:18px">No photos on file for this candidate. Identity verification needs at least one photo captured during application or interview.</div>';
+      html += '<div class="note" style="margin-top:18px">No photos on file for this candidate. You need at least one application or interview photo to run a check.</div>';
     }
     html += '</div>';
   }
@@ -654,7 +654,7 @@ function render(){
       });
     });
 
-    if(_done){ html += '<p style="margin:0;padding:14px 20px;font-size:12.5px;color:#747474;line-height:1.6">Interview photos match at 80%+; identity documents at 60%+ (older, lower quality). Open any row to compare the two photos yourself.</p>'; }
+    if(_done){ html += '<p style="margin:0;padding:14px 20px;font-size:12.5px;color:#747474;line-height:1.6">Interview photos count as a match at 80%+, identity documents at 60%+ (they're older and lower quality). Open any row to see both photos side by side.</p>'; }
 
     // recruiter's final Accept / Reject decision
     if(_done){
@@ -672,10 +672,10 @@ function render(){
         '</div>';
       } else {
         var dv = overallVerdict(s.rows);
-        var suggest = dv.state==='match' ? 'Result suggests: Accept' : dv.state==='nomatch' ? 'Result suggests: Reject' : 'Mixed result — needs your review';
+        var suggest = dv.state==='match' ? 'Suggested: Accept' : dv.state==='nomatch' ? 'Suggested: Reject' : 'Mixed result — your call';
         html += '<div style="border-top:1px solid #E0E0E0;background:#FBFBFA;padding:16px 20px">'+
           '<div style="font-size:14px;font-weight:600">Your decision</div>'+
-          '<div style="font-size:12.5px;color:#747474;margin:2px 0 10px">You have the final say — confirm or reject this candidate\'s identity to complete the check.</div>'+
+          '<div style="font-size:12.5px;color:#747474;margin:2px 0 10px">You have the final say. Confirm or reject the candidate\'s identity.</div>'+
           '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">'+
             '<span style="display:inline-flex;align-items:center;gap:6px;background:'+dv.bg+';color:'+dv.color+';border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:'+dv.color+';flex-shrink:0"></span>'+h(dv.total?(dv.label+' · '+dv.matched+' of '+dv.total+(dv.best!=null?' · strongest '+dv.best+'%':'')):dv.label)+'</span>'+
             '<span style="font-size:12.5px;color:#747474">'+h(suggest)+'</span>'+
@@ -741,7 +741,7 @@ function render(){
   if(s.confirmReshoot){
     html += '<div class="rh-scrim" onclick="scrimReshoot(event)"><div class="rh-dialog" style="width:420px">'+
       '<header><h2>Use a different photo?</h2><button class="x" onclick="cancelReshoot()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
-      '<div class="dbody"><p style="margin:0;font-size:13.5px;color:#747474;line-height:1.55">This will close the current result and let you upload a new joining-day photo. The result stays saved under <b style="color:#333;font-weight:600">Checks you ran today</b>.</p></div>'+
+      '<div class="dbody"><p style="margin:0;font-size:13.5px;color:#747474;line-height:1.55">This closes the current result so you can upload a new joining-day photo. It stays saved under <b style="color:#333;font-weight:600">Checks you ran today</b>.</p></div>'+
       '<footer><span style="flex:1"></span><button class="rh-btn tertiary sm" onclick="cancelReshoot()">Cancel</button><button class="rh-btn primary sm" onclick="doReshoot()">Use a different photo</button></footer>'+
     '</div></div>';
   }
