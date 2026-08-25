@@ -665,9 +665,9 @@ function render(){
         var dv = overallVerdict(s.rows);
         var suggest = dv.state==='match' ? 'Suggested: Accept' : dv.state==='nomatch' ? 'Suggested: Reject' : 'Mixed result — your call';
         html += '<div style="border-top:1px solid #E0E0E0;background:#FBFBFA;padding:16px 20px">'+
-          '<div style="font-size:14px;font-weight:600">Your decision</div>'+
-          '<div style="font-size:12.5px;color:#747474;margin:2px 0 4px">You have the final say. Confirm or reject the candidate\'s identity.</div>'+
-          '<div style="font-size:12px;color:#747474;margin-bottom:12px">'+h(suggest)+'</div>'+
+          '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:0;font-size:14px;font-weight:600">Your decision</div>'+
+            '<span style="display:inline-flex;align-items:center;gap:6px;background:#E6F1FB;color:#185FA5;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;white-space:nowrap"><span style="width:6px;height:6px;border-radius:50%;background:#378ADD;flex-shrink:0"></span>'+h(suggest)+'</span></div>'+
+          '<div style="font-size:12.5px;color:#747474;margin:5px 0 12px">You have the final say. Confirm or reject the candidate\'s identity.</div>'+
           '<textarea id="rh-decision-note" placeholder="Add a note (required when rejecting)" style="width:100%;box-sizing:border-box;min-height:52px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid #DDD;border-radius:8px;background:#fff;margin-bottom:'+(s.decisionErr?'6px':'12px')+'"></textarea>'+
           (s.decisionErr?'<div style="font-size:12.5px;color:#EB4040;margin-bottom:12px">'+h(s.decisionErr)+'</div>':'')+
           '<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">'+
