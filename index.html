@@ -179,8 +179,13 @@ var state = {
   rows:[], open:null, running:false, done:false, shared:[],
   upErr:'', drag:false, showShare:false, picked:[], pickQ:'',
   toast:'', roundsConfigured:true, lightbox:null, history:[], hasCamera:true, deepMiss:null,
-  confirmReshoot:false, viewingHistory:false, decision:null, decisionErr:'', entry:null, _refocus:null
+  confirmReshoot:false, viewingHistory:false, decision:null, decisionErr:'', entry:null, tab:'joining', _refocus:null
 };
+
+/* Mock "shared with you" checks for the collaboration tab (illustrative — needs a backend). */
+var MOCK_SHARED = [
+  { name:'Vikram Singh', rhid:'RH48120', req:'Data Engineer', from:'Priya Nair', label:'Review', color:'#B7791F', bg:'#FBF1DE' }
+];
 var _tt=null, _steptimers=[];
 
 /* ---------- helpers ---------- */
@@ -373,6 +378,13 @@ function verdictBadge(rows){
   return '<span style="display:inline-flex;align-items:center;gap:6px;background:'+v.bg+';color:'+v.color+';border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap">'+
     '<span style="width:6px;height:6px;border-radius:50%;background:'+v.color+';flex-shrink:0"></span>'+h(txt)+'</span>';
 }
+function _pill(txt,color,bg){ return '<span style="display:inline-flex;align-items:center;gap:6px;background:'+bg+';color:'+color+';border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap"><span style="width:6px;height:6px;border-radius:50%;background:'+color+';flex-shrink:0"></span>'+h(txt)+'</span>'; }
+function todoBadge(){ return _pill('To verify','#5F5E5A','#F1EFE8'); }
+function decisionBadge(dec){ return dec.action==='accept' ? _pill('Accepted','#1a8a3a','#E7F4EC') : _pill('Rejected','#D93025','#FDECEC'); }
+/* most recent check (history entry) for a candidate id, or null */
+function latestCheck(candId){ for(var i=state.history.length-1;i>=0;i--){ if(state.history[i].cand.id===candId) return {idx:i, hh:state.history[i]}; } return null; }
+/* worklist status badge: decision > verdict > to-verify */
+function worklistBadge(candId){ var lc=latestCheck(candId); if(!lc) return todoBadge(); if(lc.hh.decision) return decisionBadge(lc.hh.decision); return verdictBadge(lc.hh.rows); }
 
 /* big verdict banner at the top of the report */
 function verdictIcon(state, color){
@@ -436,38 +448,75 @@ function render(){
     }
     html += '</div>';
 
-    /* JOINING TODAY */
-    if(s.roundsConfigured && joiningToday.length){
-      html += '<div class="rh-card" style="padding:0">'+
-        '<div style="padding:18px 20px 14px"><div style="font-size:16px;font-weight:600;line-height:1.5">Joining today</div>'+
-        '<p style="margin:2px 0 0;font-size:14px;color:#747474;line-height:1.55">'+h(joiningToday.length+(joiningToday.length===1?' candidate at onboarding joins today.':' candidates at onboarding join today.'))+'</p></div>';
-      joiningToday.forEach(function(x){
-        html += '<div role="button" tabindex="0" onclick="pick(\''+x.id+'\')" style="display:flex;align-items:center;gap:12px;padding:12px 20px;border-top:1px solid #E0E0E0;cursor:pointer">'+
-          avatar(x.name,32)+
-          '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.35">'+h(x.name)+'</div><div style="font-size:12.5px;color:#747474">'+h(x.rhid+' · '+x.req)+'</div></div>'+
-          '<span style="font-size:12.5px;color:#747474;white-space:nowrap">'+h(x.photos.length?x.photos.length+' photos on file':'No photos on file')+'</span>'+
-        '</div>';
-      });
-      html += '</div>';
-    }
+    /* WORKLIST TABS — Joining today (default) / Checks you ran today */
+    if(s.roundsConfigured){
+      var tabBtn = function(id,label,count){
+        var active = s.tab===id;
+        return '<button type="button" onclick="setTab(\''+id+'\')" style="border:0;border-radius:7px;padding:7px 14px;font-family:inherit;font-size:13.5px;cursor:pointer;white-space:nowrap;'+(active?'background:#fff;font-weight:600;color:#2A2A2A;box-shadow:0 1px 2px rgba(0,0,0,.08)':'background:none;color:#747474;font-weight:500')+'">'+h(label)+' <span style="color:#9a9a9a;font-weight:400">'+count+'</span></button>';
+      };
+      html += '<div style="display:inline-flex;background:#F1EFE8;border-radius:9px;padding:3px;gap:2px;margin-bottom:14px;max-width:100%;overflow:auto">'+
+        tabBtn('joining','Joining today',joiningToday.length)+
+        tabBtn('checks','Checks you ran today',s.history.length)+
+      '</div>';
 
-    /* CHECKS RUN TODAY */
-    if(s.history.length){
-      html += '<div class="rh-card" style="padding:0"><div style="border-radius:8px;overflow:hidden">'+
-        '<div style="padding:14px 20px 8px"><div style="font-size:14px;font-weight:600">Checks you ran today</div>'+
-          '<div style="font-size:12px;color:#747474;margin-top:2px">'+s.history.length+(s.history.length===1?' check':' checks')+'</div></div>';
-      s.history.forEach(function(hh,idx){
-        html += '<button type="button" class="rh-histrow" onclick="openHistory('+idx+')" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 20px;border:0;border-top:1px solid #E0E0E0;background:none;text-align:left;font-family:inherit;cursor:pointer">'+
-          avatar(hh.cand.name,34)+
-          '<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">'+
-            '<span style="font-size:14px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(hh.cand.name)+'</span>'+
-            '<span style="font-size:12px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(hh.cand.rhid+' · '+hh.cand.req)+'</span></span>'+
-          verdictBadge(hh.rows)+
-          '<span class="rh-histtime" style="font-size:12px;color:#747474;flex-shrink:0;white-space:nowrap">'+h(hh.at)+'</span>'+
-          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg>'+
-        '</button>';
-      });
-      html += '</div></div>';
+      if(s.tab==='joining'){
+        html += '<div class="rh-card" style="padding:0">';
+        if(!joiningToday.length){
+          html += '<div style="padding:18px 20px;font-size:13.5px;color:#747474">No candidates at onboarding join today.</div>';
+        } else {
+          var todo=[], donel=[];
+          joiningToday.forEach(function(x){ (latestCheck(x.id)?donel:todo).push(x); });
+          html += '<div style="padding:16px 20px 6px"><div style="font-size:16px;font-weight:600;line-height:1.4">Joining today</div>'+
+            '<div style="font-size:12.5px;color:#747474;margin-top:2px">'+joiningToday.length+' candidate'+(joiningToday.length===1?'':'s')+' · '+todo.length+' to verify, '+donel.length+' done</div></div>';
+          var section = function(title,list,isTodo){
+            if(!list.length) return;
+            html += '<div style="padding:10px 20px 5px;border-top:1px solid #E0E0E0;font-size:11px;font-weight:600;color:#747474;text-transform:uppercase;letter-spacing:.04em">'+title+'</div>';
+            list.forEach(function(x){
+              var lc = latestCheck(x.id);
+              var onclick = isTodo ? ('pick(\''+x.id+'\')') : ('openHistory('+lc.idx+')');
+              html += '<div role="button" tabindex="0" onclick="'+onclick+'" style="display:flex;align-items:center;gap:12px;padding:12px 20px;border-top:1px solid #E0E0E0;cursor:pointer">'+
+                avatar(x.name,34)+
+                '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(x.name)+'</div><div style="font-size:12.5px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(x.rhid+' · '+x.req)+'</div></div>'+
+                worklistBadge(x.id)+
+                (isTodo
+                  ? '<span style="border:1px solid #0076FB;color:#0076FB;border-radius:4px;padding:5px 12px;font-size:13px;font-weight:600;flex-shrink:0">Verify</span>'
+                  : '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg>')+
+              '</div>';
+            });
+          };
+          section('To verify',todo,true);
+          section('Done',donel,false);
+        }
+        html += '</div>';
+      } else {
+        html += '<div class="rh-card" style="padding:0">'+
+          '<div style="padding:16px 20px 6px"><div style="font-size:16px;font-weight:600;line-height:1.4">Your checks today</div>'+
+            '<div style="font-size:12.5px;color:#747474;margin-top:2px">'+(s.history.length?(s.history.length+' check'+(s.history.length===1?'':'s')):'No checks run yet')+'</div></div>';
+        s.history.forEach(function(hh,idx){
+          html += '<button type="button" class="rh-histrow" onclick="openHistory('+idx+')" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 20px;border:0;border-top:1px solid #E0E0E0;background:none;text-align:left;font-family:inherit;cursor:pointer">'+
+            avatar(hh.cand.name,34)+
+            '<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">'+
+              '<span style="font-size:14px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(hh.cand.name)+'</span>'+
+              '<span style="font-size:12px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(hh.cand.rhid+' · '+hh.cand.req)+'</span></span>'+
+            (hh.decision?decisionBadge(hh.decision):verdictBadge(hh.rows))+
+            '<span class="rh-histtime" style="font-size:12px;color:#747474;flex-shrink:0;white-space:nowrap">'+h(hh.at)+'</span>'+
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg>'+
+          '</button>';
+        });
+        html += '</div>';
+        html += '<div class="rh-card" style="padding:0">'+
+          '<div style="padding:16px 20px 6px"><div style="font-size:16px;font-weight:600;line-height:1.4;display:flex;align-items:center;gap:7px"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#747474" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><circle cx="17.5" cy="8.5" r="2.3"/><path d="M16 14.5c2.4 0 4.5 1.2 4.5 4.3"/></svg>Shared with you</div>'+
+            '<div style="font-size:12.5px;color:#747474;margin-top:2px">'+MOCK_SHARED.length+' shared with you</div></div>';
+        MOCK_SHARED.forEach(function(sh){
+          html += '<div role="button" tabindex="0" onclick="sharedToast()" style="display:flex;align-items:center;gap:12px;padding:12px 20px;border-top:1px solid #E0E0E0;cursor:pointer">'+
+            avatar(sh.name,34)+
+            '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(sh.name)+'</div><div style="font-size:12.5px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(sh.rhid+' · '+sh.req+' · from '+sh.from)+'</div></div>'+
+            _pill(sh.label,sh.color,sh.bg)+
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg>'+
+          '</div>';
+        });
+        html += '</div>';
+      }
     }
   }
 
@@ -707,6 +756,8 @@ function render(){
 function onQuery(v){ state._refocus='rh-q'; setState({q:v, deepMiss:null}); }
 function onPickQuery(v){ state._refocus='rh-pick'; setState({pickQ:v}); }
 function pick(id){ var c=CANDIDATES.find(function(x){return x.id===id;}); if(c) select(c); }
+function setTab(t){ setState({tab:t}); }
+function sharedToast(){ toast('Shared reports open once the team backend is connected (demo).'); }
 function changeCandidate(){ reset({roundsConfigured:state.roundsConfigured}); }
 function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click(); }
 function openPicker(){ var el=document.getElementById('rh-file'); if(el) el.click(); }
