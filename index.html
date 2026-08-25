@@ -182,10 +182,6 @@ var state = {
   confirmReshoot:false, viewingHistory:false, decision:null, decisionErr:'', entry:null, tab:'joining', _refocus:null
 };
 
-/* Mock "shared with you" checks for the collaboration tab (illustrative — needs a backend). */
-var MOCK_SHARED = [
-  { name:'Vikram Singh', rhid:'RH48120', req:'Data Engineer', from:'Priya Nair', label:'Review', color:'#B7791F', bg:'#FBF1DE' }
-];
 var _tt=null, _steptimers=[];
 
 /* ---------- helpers ---------- */
@@ -385,7 +381,9 @@ function decisionBadge(dec){ return dec.action==='accept' ? _pill('Accepted','#1
 /* most recent check (history entry) for a candidate id, or null */
 function latestCheck(candId){ for(var i=state.history.length-1;i>=0;i--){ if(state.history[i].cand.id===candId) return {idx:i, hh:state.history[i]}; } return null; }
 /* worklist status badge: decision > verdict > to-verify */
-function worklistBadge(candId){ var lc=latestCheck(candId); if(!lc) return todoBadge(); if(lc.hh.decision) return decisionBadge(lc.hh.decision); return pendingBadge(); }
+/* one check's status: decided -> Accepted/Rejected, else Decision pending. Used in both tabs so they agree. */
+function entryBadge(hh){ return hh.decision ? decisionBadge(hh.decision) : pendingBadge(); }
+function worklistBadge(candId){ var lc=latestCheck(candId); return lc ? entryBadge(lc.hh) : todoBadge(); }
 
 /* big verdict banner at the top of the report */
 function verdictIcon(state, color){
@@ -497,22 +495,10 @@ function render(){
             '<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">'+
               '<span style="font-size:14px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(hh.cand.name)+'</span>'+
               '<span style="font-size:12px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(hh.cand.rhid+' · '+hh.cand.req)+'</span></span>'+
-            (hh.decision?decisionBadge(hh.decision):verdictBadge(hh.rows))+
+            entryBadge(hh)+
             '<span class="rh-histtime" style="font-size:12px;color:#747474;flex-shrink:0;white-space:nowrap">'+h(hh.at)+'</span>'+
             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg>'+
           '</button>';
-        });
-        html += '</div>';
-        html += '<div class="rh-card" style="padding:0">'+
-          '<div style="padding:16px 20px 6px"><div style="font-size:16px;font-weight:600;line-height:1.4;display:flex;align-items:center;gap:7px"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#747474" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5 6-5s6 1.7 6 5"/><circle cx="17.5" cy="8.5" r="2.3"/><path d="M16 14.5c2.4 0 4.5 1.2 4.5 4.3"/></svg>Shared with you</div>'+
-            '<div style="font-size:12.5px;color:#747474;margin-top:2px">'+MOCK_SHARED.length+' shared with you</div></div>';
-        MOCK_SHARED.forEach(function(sh){
-          html += '<div role="button" tabindex="0" onclick="sharedToast()" style="display:flex;align-items:center;gap:12px;padding:12px 20px;border-top:1px solid #E0E0E0;cursor:pointer">'+
-            avatar(sh.name,34)+
-            '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(sh.name)+'</div><div style="font-size:12.5px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(sh.rhid+' · '+sh.req+' · from '+sh.from)+'</div></div>'+
-            _pill(sh.label,sh.color,sh.bg)+
-            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg>'+
-          '</div>';
         });
         html += '</div>';
       }
@@ -762,7 +748,6 @@ function onQuery(v){ state._refocus='rh-q'; setState({q:v, deepMiss:null}); }
 function onPickQuery(v){ state._refocus='rh-pick'; setState({pickQ:v}); }
 function pick(id){ var c=CANDIDATES.find(function(x){return x.id===id;}); if(c) select(c); }
 function setTab(t){ setState({tab:t}); }
-function sharedToast(){ toast('Shared reports open once the team backend is connected (demo).'); }
 function changeCandidate(){ reset({roundsConfigured:state.roundsConfigured}); }
 function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click(); }
 function openPicker(){ var el=document.getElementById('rh-file'); if(el) el.click(); }

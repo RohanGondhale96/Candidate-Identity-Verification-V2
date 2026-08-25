@@ -76,8 +76,12 @@ Notes on those:
   the To-verify group) → **Accepted / Rejected** (decided → Done).
 - The whole row is clickable, no separate "Verify" button: a never-run row starts a fresh
   check; a row that's already been run reopens its report (to decide or review).
-- **Checks you ran today** = "Your checks today" (your run history) + a **Shared with you**
-  section.
+- **Checks you ran today** = "Your checks today" (your run history). (A "Shared with you"
+  section was prototyped and removed — bring it back only with a real backend.)
+- **Badge is consistent across both tabs** (`entryBadge`): a run-but-undecided check shows
+  **Decision pending** in *both* the worklist and the checks list; a decided one shows
+  **Accepted/Rejected** in both. The raw verdict (Match/Review/No match) lives in the report,
+  not in the list badges.
 - **Tab style** is the **segmented control** (the beige pill with a white active tab), kept on
   purpose — an underline-tab variant was tried and reverted. Don't "fix" it back to underline.
 - Kept small for the demo; at real-company volume this is where you'd add filtering / paging.
@@ -87,9 +91,8 @@ Notes on those:
 Nothing here persists to a server — it lives in the browser session and resets on reload:
 
 - **Decisions** (Accept/Reject) and their audit trail — stored in-session on the check record.
-- **Share report** and the **"Shared with you"** list — the shared row (Vikram Singh, "from
-  Priya Nair") is hard-coded illustrative data; clicking it just shows a toast. Real sharing
-  needs users, notifications, and shared state.
+- **Share report** — in-page only (no real recipients/notifications). Currently hidden behind
+  `SHOW_REPORT_ACTIONS`. (The earlier "Shared with you" mock list was removed.)
 - **Run history** ("Checks you ran today") — resets on reload.
 
 ## Copy / microcopy
