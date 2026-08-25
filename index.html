@@ -485,22 +485,7 @@ function render(){
           return '<div><div style="font-size:13px;color:#747474;margin-bottom:3px">'+h(f.k)+'</div><div style="font-size:14px;font-weight:600;word-break:break-word">'+h(f.v)+'</div></div>';
         }).join('')+
       '</div>';
-    if(c.photos.length && !s.done){
-      // once a report is shown below, this strip is redundant, so hide it after a run
-      html += '<div style="margin-top:18px;padding-top:16px;border-top:1px solid #E0E0E0;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><div style="display:flex;gap:8px;flex-wrap:wrap">';
-      var faceIdx = []; c.photos.forEach(function(p,i){ if(p.src!=='document') faceIdx.push(i); });
-      faceIdx.slice(0,6).forEach(function(i){ var p=c.photos[i];
-        html += '<button type="button" onclick="openLightbox('+i+')" title="'+h(p.label)+'" style="width:56px;height:68px;padding:0;border:1px solid #DDD;border-radius:4px;overflow:hidden;position:relative;cursor:pointer">'+photoTile(p,c.id+p.label,'contain')+'</button>';
-      });
-      var appN = c.photos.filter(function(p){return p.src==='application';}).length;
-      var intN = c.photos.filter(function(p){return p.src==='interview';}).length;
-      var docN = c.photos.filter(function(p){return p.src==='document';}).length;
-      var parts = [];
-      if(appN) parts.push(appN+' application');
-      if(intN) parts.push(intN+' interview');
-      if(docN) parts.push(docN+' document'+(docN>1?'s':''));
-      html += '</div><div style="font-size:13px;color:#747474">'+h(c.photos.length+' on file — '+parts.join(', '))+'</div></div>';
-    } else if(!c.photos.length){
+    if(!c.photos.length){
       html += '<div class="note" style="margin-top:18px">No photos on file for this candidate. Identity verification needs at least one photo captured during application or interview.</div>';
     }
     html += '</div>';
@@ -538,13 +523,17 @@ function render(){
     html += '</div>';
   }
 
-  /* 4 + 5. RUN + REPORT */
-  if(s.running || s.done){
+  /* 3b + 4 + 5. PHOTOS-ON-FILE TABLE — one surface across idle / running / done */
+  if(c && c.photos.length){
+    var _done = s.done, _running = s.running, _idle = !_done && !_running;
+    var tableRows = (_running || _done) ? s.rows : c.photos;
     html += '<div class="rh-card" style="padding:0"><div style="border-radius:8px;overflow:hidden">';
-    if(s.running){
+    if(_running){
       html += '<div style="display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid #E0E0E0;font-size:13px;color:#747474"><span style="width:14px;height:14px;border:2px solid #E0E0E0;border-top-color:#0076FB;border-radius:50%;animation:rh-spin .7s linear infinite;flex-shrink:0"></span>'+h('Comparing against '+c.photos.length+' photos on file…')+'</div>';
+    } else if(_idle){
+      html += '<div style="padding:13px 20px;border-bottom:1px solid #E0E0E0;font-size:13px;color:#747474">'+h('Comparing against '+c.photos.length+' photos on file')+'</div>';
     }
-    if(s.done){
+    if(_done){
       html += '<div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid #E0E0E0">'+
         '<div style="width:48px;height:60px;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;flex-shrink:0;position:relative">'+uploadedImg()+'</div>'+
         '<div style="flex:1 1 180px;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.4">Photo taken today</div>'+
@@ -575,17 +564,26 @@ function render(){
     ];
     groups.forEach(function(g){
       var idxs = [];
-      s.rows.forEach(function(r,i){ if(g.test(r)) idxs.push(i); });
+      tableRows.forEach(function(r,i){ if(g.test(r)) idxs.push(i); });
       if(!idxs.length) return;
       html += '<div class="rpt-head" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 20px;background:#F7F8FA;border-bottom:1px solid #DDD;font-size:12px;font-weight:600;color:#747474">'+g.title+(g.sub?' <span style="font-weight:400;color:#9a9a9a">· '+g.sub+'</span>':'')+'</div>';
       idxs.forEach(function(i){
-        var r = s.rows[i];
+        var r = tableRows[i];
         var scored = r.status==='done';
         var matched = rowMatched(r);
         var isDoc = r.src==='document';
         var opacity = r.status==='waiting' ? 0.38 : 1;
+        var clickable = _idle || _done;
+        var onclick = _idle ? 'openLightbox('+i+')' : (_done ? 'toggleRow('+i+')' : '');
+        var simCell = scored
+          ? '<span style="width:74px;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;flex-shrink:0;color:'+(matched?'#1a8a3a':'#EB4040')+'">'+r.score+'%</span>'
+          : (r.status==='error'
+              ? '<span title="'+h(r.err||'')+'" style="width:74px;text-align:right;flex-shrink:0;color:#EB4040;font-size:12px;font-weight:600;line-height:1.2">Couldn\'t<br>compare</span>'
+              : (_idle
+                  ? '<span style="width:74px;text-align:right;flex-shrink:0;color:#B4B2A9;font-size:16px">—</span>'
+                  : '<span style="width:74px;height:20px;border-radius:4px;flex-shrink:0;background:linear-gradient(90deg,#EFEFEF 25%,#F9FAFB 50%,#EFEFEF 75%);background-size:220% 100%;animation:rh-shim 1.3s linear infinite"></span>'));
         html += '<div style="border-bottom:1px solid #E0E0E0;opacity:'+opacity+'">'+
-          '<button type="button" class="rpt-row" onclick="toggleRow('+i+')" style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 20px;background:none;border:0;text-align:left;font-family:inherit;cursor:'+(s.done?'pointer':'default')+'">'+
+          '<button type="button" class="rpt-row"'+(onclick?(' onclick="'+onclick+'"'):'')+' style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 20px;background:none;border:0;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default')+'">'+
             '<span style="width:60px;height:74px;border-radius:6px;overflow:hidden;position:relative;flex-shrink:0;background:#EFEFEF;border:1px solid #DDD">'+photoTile(r,(c?c.id:'')+r.label,'contain')+
               (r.status==='running'?'<span style="position:absolute;left:0;right:0;height:34%;background:linear-gradient(180deg,rgba(0,118,251,0) 0%,rgba(0,118,251,.55) 55%,rgba(0,118,251,0) 100%);animation:rh-sweep 1.05s ease-in-out infinite"></span>':'')+
             '</span>'+
@@ -594,14 +592,10 @@ function render(){
               (r.status==='error' && r.err ? '<span style="font-size:12px;color:#EB4040;line-height:1.35">'+h(r.err)+'</span>' : '')+
             '</span>'+
             '<span class="rpt-cap" style="width:170px;flex-shrink:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px">'+h(r.date)+'</span><span style="font-size:12.5px;color:#747474">'+h(r.by||'')+'</span></span>'+
-            (scored
-              ? '<span style="width:74px;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;flex-shrink:0;color:'+(matched?'#1a8a3a':'#EB4040')+'">'+r.score+'%</span>'
-              : r.status==='error'
-                ? '<span title="'+h(r.err||'')+'" style="width:74px;text-align:right;flex-shrink:0;color:#EB4040;font-size:12px;font-weight:600;line-height:1.2">Couldn\'t<br>compare</span>'
-                : '<span style="width:74px;height:20px;border-radius:4px;flex-shrink:0;background:linear-gradient(90deg,#EFEFEF 25%,#F9FAFB 50%,#EFEFEF 75%);background-size:220% 100%;animation:rh-shim 1.3s linear infinite"></span>')+
-            (s.done ? chevron(s.open===i?'180deg':'0deg') : '<span style="width:18px;flex-shrink:0"></span>')+
+            simCell+
+            (_done ? chevron(s.open===i?'180deg':'0deg') : '<span style="width:18px;flex-shrink:0"></span>')+
           '</button>';
-        if(s.done && s.open===i){
+        if(_done && s.open===i){
           html += '<div style="padding:0 20px 18px;background:#F7F8FA"><div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+
             '<div><div style="font-size:13px;color:#747474;margin-bottom:6px">'+h(r.label)+'</div><div style="width:100%;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+photoTile(r,(c?c.id:'')+r.label,'contain')+'</div></div>'+
             '<div><div style="font-size:13px;color:#747474;margin-bottom:6px">Photo taken today</div><div style="width:100%;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+uploadedImg('contain')+'</div></div>'+
