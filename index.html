@@ -394,7 +394,7 @@ function verdictIcon(state, color){
 }
 function verdictBanner(rows){
   var v = overallVerdict(rows);
-  var sub = v.total ? ('Matched '+v.matched+' of '+v.total+' photos'+(v.best!=null?' · strongest match '+v.best+'%':'')) : 'No photos compared';
+  var sub = v.total ? ('Matched '+v.matched+' of '+v.total+' photos') : 'No photos compared';
   return '<div style="display:flex;align-items:center;gap:14px;padding:16px 20px;background:'+v.bg+';border-bottom:1px solid #E0E0E0">'+
     '<span style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid '+v.color+'40;display:grid;place-items:center;flex-shrink:0">'+verdictIcon(v.state,v.color)+'</span>'+
     '<div style="min-width:0"><div style="font-size:20px;font-weight:700;color:'+v.color+';line-height:1.2">'+h(v.label)+'</div>'+
@@ -677,7 +677,7 @@ function render(){
           '<div style="font-size:14px;font-weight:600">Your decision</div>'+
           '<div style="font-size:12.5px;color:#747474;margin:2px 0 10px">You have the final say. Confirm or reject the candidate\'s identity.</div>'+
           '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">'+
-            '<span style="display:inline-flex;align-items:center;gap:6px;background:'+dv.bg+';color:'+dv.color+';border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:'+dv.color+';flex-shrink:0"></span>'+h(dv.total?(dv.label+' · '+dv.matched+' of '+dv.total+(dv.best!=null?' · strongest '+dv.best+'%':'')):dv.label)+'</span>'+
+            '<span style="display:inline-flex;align-items:center;gap:6px;background:'+dv.bg+';color:'+dv.color+';border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:'+dv.color+';flex-shrink:0"></span>'+h(dv.total?(dv.label+' · '+dv.matched+' of '+dv.total):dv.label)+'</span>'+
             '<span style="font-size:12.5px;color:#747474">'+h(suggest)+'</span>'+
           '</div>'+
           '<textarea id="rh-decision-note" placeholder="Add a note (required when rejecting)" style="width:100%;box-sizing:border-box;min-height:52px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid #DDD;border-radius:8px;background:#fff;margin-bottom:'+(s.decisionErr?'6px':'12px')+'"></textarea>'+
