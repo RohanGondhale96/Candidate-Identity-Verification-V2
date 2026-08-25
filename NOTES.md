@@ -21,11 +21,15 @@ Notes on those:
 
 ## Overall verdict logic
 
-- The report shows a **Match / Review / No match** banner: best-match + "matched N of M",
-  never an average.
+- The report shows a **Match / Review / No match** banner summarised only by the **count**:
+  "Matched N of M photos". No single percentage — deliberately.
   - **Match** — every photo passed its bar.
   - **Review** — some passed, some didn't (e.g. one low reference photo).
   - **No match** — nothing passed.
+- **Why no % in the summary:** the count *is* the aggregate. A single number was dropped on
+  purpose — an average fights the "scores are never averaged" rule and mixes the 80% / 60%
+  bars; "strongest match" was optimistic and arbitrary. The per-photo scores below carry the
+  detail. (`overallVerdict()` still computes `best`, but nothing displays it.)
 - **Source-aware match bars:** application/interview photos pass at **80%+**; identity
   documents pass at **60%+** (they're older/lower-resolution). Change these in the
   `photoBar()` function.
