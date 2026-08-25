@@ -34,6 +34,15 @@ Notes on those:
   documents pass at **60%+** (they're older/lower-resolution). Change these in the
   `photoBar()` function.
 
+## Report table columns
+
+- The scored rows are grouped (**Application & interview photos** / **Identity documents**).
+  Each group header labels the columns — **Captured** and **Similarity** — rather than one
+  header at the very top, so the labels stay attached to their group. Score cells are just the
+  number ("92%"), no "% match" repeated per row.
+- The column labels show on **desktop only**; on mobile the rows reflow (date drops under the
+  name), so the labels hide — but the group titles still show.
+
 ## Recruiter Accept / Reject decision
 
 - Below the report, the recruiter makes the final call — **Accept** or **Reject**. The
