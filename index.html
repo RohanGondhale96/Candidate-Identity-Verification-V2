@@ -426,7 +426,7 @@ function render(){
   if(s.searchOpen){
     html += '<div class="rh-card">'+
       '<div style="font-size:16px;font-weight:600;line-height:1.5;margin-bottom:2px">Identity check</div>'+
-      '<p style="margin:0 0 20px;font-size:14px;color:#747474;line-height:1.55">Compare the person who showed up today against the candidate's application and interview photos.</p>'+
+      '<p style="margin:0 0 20px;font-size:14px;color:#747474;line-height:1.55">Compare the person who showed up today against the candidate\'s application and interview photos.</p>'+
       '<label for="rh-q" style="font-size:14px;font-weight:600;color:#555">Search candidate</label>'+
       '<div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid #A5A5A5;padding:6px 0">'+searchIcon()+
         '<input id="rh-q" type="search" placeholder="Search by name, RHID or email" autocomplete="off" value="'+h(s.q)+'" '+(s.roundsConfigured?'':'disabled')+' oninput="onQuery(this.value)" style="flex:1;min-width:0;border:0;outline:0;background:none;font-family:inherit;font-size:14px;font-weight:500;color:#2A2A2A">'+
@@ -654,7 +654,7 @@ function render(){
       });
     });
 
-    if(_done){ html += '<p style="margin:0;padding:14px 20px;font-size:12.5px;color:#747474;line-height:1.6">Interview photos count as a match at 80%+, identity documents at 60%+ (they're older and lower quality). Open any row to see both photos side by side.</p>'; }
+    if(_done){ html += '<p style="margin:0;padding:14px 20px;font-size:12.5px;color:#747474;line-height:1.6">Interview photos count as a match at 80%+, identity documents at 60%+ (they\'re older and lower quality). Open any row to see both photos side by side.</p>'; }
 
     // recruiter's final Accept / Reject decision
     if(_done){
