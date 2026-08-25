@@ -52,10 +52,11 @@ Notes on those:
   collapses to a record: *"Accepted/Rejected by A. Sharma · &lt;when&gt; · &lt;note&gt;"* with a
   **Change** link (logged). The decision is separate from the verdict — you can accept a
   Review or reject a Match.
-- The verdict appears in **two places on purpose**: the big banner at the top of the report
-  (headline first), and a **compact recap chip** inside the decision bar (e.g. *"Match · 8 of
-  8"*) right above Accept/Reject — so the conclusion is in view at the moment of deciding,
-  without scrolling back up. Not a bug; it's deliberate.
+- **Layout is evidence → verdict → decision.** The verdict banner sits **just above the
+  decision bar** (not at the top of the report): the recruiter reads the scored rows first,
+  then the overall verdict, then makes the call — a natural build to the conclusion. (An
+  earlier version had the banner at the top with a small recap chip in the decision bar; that
+  was replaced by this single, better-placed banner.)
 - The "by A. Sharma" name and timestamps are **hard-coded placeholders** — in production
   they'd come from the logged-in user and server clock.
 
