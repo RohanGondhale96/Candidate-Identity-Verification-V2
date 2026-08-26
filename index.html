@@ -143,9 +143,9 @@ var CANDIDATES = [
       {label:'Round 2 — technical', src:'interview', date:'02 Jun 2026, 15:20', by:'R. Menon', score:61, tone:'dark'},
       {label:'Round 3 — manager round', src:'interview', date:'18 Jun 2026, 11:05', by:'S. Iyer', score:91, tone:'clear'},
       {label:'Round 4 — HR discussion', src:'interview', date:'27 Jun 2026, 16:40', by:'A. Sharma', score:89, tone:'soft'},
-      {label:'Aadhaar card', src:'document', date:'Identity document', by:null},
-      {label:'PAN card', src:'document', date:'Identity document', by:null},
-      {label:'Driving licence', src:'document', date:'Identity document', by:null}
+      {label:'Aadhaar card', src:'document', date:'Identity document', by:null, score:71},
+      {label:'PAN card', src:'document', date:'Identity document', by:null, cant:true},
+      {label:'Driving licence', src:'document', date:'Identity document', by:null, score:22}
     ]},
   { id:'c2', name:'Arjun Reddy', rhid:'RH47980', email:'arjun.reddy@outlook.com', phone:'+91 99872 08802',
     req:'Product Designer', reqid:'REQ-2244', stage:'Hired', eligible:true, joining:'12 Aug 2026',
@@ -153,9 +153,9 @@ var CANDIDATES = [
       {label:'Application photo', src:'application', date:'21 Mar 2026', by:null, score:96, tone:'clear'},
       {label:'Round 1 — portfolio review', src:'interview', date:'09 Apr 2026, 12:00', by:'N. Bhatia', score:93, tone:'clear'},
       {label:'Round 2 — craft interview', src:'interview', date:'24 Apr 2026, 14:30', by:'T. Rao', score:95, tone:'clear'},
-      {label:'Aadhaar card', src:'document', date:'Identity document', by:null},
-      {label:'PAN card', src:'document', date:'Identity document', by:null},
-      {label:'Driving licence', src:'document', date:'Identity document', by:null}
+      {label:'Aadhaar card', src:'document', date:'Identity document', by:null, score:88},
+      {label:'PAN card', src:'document', date:'Identity document', by:null, score:84},
+      {label:'Driving licence', src:'document', date:'Identity document', by:null, score:79}
     ]},
   { id:'c3', name:'Meera Krishnan', rhid:'RH48466', email:'meera.k@yahoo.in', phone:'+91 91234 51129',
     req:'Data Analyst', reqid:'REQ-2310', stage:'Onboarding', eligible:true, joining:'13 Aug 2026', photos:[] }
@@ -288,15 +288,23 @@ function run(){
   var token=_runToken;
   if(!state.photo){ setState({upErr:'Upload a joining-day photo first.'}); return; }
   // all rows start scanning at once; each settles independently as its Gemini call returns
-  var rows = state.cand.photos.map(function(p){ return Object.assign({}, p, {status:'running', score:null, reason:'', err:''}); });
+  var rows = state.cand.photos.map(function(p){ return Object.assign({}, p, {status:'running', score:null, reason:'', err:'', review:null, asked:false}); });
   setState({ rows:rows, running:true, done:false, open:null, shared:[], viewingHistory:false, decision:null, decisionErr:'', entry:null }, function(){
     var photos = state.cand.photos;
     if(!photos.length){ setState({running:false, done:true}); return; }
     photos.forEach(function(p, i){
-      var work = (!p.img) ? Promise.reject(new Error('No stored photo on file for this round.'))
-                          : geminiCompare(state.photo, p.img);
-      work.then(function(res){ settleRow(i, token, res, null); })
-          .catch(function(err){ settleRow(i, token, null, err); });
+      if(USE_LIVE_SCORING){
+        var work = (!p.img) ? Promise.reject(new Error('No stored photo on file for this round.'))
+                            : geminiCompare(state.photo, p.img);
+        work.then(function(res){ settleRow(i, token, res, null); })
+            .catch(function(err){ settleRow(i, token, null, err); });
+      } else {
+        var t = setTimeout(function(){
+          if(p.cant) settleRow(i, token, null, new Error('No face detected in this document'));
+          else settleRow(i, token, {similarity:p.score, confidence:90, samePerson:(p.score>=50), reason:''}, null);
+        }, 320 + i*220);
+        _steptimers.push(t);
+      }
     });
   });
 }
@@ -349,12 +357,121 @@ function pageheader(){
   '</div>';
 }
 
-/* score bands: >80 green, 50-80 amber, <50 red */
-function scoreColor(s){ return s>80 ? '#1a8a3a' : s>=50 ? '#B7791F' : '#EB4040'; }
+/* Scoring engine flag. Live Gemini returns near-constant per-category scores
+   (every interview ~92, every document ~96) because it is not a face-recognition
+   model - so for the demo we drive the report from seeded per-photo scores that
+   have real spread. Flip to true to call Gemini again; the real fix is a face
+   embedding engine (Rekognition / Azure Face / ArcFace) - see NOTES.md. */
+var USE_LIVE_SCORING = false;
 
-/* per-photo match bar: identity documents are older/low-res, so they pass at a lower bar */
-function photoBar(r){ return (r && r.src==='document') ? 60 : 80; }
-function rowMatched(r){ return !!(r && r.status==='done' && typeof r.score==='number' && r.score >= photoBar(r)); }
+/* colour ramp for the raw score, shown only in the expanded row */
+function scoreColor(s){ return s>=85 ? '#1a8a3a' : s>=50 ? '#B7791F' : '#EB4040'; }
+
+/* source-aware bars: photos match at 85+, documents (older/low-res) at 65+.
+   below the review floor (photos 50, docs 40) it is a hard no-match. */
+function photoBar(r){ return (r && r.src==='document') ? 65 : 85; }
+function reviewFloor(r){ return (r && r.src==='document') ? 40 : 50; }
+
+/* the state the model produced for a row: match | review | nomatch | cant | null(not scored yet) */
+function photoState(r){
+  if(!r) return null;
+  if(r.status==='error') return 'cant';
+  if(r.status!=='done' || typeof r.score!=='number') return null;
+  if(r.score >= photoBar(r)) return 'match';
+  if(r.score >= reviewFloor(r)) return 'review';
+  return 'nomatch';
+}
+function rowMatched(r){ return photoState(r)==='match'; }
+
+/* reason codes a human records on a review / no-match row (structured, not free text) */
+var CODE_LABELS = { quality:"Same person · poor photo quality", appearance:"Same person · appearance changed", different:"Different person", unsure:"Can’t tell" };
+var CODE_ORDER = ['quality','appearance','different','unsure'];
+/* pos = human vouches it is the same person, neg = human says different, open = unsure / undecided */
+function codeOutcome(code){ return (code==='quality'||code==='appearance') ? 'pos' : (code==='different' ? 'neg' : 'open'); }
+/* a review/nomatch row still needs a human once it has no resolving answer */
+function rowUnresolved(r){ var st=photoState(r); if(st!=='review'&&st!=='nomatch') return false; return codeOutcome(r.review||'')!=='pos' && codeOutcome(r.review||'')!=='neg'; }
+
+/* single per-row badge: the model finding, replaced by the human answer once reviewed */
+function rowBadge(r){
+  var st = photoState(r);
+  if(st==='cant') return _pill("Couldn’t compare",'#5F5E5A','#EFEFEF');
+  if(r.review){
+    var o = codeOutcome(r.review);
+    if(o==='pos') return _pill('Reviewed · same person','#1a8a3a','#E7F4EC');
+    if(o==='neg') return _pill('Reviewed · different person','#D93025','#FDECEC');
+  }
+  if(st==='match')   return _pill('Match','#1a8a3a','#E7F4EC');
+  if(st==='review')  return _pill('Needs review','#B7791F','#FBF1DE');
+  if(st==='nomatch') return _pill('Not a match','#D93025','#FDECEC');
+  return '';
+}
+
+/* banner state machine: reports the current state, never invents a fresh verdict,
+   and never turns green off human vouching. Keeps model-matched vs human-vouched legible. */
+function reportSummary(rows){
+  var scored = (rows||[]).filter(function(r){ return photoState(r)!==null; });
+  var cant = scored.filter(function(r){ return photoState(r)==='cant'; }).length;
+  var comparable = scored.filter(function(r){ return photoState(r)!=='cant'; });
+  var Y = comparable.length;
+  var modelMatch=0, vouchPos=0, vouchNeg=0, unsure=0, openReview=0, openNoMatch=0;
+  comparable.forEach(function(r){
+    var st=photoState(r), o = r.review ? codeOutcome(r.review) : null;
+    if(o==='pos'){ vouchPos++; return; }
+    if(o==='neg'){ vouchNeg++; return; }
+    if(r.review==='unsure'){ unsure++; return; }
+    if(st==='match') modelMatch++;
+    else if(st==='review') openReview++;
+    else if(st==='nomatch') openNoMatch++;
+  });
+  var matched = modelMatch + vouchPos;
+  var unresolved = openReview + openNoMatch + unsure;
+  var reviewedCount = vouchPos + vouchNeg;
+  var cantNote = cant ? (' · '+cant+' document'+(cant>1?'s':'')+" couldn’t be read") : '';
+  var base = {matched:matched, total:Y, cant:cant, unresolved:unresolved, reviewedCount:reviewedCount, vouchPos:vouchPos};
+  function out(o){ for(var k in base) o[k]=base[k]; return o; }
+  if(Y===0){
+    return out({tier:'inconclusive', color:'#5F5E5A', bg:'#F1EFE8', title:"Couldn’t run the check", sub:'No readable photos to compare against.'+cantNote, suggest:"Can’t verify — nothing to compare"});
+  }
+  if(vouchNeg>0 || openNoMatch>0){
+    var m = vouchNeg + openNoMatch, need = openReview + unsure;
+    var bits = [matched+' of '+Y+' comparable photos match'];
+    if(need>0) bits.push(need+' need'+(need>1?'':'s')+' review');
+    bits.push(m===1 ? "1 doesn’t match" : m+" don’t match");
+    return out({tier:'mismatch', color:'#D93025', bg:'#FDECEC', title:'Possible mismatch', sub:bits.join(' · ')+cantNote, suggest:"Suggested: Can’t confirm"});
+  }
+  if(openReview>0 || unsure>0){
+    var n = openReview + unsure;
+    return out({tier:'review', color:'#B7791F', bg:'#FBF1DE', title:'Needs review', sub:matched+' of '+Y+' comparable photos match · '+n+' need'+(n>1?'':'s')+' a closer look'+cantNote, suggest:'Your call'});
+  }
+  if(vouchPos>0){
+    return out({tier:'reviewed', color:'#444441', bg:'#F1EFE8', title:'Reviewed by A. Sharma', sub:modelMatch+' photo'+(modelMatch===1?'':'s')+' matched · '+vouchPos+' confirmed by your review'+cantNote, suggest:'Suggested: Confirm'});
+  }
+  return out({tier:'match', color:'#1a8a3a', bg:'#E7F4EC', title:'Match', sub:matched+' of '+Y+' comparable photos match'+cantNote, suggest:'Suggested: Confirm'});
+}
+function bannerIcon(tier, color){
+  if(tier==='review')       return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>';
+  if(tier==='mismatch')     return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="'+color+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10M17 7L7 17"/></svg>';
+  if(tier==='inconclusive') return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.6v.1"/></svg>';
+  return '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="'+color+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+}
+/* structured reason codes inside an expanded review / no-match row */
+function reasonCodes(i, r){
+  var out = '<div style="font-size:13px;font-weight:600;margin-top:14px">What did you find?</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">';
+  CODE_ORDER.forEach(function(code){
+    var on = r.review===code, neg = code==='different';
+    var bd = neg?'#E24B4A':'#378ADD', bg = neg?'#FDECEC':'#E6F1FB', col = neg?'#A32D2D':'#185FA5';
+    out += '<button type="button" onclick="resolveRow('+i+',\''+code+'\')" style="border:'+(on?('2px solid '+bd):'1px solid #DDD')+';background:'+(on?bg:'#fff')+';color:'+(on?col:'#444')+';border-radius:8px;padding:'+(on?'7px 11px':'8px 12px')+';font-size:12.5px;font-weight:'+(on?'600':'400')+';cursor:pointer;font-family:inherit">'+h(CODE_LABELS[code])+'</button>';
+  });
+  out += '</div>';
+  if(r.review){
+    var o = codeOutcome(r.review), col = o==='neg'?'#D93025':(o==='pos'?'#1a8a3a':'#B7791F');
+    out += '<div style="font-size:12px;color:'+col+';margin-top:9px;display:inline-flex;align-items:center;gap:5px">'+
+      (o==='open' ? '' : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>')+
+      'Recorded: '+h(CODE_LABELS[r.review])+'</div>';
+  }
+  return out;
+}
 
 /* overall verdict across all scored photos, using the source-aware bars */
 function overallVerdict(rows){
@@ -377,7 +494,7 @@ function verdictBadge(rows){
 function _pill(txt,color,bg){ return '<span style="display:inline-flex;align-items:center;gap:6px;background:'+bg+';color:'+color+';border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap"><span style="width:6px;height:6px;border-radius:50%;background:'+color+';flex-shrink:0"></span>'+h(txt)+'</span>'; }
 function todoBadge(){ return _pill('To verify','#5F5E5A','#ECEEF1'); }
 function pendingBadge(){ return _pill('Decision pending','#B7791F','#FBF1DE'); }
-function decisionBadge(dec){ return dec.action==='accept' ? _pill('Accepted','#1a8a3a','#E7F4EC') : _pill('Rejected','#D93025','#FDECEC'); }
+function decisionBadge(dec){ return dec.action==='confirm' ? _pill('Confirmed','#1a8a3a','#E7F4EC') : _pill("Can’t confirm",'#D93025','#FDECEC'); }
 /* most recent check (history entry) for a candidate id, or null */
 function latestCheck(candId){ for(var i=state.history.length-1;i>=0;i--){ if(state.history[i].cand.id===candId) return {idx:i, hh:state.history[i]}; } return null; }
 /* worklist status badge: decision > verdict > to-verify */
@@ -392,13 +509,27 @@ function verdictIcon(state, color){
   return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>';
 }
 function verdictBanner(rows){
-  var v = overallVerdict(rows);
-  var sub = v.total ? ('Matched '+v.matched+' of '+v.total+' photos') : 'No photos compared';
+  var v = reportSummary(rows);
   return '<div style="display:flex;align-items:center;gap:14px;padding:16px 20px;background:'+v.bg+';border-bottom:1px solid #E0E0E0">'+
-    '<span style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid '+v.color+'40;display:grid;place-items:center;flex-shrink:0">'+verdictIcon(v.state,v.color)+'</span>'+
-    '<div style="min-width:0"><div style="font-size:20px;font-weight:700;color:'+v.color+';line-height:1.2">'+h(v.label)+'</div>'+
-      '<div style="font-size:13px;color:'+v.color+';margin-top:2px">'+h(sub)+'</div></div>'+
+    '<span style="width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid '+v.color+'40;display:grid;place-items:center;flex-shrink:0">'+bannerIcon(v.tier,v.color)+'</span>'+
+    '<div style="min-width:0"><div style="font-size:20px;font-weight:700;color:'+v.color+';line-height:1.2">'+h(v.title)+'</div>'+
+      '<div style="font-size:13px;color:'+v.color+';margin-top:2px">'+h(v.sub)+'</div></div>'+
   '</div>';
+}
+/* amber jump strip: sends the recruiter to the rows that still need attention (nothing hidden) */
+function jumpStrip(rows){
+  var v = reportSummary(rows);
+  var pending = v.unresolved + (v.tier==='mismatch' ? 0 : 0);
+  var parts = [];
+  var need = (rows||[]).filter(function(r){ return photoState(r)==='review' && rowUnresolved(r); }).length + (rows||[]).filter(function(r){ return r.review==='unsure'; }).length;
+  var no  = (rows||[]).filter(function(r){ var st=photoState(r); return (st==='nomatch' && rowUnresolved(r)) || codeOutcome(r.review||'')==='neg'; }).length;
+  if(need>0) parts.push(need+' photo'+(need>1?'s':'')+' need'+(need>1?'':'s')+' review');
+  if(no>0)   parts.push(no+(no>1?" don’t match":" doesn’t match"));
+  if(!parts.length) return '';
+  return '<button type="button" onclick="jumpToReview()" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:11px 20px;background:#FBF1DE;border:0;border-bottom:1px solid #E0E0E0;font-family:inherit;cursor:pointer">'+
+    '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>'+
+    '<span style="font-size:13px;color:#8a6414;font-weight:600">'+h(parts.join(' · '))+'</span>'+
+  '</button>';
 }
 
 function render(){
@@ -589,6 +720,9 @@ function render(){
     }
 
 
+    // jump strip to the rows that still need attention (only once results are in)
+    if(_done){ html += jumpStrip(s.rows); }
+
     // rows grouped by source: application/interview photos, then identity documents
     var groups = [
       {title:'Application &amp; interview photos', sub:'', test:function(r){return r.src!=='document';}},
@@ -600,49 +734,52 @@ function render(){
       if(!idxs.length) return;
       html += '<div class="rpt-head" style="display:flex;align-items:center;gap:14px;padding:10px 20px;background:#F7F8FA;border-bottom:1px solid #DDD;font-size:12px;font-weight:600;color:#747474">'+
         '<span style="flex:1;min-width:0">'+g.title+(g.sub?' <span style="font-weight:400;color:#9a9a9a">· '+g.sub+'</span>':'')+'</span>'+
-        '<span class="rpt-simhead" style="width:170px;flex-shrink:0">Captured</span>'+
-        '<span class="rpt-simhead" style="width:74px;text-align:right;flex-shrink:0">Similarity</span>'+
-        '<span class="rpt-simhead" style="width:18px;flex-shrink:0"></span>'+
       '</div>';
       idxs.forEach(function(i){
         var r = tableRows[i];
-        var scored = r.status==='done';
-        var matched = rowMatched(r);
-        var isDoc = r.src==='document';
+        var st = photoState(r);
+        var isCant = st==='cant';
         var opacity = r.status==='waiting' ? 0.38 : 1;
-        var clickable = _idle || _done;
-        var onclick = _idle ? 'openLightbox('+i+')' : (_done ? 'toggleRow('+i+')' : '');
-        var simCell = scored
-          ? '<span style="width:74px;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;flex-shrink:0;color:'+(matched?'#1a8a3a':'#EB4040')+'">'+r.score+'%</span>'
-          : (r.status==='error'
-              ? '<span title="'+h(r.err||'')+'" style="width:74px;text-align:right;flex-shrink:0;color:#EB4040;font-size:12px;font-weight:600;line-height:1.2">Couldn\'t<br>compare</span>'
-              : (_idle
-                  ? '<span style="width:74px;text-align:right;flex-shrink:0;color:#B4B2A9;font-size:16px">—</span>'
-                  : '<span style="width:74px;height:20px;border-radius:4px;flex-shrink:0;background:linear-gradient(90deg,#EFEFEF 25%,#F9FAFB 50%,#EFEFEF 75%);background-size:220% 100%;animation:rh-shim 1.3s linear infinite"></span>'));
-        html += '<div style="border-bottom:1px solid #E0E0E0;opacity:'+opacity+'">'+
+        var expandable = _done && !isCant;
+        var onclick = _idle ? 'openLightbox('+i+')' : (expandable ? 'toggleRow('+i+')' : '');
+        var clickable = !!onclick;
+        var badgeCell = st ? '<span style="flex-shrink:0">'+rowBadge(r)+'</span>'
+          : (_idle
+              ? '<span style="flex-shrink:0;color:#B4B2A9;font-size:16px">—</span>'
+              : '<span style="width:96px;height:22px;border-radius:999px;flex-shrink:0;background:linear-gradient(90deg,#EFEFEF 25%,#F9FAFB 50%,#EFEFEF 75%);background-size:220% 100%;animation:rh-shim 1.3s linear infinite"></span>');
+        html += '<div id="rpt-row-'+i+'" style="border-bottom:1px solid #E0E0E0;opacity:'+opacity+'">'+
           '<button type="button" class="rpt-row"'+(onclick?(' onclick="'+onclick+'"'):'')+' style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 20px;background:none;border:0;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default')+'">'+
-            '<span style="width:60px;height:74px;border-radius:6px;overflow:hidden;position:relative;flex-shrink:0;background:#EFEFEF;border:1px solid #DDD">'+photoTile(r,(c?c.id:'')+r.label,'contain')+
+            '<span style="width:66px;height:81px;border-radius:6px;overflow:hidden;position:relative;flex-shrink:0;background:#EFEFEF;border:1px solid #DDD">'+photoTile(r,(c?c.id:'')+r.label,'contain')+
               (r.status==='running'?'<span style="position:absolute;left:0;right:0;height:34%;background:linear-gradient(180deg,rgba(0,118,251,0) 0%,rgba(0,118,251,.55) 55%,rgba(0,118,251,0) 100%);animation:rh-sweep 1.05s ease-in-out infinite"></span>':'')+
             '</span>'+
-            '<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:600;line-height:1.35">'+h(r.label)+'</span>'+
-              (scored && isDoc ? '<span style="align-self:flex-start;margin-top:2px;font-size:11px;border-radius:999px;padding:1px 8px;'+(matched?'color:#1a8a3a;background:#E7F4EC':'color:#D93025;background:#FDECEC')+'">'+(matched?'matches · document bar &ge; 60%':'below document bar (&ge; 60%)')+'</span>' : '')+
-              (r.status==='error' && r.err ? '<span style="font-size:12px;color:#EB4040;line-height:1.35">'+h(r.err)+'</span>' : '')+
+            '<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600;line-height:1.35">'+h(r.label)+'</span>'+
+              '<span style="font-size:12.5px;color:#747474">'+h(r.date)+'</span>'+
+              (isCant ? '<span style="font-size:12px;color:#8a8a8a;line-height:1.35">'+h(r.err||'No face detected in this document')+'</span>' : '')+
             '</span>'+
-            '<span class="rpt-cap" style="width:170px;flex-shrink:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:13px">'+h(r.date)+'</span><span style="font-size:12.5px;color:#747474">'+h(r.by||'')+'</span></span>'+
-            simCell+
-            (_done ? chevron(s.open===i?'180deg':'0deg') : '<span style="width:18px;flex-shrink:0"></span>')+
+            badgeCell+
+            (expandable ? chevron(s.open===i?'180deg':'0deg') : '<span style="width:18px;flex-shrink:0"></span>')+
           '</button>';
-        if(_done && s.open===i){
-          html += '<div style="padding:0 20px 18px;background:#F7F8FA"><div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+
-            '<div><div style="font-size:13px;color:#747474;margin-bottom:6px">'+h(r.label)+'</div><div style="width:100%;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+photoTile(r,(c?c.id:'')+r.label,'contain')+'</div></div>'+
-            '<div><div style="font-size:13px;color:#747474;margin-bottom:6px">Photo taken today</div><div style="width:100%;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+uploadedImg('contain')+'</div></div>'+
-          '</div></div>';
+        if(_done && s.open===i && !isCant){
+          var needsCode = (st==='review' || st==='nomatch');
+          html += '<div style="padding:0 20px 18px;background:#F7F8FA">'+
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+
+              '<div><div style="font-size:13px;color:#747474;margin-bottom:6px">Photo taken today</div><div style="width:100%;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+uploadedImg('contain')+'</div></div>'+
+              '<div><div style="font-size:13px;color:#747474;margin-bottom:6px">'+h(r.label)+'</div><div style="width:100%;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+photoTile(r,(c?c.id:'')+r.label,'contain')+'</div></div>'+
+            '</div>'+
+            (r.by ? '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px"><span style="font-size:12.5px;color:#747474;display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#747474" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>Interviewed by '+h(r.by)+'</span>'+
+              (r.asked
+                ? '<span style="font-size:12.5px;color:#1a8a3a;font-weight:600;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#1a8a3a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Asked '+h(r.by)+' to confirm</span>'
+                : '<button type="button" onclick="askInterviewer('+i+')" style="border:1px solid #DDD;background:#fff;border-radius:6px;padding:5px 12px;font-size:12.5px;font-weight:600;color:#0076FB;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Ask '+h(r.by)+' to confirm</button>') +
+            '</div>' : '')+
+            '<div style="font-size:12px;color:#9a9a9a;margin-top:10px">Model similarity '+r.score+'% · match bar for '+(r.src==='document'?'documents is 65%':'photos is 85%')+'</div>'+
+            (needsCode ? reasonCodes(i, r) : '')+
+          '</div>';
         }
         html += '</div>';
       });
     });
 
-    if(_done){ html += '<p style="margin:0;padding:14px 20px;font-size:12.5px;color:#747474;line-height:1.6">Interview photos count as a match at 80%+, identity documents at 60%+ (they\'re older and lower quality). Open any row to see both photos side by side.</p>'; }
+    if(_done){ html += '<p style="margin:0;padding:14px 20px;font-size:12.5px;color:#747474;line-height:1.6">Photos count as a match at 85%+, identity documents at 65%+ (they\'re older and lower quality). Open any flagged row to compare the two photos and record what you found.</p>'; }
 
     // overall verdict banner — sits right above the decision (evidence -> verdict -> decide)
     if(_done){ html += verdictBanner(s.rows); }
@@ -650,29 +787,31 @@ function render(){
     // recruiter's final Accept / Reject decision
     if(_done){
       if(s.decision){
-        var dec = s.decision, dok = dec.action==='accept';
+        var dec = s.decision, dok = dec.action==='confirm';
         var dcol = dok ? '#1a8a3a' : '#D93025';
+        var dlabel = dok ? (dec.unreviewed>0 ? ('Confirmed with '+dec.unreviewed+' row'+(dec.unreviewed>1?'s':'')+' unreviewed') : 'Confirmed identity') : 'Couldn’t confirm — flagged for review';
         html += '<div style="display:flex;align-items:center;gap:12px;border-top:1px solid #E0E0E0;padding:14px 20px;background:#fff">'+
           '<span style="width:30px;height:30px;border-radius:50%;background:'+(dok?'#E7F4EC':'#FDECEC')+';display:grid;place-items:center;flex-shrink:0">'+
             (dok?'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="'+dcol+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
-                :'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="'+dcol+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10M17 7L7 17"/></svg>')+
+                :'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="'+dcol+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>')+
           '</span>'+
-          '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;color:'+dcol+'">'+(dok?'Accepted':'Rejected')+'</div>'+
+          '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;color:'+dcol+'">'+h(dlabel)+'</div>'+
             '<div style="font-size:12px;color:#747474;word-break:break-word">by '+h(dec.by)+' · '+h(dec.at)+(dec.note?' · “'+h(dec.note)+'”':'')+'</div></div>'+
           (s.viewingHistory?'':'<button type="button" onclick="changeDecision()" style="border:0;background:none;padding:4px 2px;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;flex-shrink:0">Change</button>')+
         '</div>';
       } else {
-        var dv = overallVerdict(s.rows);
-        var suggest = dv.state==='match' ? 'Suggested: Accept' : dv.state==='nomatch' ? 'Suggested: Reject' : 'Mixed result — your call';
+        var dv = reportSummary(s.rows);
+        var helper = dv.unresolved>0 ? (dv.unresolved+' row'+(dv.unresolved>1?'s':'')+' still need'+(dv.unresolved>1?'':'s')+' your review.')
+                    : (dv.reviewedCount>0 ? ('You reviewed '+dv.reviewedCount+' row'+(dv.reviewedCount>1?'s':'')+'.') : 'All comparable photos matched.');
         html += '<div style="border-top:1px solid #E0E0E0;background:#FBFBFA;padding:16px 20px">'+
           '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:0;font-size:14px;font-weight:600">Your decision</div>'+
-            '<span style="display:inline-flex;align-items:center;gap:6px;background:#E6F1FB;color:#185FA5;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;white-space:nowrap"><span style="width:6px;height:6px;border-radius:50%;background:#378ADD;flex-shrink:0"></span>'+h(suggest)+'</span></div>'+
-          '<div style="font-size:12.5px;color:#747474;margin:5px 0 12px">You have the final say. Confirm or reject the candidate\'s identity.</div>'+
-          '<textarea id="rh-decision-note" placeholder="Add a note (required when rejecting)" style="width:100%;box-sizing:border-box;min-height:52px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid #DDD;border-radius:8px;background:#fff;margin-bottom:'+(s.decisionErr?'6px':'12px')+'"></textarea>'+
+            '<span style="display:inline-flex;align-items:center;gap:6px;background:#E6F1FB;color:#185FA5;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;white-space:nowrap"><span style="width:6px;height:6px;border-radius:50%;background:#378ADD;flex-shrink:0"></span>'+h(dv.suggest)+'</span></div>'+
+          '<div style="font-size:12.5px;color:#747474;margin:5px 0 12px">You have the final say. '+h(helper)+'</div>'+
+          '<textarea id="rh-decision-note" placeholder="Add a note (required to flag, or to confirm with rows still unreviewed)" style="width:100%;box-sizing:border-box;min-height:52px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid #DDD;border-radius:8px;background:#fff;margin-bottom:'+(s.decisionErr?'6px':'12px')+'"></textarea>'+
           (s.decisionErr?'<div style="font-size:12.5px;color:#EB4040;margin-bottom:12px">'+h(s.decisionErr)+'</div>':'')+
           '<div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">'+
-            '<button type="button" onclick="decide(\'reject\')" style="border:1px solid #EB4040;color:#EB4040;background:#fff;border-radius:4px;padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:7px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7l10 10M17 7L7 17"/></svg>Reject</button>'+
-            '<button type="button" onclick="decide(\'accept\')" style="border:0;color:#fff;background:#1a8a3a;border-radius:4px;padding:9px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:7px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Accept</button>'+
+            '<button type="button" onclick="decide(\'cantconfirm\')" style="border:1px solid #EB4040;color:#EB4040;background:#fff;border-radius:4px;padding:9px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:7px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h11l-1.5 4H20l-3 5H5"/></svg>Can’t confirm identity</button>'+
+            '<button type="button" onclick="decide(\'confirm\')" style="border:0;color:#fff;background:#1a8a3a;border-radius:4px;padding:9px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:7px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Confirm identity</button>'+
           '</div>'+
         '</div>';
       }
@@ -753,17 +892,45 @@ function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click
 function openPicker(){ var el=document.getElementById('rh-file'); if(el) el.click(); }
 function onFileInput(e){ handleFile(e.target.files[0]); }
 function retake(){ clearTimers(); _runToken++; setState({photo:null, consent:false, upErr:'', done:false, running:false, rows:[], open:null, decision:null, decisionErr:'', entry:null}); }
-/* recruiter's final Accept / Reject decision on the current check */
+/* recruiter's final Confirm / Can't-confirm decision on the current check.
+   Never gated: the human can always decide, including deciding the tool is wrong.
+   A note is required to flag, or to confirm while rows are still unreviewed -
+   which is then recorded permanently as "Confirmed with N rows unreviewed". */
 function decide(action){
   var el = document.getElementById('rh-decision-note');
   var note = el ? el.value.trim() : '';
-  if(action==='reject' && !note){ setState({decisionErr:'Add a reason before rejecting.'}); return; }
+  var v = reportSummary(state.rows);
+  var unresolved = action==='confirm' ? v.unresolved : 0;
+  if(action==='cantconfirm' && !note){ setState({decisionErr:'Add a reason before flagging for review.'}); return; }
+  if(action==='confirm' && unresolved>0 && !note){ setState({decisionErr:"You’re confirming with "+unresolved+' row'+(unresolved>1?'s':'')+' still unreviewed — add a note saying why.'}); return; }
   var at = new Date().toLocaleString([], {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-  var dec = {action:action, by:'A. Sharma', at:at, note:note};
+  var dec = {action:action, by:'A. Sharma', at:at, note:note, unreviewed:unresolved};
   if(state.entry) state.entry.decision = dec;   // persist onto the saved check record
   setState({decision:dec, decisionErr:''});
 }
 function changeDecision(){ if(state.entry) state.entry.decision = null; setState({decision:null, decisionErr:''}); }
+/* record a structured reason code on a review / no-match row (non-binding on the verdict) */
+function resolveRow(i, code){
+  var rows = state.rows.slice();
+  rows[i] = Object.assign({}, rows[i], {review: (rows[i].review===code ? null : code)});
+  if(state.entry) state.entry.rows = rows;   // keep the saved check record in sync
+  setState({rows:rows});
+}
+/* escalation: ask the interviewer who sat with this candidate to confirm (mocked) */
+function askInterviewer(i){
+  var r = state.rows[i]; if(!r || !r.by) return;
+  var rows = state.rows.slice(); rows[i] = Object.assign({}, rows[i], {asked:true});
+  if(state.entry) state.entry.rows = rows;
+  setState({rows:rows});
+  toast('Asked '+r.by+' to confirm — request sent');
+}
+/* jump strip: open and scroll to the first row that still needs attention */
+function jumpToReview(){
+  for(var i=0;i<state.rows.length;i++){ if(rowUnresolved(state.rows[i]) || codeOutcome(state.rows[i].review||'')==='neg'){
+    setState({open:i}, function(){ var el=document.getElementById('rpt-row-'+i); if(el) el.scrollIntoView({behavior:'smooth', block:'center'}); });
+    return;
+  } }
+}
 function askReshoot(){ setState({confirmReshoot:true}); }
 function cancelReshoot(){ setState({confirmReshoot:false}); }
 function doReshoot(){ setState({confirmReshoot:false}); retake(); window.scrollTo({top:0,behavior:'smooth'}); }

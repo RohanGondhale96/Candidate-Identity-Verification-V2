@@ -19,69 +19,106 @@ Notes on those:
 - **Share report** (`openShare` + the share dialog) is fully functional (in-page only, no
   backend) and can be switched on any time.
 
-## Overall verdict logic
+## Per-photo state — pills, not percentages
 
-- The report shows a **Match / Review / No match** banner summarised only by the **count**:
-  "Matched N of M photos". No single percentage — deliberately.
-  - **Match** — every photo passed its bar.
-  - **Review** — some passed, some didn't (e.g. one low reference photo).
-  - **No match** — nothing passed.
-- **Why no % in the summary:** the count *is* the aggregate. A single number was dropped on
-  purpose — an average fights the "scores are never averaged" rule and mixes the 80% / 60%
-  bars; "strongest match" was optimistic and arbitrary. The per-photo scores below carry the
-  detail. (`overallVerdict()` still computes `best`, but nothing displays it.)
-- **Source-aware match bars:** application/interview photos pass at **80%+**; identity
-  documents pass at **60%+** (they're older/lower-resolution). Change these in the
-  `photoBar()` function.
+- Each photo row shows **one badge**, not a number: **Match / Needs review / Not a match /
+  Couldn't compare**. The raw % is kept, but only in the **expanded row** (small, grey), for
+  support, tuning, and disputes. It is never the headline.
+- **Source-aware thresholds** (in `photoBar()` / `reviewFloor()`):
+  - Photos (application/interview): Match **≥85**, Needs review **50–84**, Not a match **<50**.
+  - Identity documents: Match **≥65**, Needs review **40–64**, Not a match **<40** (older,
+    lower-resolution, so a lower bar).
+- **"Couldn't compare"** is a distinct fourth state (no face detected, glare, unreadable scan).
+  It is **grey, never red** — a bad scan must not look like a genuine mismatch — and it is
+  **excluded from the denominator** (`reportSummary` counts it separately: "N documents couldn't
+  be read"). It never gates anything. The row prints the reason ("No face detected in this
+  document"). See `photoState()`.
 
-## Report table columns
+## Overall verdict banner — reports state, never a fresh verdict
 
-- The scored rows are grouped (**Application & interview photos** / **Identity documents**).
-  Each group header labels the columns — **Captured** and **Similarity** — rather than one
-  header at the very top, so the labels stay attached to their group. Score cells are just the
-  number ("92%"), no "% match" repeated per row.
-- The column labels show on **desktop only**; on mobile the rows reflow (date drops under the
-  name), so the labels hide — but the group titles still show.
+`reportSummary()` drives the banner. Its job is to **report the current state, not invent a new
+verdict**, and to keep **model-matched vs human-vouched legible forever** (never collapse them
+into one number). Tiers:
 
-## Recruiter Accept / Reject decision
+- **Match** (green) — every comparable photo matched *by the model*, nothing flagged. Unread
+  documents don't stop this; the banner just footnotes "· N document couldn't be read".
+- **Needs review** (amber) — open review rows, or anything a human marked **Can't tell**.
+- **Possible mismatch** (red) — any **Not a match** still open, or anything a human marked
+  **Different person**. Suggests *Can't confirm*.
+- **Reviewed by A. Sharma** (neutral grey, **not green**) — every flagged row was resolved
+  positively by a human ("N matched · M confirmed by your review"). Deliberately **not green**:
+  green would launder human judgment into a machine match, so someone reading the report next
+  month can still tell which rows the model matched and which a person vouched for.
+- **Couldn't run the check** (neutral) — nothing comparable (no photos, or all unreadable). Not
+  a pass, not a fail; never red — the candidate did nothing wrong, our intake did.
 
-- Below the report, the recruiter makes the final call — **Accept** or **Reject**. The
-  machine only *advises* (the verdict); the human decides. The verdict subtly suggests an
-  action but never auto-decides.
-- **Deciding is not hard-mandatory** (no blocking modal). Instead it's enforced softly: an
-  undecided check keeps the candidate in **To verify** (see the worklist), so unfinished work
-  stays visible rather than being forced.
-- The decided **record is neutral-styled** (white row, small coloured icon + label) on purpose
-  — it sits directly under the coloured verdict banner, so a filled green/red bar there would
-  clash or merge with the banner.
-- A **reason is required when rejecting** (optional note on accept). Once decided, the bar
-  collapses to a record: *"Accepted/Rejected by A. Sharma · &lt;when&gt; · &lt;note&gt;"* with a
-  **Change** link (logged). The decision is separate from the verdict — you can accept a
-  Review or reject a Match.
-- **Layout is evidence → verdict → decision.** The verdict banner sits **just above the
-  decision bar** (not at the top of the report): the recruiter reads the scored rows first,
-  then the overall verdict, then makes the call — a natural build to the conclusion. (An
-  earlier version had the banner at the top with a small recap chip in the decision bar; that
-  was replaced by this single, better-placed banner.)
-- The "by A. Sharma" name and timestamps are **hard-coded placeholders** — in production
-  they'd come from the logged-in user and server clock.
+The banner **reacts** as the recruiter records reasons (amber/red → neutral once resolved), but
+never flips to a clean "Match" off human vouching.
+
+## Report row layout
+
+- No column headers at all (the old **Captured** / **Similarity** labels are gone). Each row is:
+  thumbnail (~10% larger than before), then **name with the captured date/time directly under
+  it**, then the single state badge, then a chevron.
+- The **interviewer's name is not on the row** — it moved into the expanded panel (see below),
+  because on a fail the person who ran that round is who you'd call, and that belongs next to the
+  comparison, not cluttering the list.
+
+## Per-photo review — structured reason codes
+
+- Open a **Needs review** or **Not a match** row to see the two photos side by side, the raw
+  similarity %, "Interviewed by …", and **four reason codes** (radio-style, pick one):
+  *Same person · poor photo quality* / *Same person · appearance changed* / *Different person* /
+  *Can't tell*. See `reasonCodes()` / `resolveRow()`.
+- **Structured codes, not a free-text note** — on purpose. Free text is unsearchable, useless in
+  a dispute, and recruiters type "ok" in it. Codes give a dataset on *why* the model was
+  uncertain, which is how thresholds get tuned in v2. Collected structurally from day one.
+- Codes are **non-binding on the verdict** (the human still owns the overall call) but they
+  **change the row badge** to a single combined state: *Reviewed · same person* (green) or
+  *Reviewed · different person* (red). One badge carries both the model finding and the human
+  answer — never two competing badges.
+- **Escalation:** each interviewer row has an **"Ask &lt;name&gt; to confirm"** button. After a
+  retake still fails, the person who sat with the candidate for 45 minutes is better evidence
+  than any score, and the tool already knows who that is. (Mocked — toast only, no real message.)
+
+## Recruiter decision — Confirm / Can't confirm
+
+- The two actions are **Confirm identity** and **Can't confirm identity**. Deliberately **not
+  Accept/Reject**: this screen verifies identity, it does not make an employment decision, and
+  "reject" reads as rejecting the person. "Can't confirm" describes the recruiter's actual
+  authority and carries **no fraud allegation** — fraud is a conclusion reached after an
+  investigation, downstream of this screen. Never label anything "potential fraud / mismatch"
+  against a named person; legal would strike it, and it lives in the record permanently.
+- **"Can't confirm" = flag for review.** In production it routes to a configured escalation
+  owner (hiring manager + HR/TA ops, per-org) with a link to the frozen report, and gives the
+  recruiter a non-accusatory script for the person in the room; onboarding continues in parallel,
+  the flag does **not** hard-block day one. A flag is a **review trigger, not an adverse
+  decision**. (Destination is mocked here.)
+- **No gating.** Both buttons are always enabled — the human can always decide, including
+  deciding the tool is wrong. Blocking would trap a recruiter who genuinely can't tell with a
+  person sitting in front of her. Instead: confirming while rows are still unreviewed **requires
+  a note**, and the record permanently reads *"Confirmed with N rows unreviewed"* (audit fact,
+  nobody skips twice). A note is also required to flag.
+- **Layout is evidence → verdict → decision** (scored rows, then the banner, then the decision).
+- The "by A. Sharma" name and timestamps are **hard-coded placeholders** — in production they'd
+  come from the logged-in user and server clock.
 
 ## Landing screen — tabbed worklist
 
 - Two tabs: **Joining today** (default) and **Checks you ran today**.
 - **Joining today** is a worklist: candidates split into **To verify** and **Done** (sentence-
-  case group headers). A candidate is only **Done once a recruiter has decided** (Accepted /
-  Rejected). Running the check alone does **not** move them off the list. Row badge by state:
-  **To verify** (never run) → **Decision pending** (run, but no Accept/Reject yet — stays in
-  the To-verify group) → **Accepted / Rejected** (decided → Done).
+  case group headers). A candidate is only **Done once a recruiter has decided** (Confirmed /
+  Can't confirm). Running the check alone does **not** move them off the list. Row badge by state:
+  **To verify** (never run) → **Decision pending** (run, but no decision yet — stays in
+  the To-verify group) → **Confirmed / Can't confirm** (decided → Done).
 - The whole row is clickable, no separate "Verify" button: a never-run row starts a fresh
   check; a row that's already been run reopens its report (to decide or review).
 - **Checks you ran today** = "Your checks today" (your run history). (A "Shared with you"
   section was prototyped and removed — bring it back only with a real backend.)
 - **Badge is consistent across both tabs** (`entryBadge`): a run-but-undecided check shows
   **Decision pending** in *both* the worklist and the checks list; a decided one shows
-  **Accepted/Rejected** in both. The raw verdict (Match/Review/No match) lives in the report,
-  not in the list badges.
+  **Confirmed / Can't confirm** in both. The raw verdict (Match/Review/No match) lives in the
+  report, not in the list badges.
 - **Tab style** is the **segmented control** (the beige pill with a white active tab), kept on
   purpose — an underline-tab variant was tried and reverted. Don't "fix" it back to underline.
 - Kept small for the demo; at real-company volume this is where you'd add filtering / paging.
@@ -90,7 +127,11 @@ Notes on those:
 
 Nothing here persists to a server — it lives in the browser session and resets on reload:
 
-- **Decisions** (Accept/Reject) and their audit trail — stored in-session on the check record.
+- **Decisions** (Confirm/Can't confirm), reason codes, and their audit trail — stored in-session
+  on the check record.
+- **Per-photo scores** — seeded, not from a live model (see the scoring-engine note above).
+- **"Ask &lt;interviewer&gt; to confirm"** — toast only, no real message sent.
+- **"Can't confirm" flag destination** — no real escalation owner is notified yet.
 - **Share report** — in-page only (no real recipients/notifications). Currently hidden behind
   `SHOW_REPORT_ACTIONS`. (The earlier "Shared with you" mock list was removed.)
 - **Run history** ("Checks you ran today") — resets on reload.
@@ -100,7 +141,7 @@ Nothing here persists to a server — it lives in the browser session and resets
 - The UI copy went through a light "humanize" pass — plainer, more direct, active voice.
   Notable wording: the search intro ("Compare the person who showed up today…"), the empty /
   no-round notes say what to do ("Ask your RippleHire admin to add one"), the decision hint
-  ("Suggested: Accept/Reject", "Mixed result — your call"), and the report footer.
+  ("Suggested: Confirm / Can't confirm", "Your call"), and the report footer.
 - The **consent line** was left precise on purpose ("I have the candidate's consent to take
   and submit this photo for identity verification") — consent copy favours clarity over brevity.
 - **Editing copy — watch the quotes.** Most strings are built as single-quoted JavaScript, so
@@ -116,20 +157,34 @@ Nothing here persists to a server — it lives in the browser session and resets
 - In the real product these would come from the candidate-portal document uploads, and the
   face would be detected/cropped from the actual document image.
 
-## Face comparison
+## Scoring engine — known bug, and why the demo is seeded
 
-- The face match runs through the serverless function **`api/compare.js`**, which calls
-  Google Gemini (`gemini-2.5-flash`). The API key is read from the **`GEMINI_API_KEY`**
-  environment variable in Vercel — it is never committed to the repo or exposed in the browser.
-- The uploaded joining-day photo is downscaled in the browser (≤1280px) before upload to stay
-  under Vercel's request-size limit.
+- **Gemini is not a face-recognition model.** With live scoring on, `gemini-2.5-flash` returned
+  a near-constant score per image *type* — every interview ~92, every document ~96 — regardless
+  of the actual faces. It ignores the "use non-round, non-repeating numbers" instruction, which
+  is the tell that the number is a confabulation, not a measurement. Eight identical scores that
+  turn into eight green pills look perfect while telling you nothing.
+- **So the demo does not score with Gemini.** `USE_LIVE_SCORING` (top of the app script) defaults
+  to **`false`**: the report is driven by **seeded per-photo scores** that have real spread, so
+  the four states, reason codes, and banner logic are all demonstrable. Rahul (`RH48213`) is the
+  mixed showcase (a review, a no-match, an unreadable PAN); Arjun (`RH47980`) is a clean all-match.
+- Flip `USE_LIVE_SCORING` to `true` to call Gemini again (`api/compare.js`, key from the
+  **`GEMINI_API_KEY`** Vercel env var, never in the repo/browser; joining photo downscaled
+  ≤1280px before upload). But **don't ship pills on top of it** — the real fix is a genuine face
+  **embedding** engine that returns a true per-pair distance: AWS Rekognition `CompareFaces`,
+  Azure Face `verify`, or the ArcFace/Facenet path in the DeepFace POC. That's the v2 workstream.
+- Gemini stays useful for one thing it's actually good at: the **"Couldn't compare"** check (is
+  there a usable face at all). Split architecture for v2 — embedding model for the score, vision
+  model for the quality gate.
 
 ## Demo tips
 
 - Deep links: `/?candidateId=RH48213` (Rahul), `/?candidateId=RH47980` (Arjun).
-- To show the **Review** / **No match** states, upload a *different* person as the joining
-  photo (or one candidate's photo against the other).
-- Rahul's document cards use his real headshot, so a genuine Rahul joining photo matches them.
-- Full loop to demo: **Joining today** → **Verify** a candidate → upload a photo → run →
-  **Accept/Reject** → go back; the candidate moves to **Done** with the decision badge, and
-  also appears under **Checks you ran today**.
+- Scores are **seeded** (see the scoring-engine note): **Rahul (`RH48213`)** shows all four
+  states in one report — a **Needs review** (Round 2), a **Not a match** (driving licence), and
+  an unreadable **PAN** ("Couldn't compare"). **Arjun (`RH47980`)** is a clean all-**Match**.
+- Open the **Needs review** / **Not a match** rows to compare side by side and record a reason
+  code — watch the banner move from red to neutral (never to green) as you resolve them.
+- Full loop to demo: **Joining today** → open a candidate → upload a photo → run → resolve the
+  flagged rows → **Confirm** or **Can't confirm** → go back; the candidate moves to **Done** with
+  the decision badge, and also appears under **Checks you ran today**.
