@@ -331,8 +331,10 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
   risks the silent gap.) Parked until assignment is built.
 - **[open, out of scope]** **Row ownership / assignment does not exist today** — it is the
   prerequisite for a shared team attention queue. Noted so it isn't lost; not in this change.
-- **Demo limitation:** ~60 candidates are **seeded** (in `buildSeeds()`) so counts, overdue ages,
-  and pagination are real. Seeds have **no on-file photos** — clicking one opens the check page
+- **Demo limitation:** a small set — **7 seeded candidates + the 3 real ones = 10 total** (in
+  `buildSeeds()`), covering every state, the attention block, and a "Coming up" future joiner
+  (kept small on purpose, so it fits one page — pagination still works but won't trigger here).
+  Seeds have **no on-file photos** — clicking one opens the check page
   (empty upload). Only the three interactive candidates (Rahul `c1`, Arjun `c2`, Meera `c3`) have
   real photos and a full check flow. **Rahul and Arjun are seeded as overdue "To verify"** (joining
   3 and 5 Aug vs the fixed demo "today" of 15 Aug, `WL_TODAY_MS`) so they sit at the **top of Needs

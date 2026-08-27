@@ -1203,28 +1203,19 @@ function hhmm(n){ var hh=9+(n%8), mm=(n*7)%60; return (hh<10?'0':'')+hh+':'+(mm<
    real. Seeds have no photos; clicking one opens the check page. The three interactive
    candidates (Rahul c1, Arjun c2, Meera c3) are the ones with real on-file photos. */
 function buildSeeds(){
-  var first=['Ananya','Rohit','Kavya','Sameer','Neha','Vikas','Divya','Isha','Pooja','Nikhil','Sneha','Karan','Aditya','Riya','Suresh','Tara','Manish','Lakshmi','Varun','Anita','Deepak','Swati','Gaurav','Kiran','Ritu','Ajay','Nisha','Harsh','Preeti','Vivek','Shreya','Rakesh','Anjali','Sanjay','Payal','Amit','Ruchi','Yash','Komal','Farhan','Ishita','Naveen','Bhavna','Rohan','Simran','Alia','Kabir','Zoya','Mira','Veer','Diya','Ayaan','Sara','Krish','Myra','Reyansh','Anaya','Aryan','Tanya','Dhruv'];
-  var last=['Rao','Verma','Iyer','Menon','Gupta','Reddy','Patel','Bose','Ghosh','Kaur','Singh','Das','Pillai','Joshi','Kulkarni','Malhotra','Chopra','Nanda','Sinha','Bhat'];
-  var roles=['Backend Engineer','QA Analyst','Product Manager','UX Designer','Data Engineer','SDET','DevOps Engineer','Business Analyst','Support Lead','Frontend Engineer','Recruiter','Account Manager'];
-  var i=0, id=1;
-  function push(name, st, iso, owner, reason){
-    CANDIDATES.push({ id:'s'+id, name:name, rhid:'RH'+(49000+id), req:roles[id%roles.length], reqid:'REQ-'+(2400+id), stage:'Onboarding', eligible:true, joiningISO:iso, joining:fmtLong(iso), owner:owner, photos:[], wl:{status:st, by:'A. Sharma', at:hhmm(id), reason:reason} });
-    id++;
-  }
-  function nm(){ var n=first[i%first.length]+' '+last[(i*3)%last.length]; i++; return n; }
-  push('Vikram Nair','toverify','2026-08-04','me','');
-  push('Priya Sharma','toverify','2026-08-12','me','');
-  push('Imran Shaikh','awaiting','2026-08-13','me','Checked · decision not made');
-  for(var k=0;k<44;k++){ push(nm(),'confirmed','2026-08-'+(('0'+(5+(k%10))).slice(-2)),'me','Confirmed by A. Sharma · '+hhmm(k+2)); }
-  for(k=0;k<8;k++){ push(nm(),'toverify', k<5?'2026-08-15':'2026-08-16','me',''); }
-  for(k=0;k<3;k++){ push(nm(),'awaiting','2026-08-15','me','Checked · decision not made'); }
-  push(nm(),'cantconfirm','2026-08-10','me','Flagged for review');
-  push(nm(),'cantconfirm','2026-08-11','me','Flagged for review');
-  for(k=0;k<4;k++){ push(nm(),'toverify','2026-08-'+(17+k),'me',''); }
-  push(nm(),'toverify','2026-08-06','other','');
-  push(nm(),'confirmed','2026-08-08','other','Confirmed by K. Menon · 11:20');
-  push(nm(),'awaiting','2026-08-09','other','Checked · decision not made');
-  for(k=0;k<5;k++){ push(nm(), k%2?'confirmed':'toverify', '2026-08-'+(('0'+(7+k)).slice(-2)), 'other', k%2?('Confirmed by F. Qureshi · 10:0'+k):''); }
+  // Small demo set: 7 seeds + the 3 real candidates (Rahul, Arjun, Meera) = 10 total.
+  var seeds=[
+    {name:'Vikram Nair',  req:'Data Engineer',     st:'toverify',    iso:'2026-08-04', reason:''},
+    {name:'Priya Sharma', req:'QA Analyst',        st:'toverify',    iso:'2026-08-12', reason:''},
+    {name:'Imran Shaikh', req:'UX Designer',       st:'awaiting',    iso:'2026-08-13', reason:'Checked · decision not made'},
+    {name:'Ananya Rao',   req:'Product Manager',   st:'confirmed',   iso:'2026-08-14', reason:'Confirmed by A. Sharma · 11:14'},
+    {name:'Rohit Menon',  req:'SDET',              st:'confirmed',   iso:'2026-08-15', reason:'Confirmed by A. Sharma · 09:32'},
+    {name:'Sana Kapoor',  req:'Frontend Engineer', st:'cantconfirm', iso:'2026-08-13', reason:'Flagged for review'},
+    {name:'Dev Patel',    req:'Mobile Engineer',   st:'toverify',    iso:'2026-08-18', reason:''}
+  ];
+  seeds.forEach(function(x,i){
+    CANDIDATES.push({ id:'s'+(i+1), name:x.name, rhid:'RH'+(49001+i), req:x.req, reqid:'REQ-'+(2401+i), stage:'Onboarding', eligible:true, joiningISO:x.iso, joining:fmtLong(x.iso), owner:'me', photos:[], wl:{status:x.st, by:'A. Sharma', at:hhmm(i+2), reason:x.reason} });
+  });
 }
 
 /* ---------- entry ---------- */
