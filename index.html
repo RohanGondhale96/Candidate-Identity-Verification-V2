@@ -662,23 +662,16 @@ function findCandidateCard(ok){
 
 function worklistView(){
   var s=state;
-  var chips=[['all','All'],['attention','Needs attention'],['toverify','To verify'],['awaiting','Awaiting decision'],['confirmed','Confirmed'],['cantconfirm',"Can’t confirm"]];
-  var html='<div style="display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:12px">';
-  chips.forEach(function(ch){
-    var id=ch[0], on=s.filter===id, att=id==='attention', n=wlCount(id);
-    var base='display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:12.5px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit;';
-    var style = att
-      ? base+'background:#FBF1DE;border:'+(on?'1.5px solid #B7791F':'0.5px solid #EAD9AE')+';color:#8a6414'
-      : base+'background:#fff;border:'+(on?'1.5px solid #2A2A2A;color:#2A2A2A':'0.5px solid #DDD;color:#747474');
-    html+='<button type="button" onclick="wlSetFilter(\''+id+'\')" style="'+style+'">'+(att?'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>':'')+h(ch[1])+' <span style="font-weight:600;color:'+(att?'#8a6414':'#2A2A2A')+'">'+n+'</span></button>';
-  });
-  html+='</div>';
-
-  /* controls row */
+  /* controls row — status is a dropdown too (tidier); counts kept inside each option */
+  var statuses=[['all','All'],['attention','Needs attention'],['toverify','To verify'],['awaiting','Awaiting decision'],['confirmed','Confirmed'],['cantconfirm',"Can’t confirm"]];
+  var sctrl='height:32px;border:1px solid #DDD;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 8px;color:#2A2A2A';
+  var statusSel='<select onchange="wlSetFilter(this.value)" style="'+sctrl+';font-weight:'+(s.filter==='attention'?'600':'400')+'">'+
+    statuses.map(function(st){ return '<option value="'+st[0]+'"'+(s.filter===st[0]?' selected':'')+'>'+(st[0]==='attention'?'⚠ ':'')+h(st[1])+' ('+wlCount(st[0])+')</option>'; }).join('')+'</select>';
   var dopt=function(v,l){ return '<option value="'+v+'"'+(s.dateRange===v?' selected':'')+'>'+l+'</option>'; };
   var sopt=function(v,l){ return '<option value="'+v+'"'+(s.wlSort===v?' selected':'')+'>'+l+'</option>'; };
-  html+='<div style="display:flex;flex-wrap:nowrap;align-items:center;gap:10px;margin-bottom:16px">'+
-    '<select onchange="wlSetDate(this.value)" style="height:32px;border:1px solid #DDD;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 8px;color:#2A2A2A">'+
+  var html='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px">'+
+    statusSel+
+    '<select onchange="wlSetDate(this.value)" style="'+sctrl+'">'+
       dopt('today','Joining date: Today')+dopt('past7','Past 7 days')+dopt('past30','Past 30 days')+dopt('next7','Next 7 days')+dopt('all','All dates')+'</select>'+
     '<select onchange="wlSetSort(this.value)" style="height:32px;border:1px solid #DDD;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 8px;color:#2A2A2A">'+
       sopt('overdue','Sort: Oldest overdue first')+sopt('newest','Joining date, newest')+sopt('name','Name A–Z')+'</select>'+

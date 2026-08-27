@@ -15,6 +15,19 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-08-27 · Status filter: chips → dropdown (tidier, UX trade accepted) — BUILT
+
+- **Discussion:** user asked why status isn't a dropdown like date/sort, defaulting to All or
+  Needs attention. I flagged the trade — chips keep every count on screen (an earlier explicit
+  requirement), a dropdown hides them behind a click; date/sort are view controls so dropdowns fit
+  them, but status counts are the workload itself. Recommended keeping chips + All default.
+- **Decision:** user chose the **tidier dropdown**, explicitly accepting the UX trade. Compromise
+  built: status is a dropdown with the **count inside each option** ("Needs attention (8)"), so
+  counts are one click away rather than gone. Default stays **All** (the attention block already
+  pins the urgent work on top; defaulting to Needs-attention risks an empty screen on quiet days).
+- **Also:** default page size dropped 25 → **10** so pagination shows immediately (10/25/50).
+- **Change:** built + verified (harness green, live DOM check). Committed.
+
 ## 2026-08-27 · Worklist rebuild + banner rename — BUILT
 
 - **Discussion:** user said "go ahead and build it, rename the banner too."

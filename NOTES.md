@@ -271,8 +271,11 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
 - Kill the tabs → **one list**. Four row states: **To verify** / **Awaiting decision** (amber) /
   **Confirmed** / **Can't confirm**. (Splits the old overloaded "Decision pending".) Pills are all
   **filled** — colour carries the meaning, no outlined/filled mix.
-- Status **filter chips with counts** (Needs-attention chip amber-tinted, on one row); second
-  control row: joining-date range + sort + **Mine-only** toggle, controls **inline / auto-width**.
+- Status is a **dropdown** (not chips), sitting inline with the date-range and sort dropdowns +
+  **Mine-only** toggle — a tidier, consistent control row. The per-status **counts are kept inside
+  each option** ("Needs attention (8)", "To verify (21)"). This is a deliberate UX trade: chips
+  showed every count at a glance, the dropdown hides them behind one click; the tidier look was
+  chosen over the always-visible dashboard (2026-08-27, with the trade acknowledged).
 - **Chip counts follow the active date range + Mine scope** — EXCEPT **Needs attention, which
   ignores the date filter entirely** (that is its safety property; it must never be filtered away).
   Because the attention count can then exceed what's visible in the range, the block header says so:
