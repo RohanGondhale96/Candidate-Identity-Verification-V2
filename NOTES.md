@@ -259,27 +259,52 @@ undecided.
   + raw scores (similarity, confidence), AND the **recruiter** action + reason + who + when. The
   record reads e.g. *"AI: Needs review (not facing camera) → A. Sharma marked Same person · 10:14."*
 
-## D. Landing worklist rebuild (driver: stale joining-date → unverified joiner)
+## D. Landing worklist rebuild (driver: stale joining-date → unverified joiner) — SIGNED OFF 2026-08-27, build next
 
-- **[rec]** Kill the tabs → **one list**. Four row states: **To verify** / **Awaiting decision**
-  (amber) / **Confirmed** / **Can't confirm**. (Splits the old overloaded "Decision pending".)
-- **[rec]** Status **filter chips with counts** (Needs-attention chip amber-tinted); second control
-  row: joining-date range + sort + **Mine-only** toggle.
-- **[rec]** Pinned **"Needs your attention"** block for overdue checks (joining date passed and
-  check unfinished): **never paginates, ignores the date filter, persists until verified or
-  dismissed, hidden when filtered to a single status, per-row attributable dismissal**
-  (Not joining / Date changed, records who + when).
-- **[rec]** Main list flat; header + work summary phrased as remaining work ("12 to verify, 4
-  awaiting decision"), never "0 done"; reason line under each name; **future joiners inert** (no
-  pill, no chevron); **pagination + URL state** (filter/sort/page) so Back returns to the view.
-- **[open]** Does "Needs attention" show **only the recruiter's** overdue rows or **everyone's**?
-  Building **mine-only for now**; a shared/team queue is the real question at multi-recruiter
-  scale (same silent-gap failure, relocated).
-- **[open, out of scope]** **Row ownership / assignment does not exist today.** It's the
-  prerequisite for ever making the attention block a shared team queue — noted here so it isn't
-  lost, but not part of the current change.
+Driver: a candidate's joining date changes, nobody updates the system, and on the real day the row
+doesn't surface anywhere → the person joins **unverified**. The worklist must make an overdue,
+unverified person impossible to lose. All items **[agreed]** unless marked otherwise.
 
-## E. Still awaiting sign-off before any of C / D is built
+- Kill the tabs → **one list**. Four row states: **To verify** / **Awaiting decision** (amber) /
+  **Confirmed** / **Can't confirm**. (Splits the old overloaded "Decision pending".) Pills are all
+  **filled** — colour carries the meaning, no outlined/filled mix.
+- Status **filter chips with counts** (Needs-attention chip amber-tinted, on one row); second
+  control row: joining-date range + sort + **Mine-only** toggle, controls **inline / auto-width**.
+- **Chip counts follow the active date range + Mine scope** — EXCEPT **Needs attention, which
+  ignores the date filter entirely** (that is its safety property; it must never be filtered away).
+  Because the attention count can then exceed what's visible in the range, the block header says so:
+  *"Includes N outside your selected dates."*
+- The main list **groups by date within the range** (a "Joining today" group, then a dimmed
+  "Coming up") — so "Joining today" is a group header, not the whole list.
+- Pinned **"Needs your attention"** block for overdue checks (joining date passed and check
+  unfinished — both *no check run* and *run-but-undecided*): **never paginates, ignores the date
+  filter, persists until verified or dismissed, always sorted oldest-first (NOT wired to the sort
+  dropdown), hidden whenever a single status OR the Needs-attention chip is selected** (rows would
+  otherwise show twice). Age line amber, **red past ~7 days**.
+- **Dismissal is demoted** (a `⋯` menu, not a full-weight button — the row's primary action is
+  opening the check, with a chevron). Per-row dismissal **requires a reason** (Not joining / Date
+  changed / Verified elsewhere) and **records who + when**. **Dismiss all** has a **confirm step**
+  + required reason (it exists for bad date imports, not as a one-tap way to empty the block).
+- Main list flat; header + work summary phrased as remaining work ("12 to verify, 4 awaiting
+  decision"), never "0 done"; reason line under each name ("1 photo needs review", "Confirmed by
+  A. Sharma · 09:41", "Escalated to R. Menon · 10:12"); **future joiners inert** (no pill, no
+  chevron, neutral "Joining Mon 18 Aug"); **pagination** (25/50/100 per page, resets to page 1 on
+  any filter/sort change) + **URL state** (filter/sort/page) so opening a check and hitting Back
+  returns to the same view.
+- Keep the **candidate search** ("Find a candidate", onboarding/hired rounds scope note) — demoted
+  but important: it's how you reach someone who isn't where the system says they are, which is the
+  whole point of the redesign.
+- Page renamed to **"Identity checks"** (plural — it's a list now).
+- **Demo data:** seed ~30–40 candidates covering all four states, varied joining dates, ≥2 overdue
+  at different ages (one ~3d amber, one ~11d red), one overdue-because-undecided, one future joiner,
+  one with no photos on file, and enough **Confirmed** that filtering to it pages (pagination must
+  be demonstrable inside a single status, not just on All). Labelled as demo data.
+- **[open]** Needs-attention is **mine-only for now**; whether it should show the whole team's
+  overdue rows is the real multi-recruiter question (same silent-gap failure, relocated).
+- **[open, out of scope]** **Row ownership / assignment does not exist today** — it is the
+  prerequisite for a shared team attention queue. Noted so it isn't lost; not in this change.
 
-The worklist (six confirmations) and the quality-gate model (five confirmations) were put to the
-user and are **not yet confirmed**. Nothing in C or D should be built until they are.
+## E. Still awaiting sign-off before it is built
+
+The **quality-gate + per-row review model (§C)** and the **verdict-vocabulary rename (§A:
+Verified / Needs review / Not verified)** are not yet confirmed. The worklist (§D) is signed off.

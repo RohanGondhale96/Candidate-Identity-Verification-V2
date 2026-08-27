@@ -15,6 +15,31 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-08-27 · Worklist rebuild — SIGNED OFF (build next)
+
+- **Discussion:** walked the six open questions on the worklist rebuild wireframe; user answered
+  all six and added requirements + five wireframe fixes.
+- **Decision [agreed]:**
+  1. Chip counts follow date range + Mine scope; **Needs attention ignores the date filter** and
+     the block header states *"Includes N outside your selected dates."*
+  2. Attention block hidden on any single-status filter **and** on the Needs-attention chip.
+  3. Seed ~30–40 demo candidates: all four states, varied dates, ≥2 overdue (≈3d amber / ≈11d red),
+     one overdue-because-undecided, one future joiner, one no-photos; enough **Confirmed** that a
+     single status pages.
+  4. Build real **URL routing** (list⇄check, filter/sort/page in URL) — losing your place on every
+     candidate makes a 30-a-day list unusable.
+  5. Keep the **"Find a candidate"** search (not just an escape hatch — it's how you reach people
+     who aren't where the system says they are, the whole premise).
+  6. Rename page to **"Identity checks"**.
+- **Wireframe fixes applied:** dismiss demoted to a `⋯` menu + row chevron (primary action = open
+  check); dismissal **requires reason + records who/when**, Dismiss-all gets a confirm step; pills
+  **all filled**; chips on **one row**; date/sort dropdowns **inline auto-width**.
+- **Build note:** sort dropdown drives the **main list only**; the attention block is always
+  oldest-first as its own rule.
+- **Parked [open]:** attention block mine-only for now; **row ownership/assignment out of scope**
+  and is the prerequisite for a shared team attention queue.
+- **Change:** corrected wireframe produced; NOTES.md §D moved to signed-off. Code not built yet.
+
 ## 2026-08-27 · Start keeping this research + discussion log
 
 - **Discussion:** the team asked that we document not just decisions but the research behind them
