@@ -203,8 +203,11 @@ undecided.
 
 ## A. Overall verdict — vocabulary and logic
 
-- **[rec]** Rename the banner tiers to **Verified / Needs review / Not verified** — reads as the
-  status of the *check*, not a judgment of the *person* (same reason we dropped "reject").
+- **[BUILT 2026-08-27]** The banner tiers are now **Verified / Needs review / Not verified** —
+  reads as the status of the *check*, not a judgment of the *person* (same reason we dropped
+  "reject"). Note: a human-vouched result still shows **Verified** but in **neutral grey, not
+  green** (green is reserved for a pure model match) — so model-matched vs human-vouched stays
+  legible. "Couldn't run the check" (nothing comparable) is a separate neutral state.
 - **[agreed]** The overall status is **computed by the system** from the resolved per-row states —
   the recruiter never types the verdict. Not a single **%** (vague, blends heterogeneous
   references and unreliable scores).
@@ -259,7 +262,7 @@ undecided.
   + raw scores (similarity, confidence), AND the **recruiter** action + reason + who + when. The
   record reads e.g. *"AI: Needs review (not facing camera) → A. Sharma marked Same person · 10:14."*
 
-## D. Landing worklist rebuild (driver: stale joining-date → unverified joiner) — SIGNED OFF 2026-08-27, build next
+## D. Landing worklist rebuild (driver: stale joining-date → unverified joiner) — BUILT 2026-08-27
 
 Driver: a candidate's joining date changes, nobody updates the system, and on the real day the row
 doesn't surface anywhere → the person joins **unverified**. The worklist must make an overdue,
@@ -303,8 +306,14 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
   overdue rows is the real multi-recruiter question (same silent-gap failure, relocated).
 - **[open, out of scope]** **Row ownership / assignment does not exist today** — it is the
   prerequisite for a shared team attention queue. Noted so it isn't lost; not in this change.
+- **Demo limitation:** ~60 candidates are **seeded** (in `buildSeeds()`) so counts, overdue ages,
+  and pagination are real. Seeds have **no on-file photos** — clicking one opens the check page
+  (empty upload). Only the three interactive candidates (Rahul `c1`, Arjun `c2`, Meera `c3`) have
+  real photos and a full check flow. Overdue is computed against a fixed demo "today" (15 Aug 2026,
+  `WL_TODAY_MS`). URL routing (`?f`/`?d`/`?s`/`?mine`/`?p`, and `?candidateId` when a check is
+  open) drives filter/sort/page and the Back button.
 
 ## E. Still awaiting sign-off before it is built
 
-The **quality-gate + per-row review model (§C)** and the **verdict-vocabulary rename (§A:
-Verified / Needs review / Not verified)** are not yet confirmed. The worklist (§D) is signed off.
+Only the **quality-gate + per-row review model (§C)** remains unconfirmed. The worklist (§D) and
+the verdict-vocabulary rename (§A) are built.

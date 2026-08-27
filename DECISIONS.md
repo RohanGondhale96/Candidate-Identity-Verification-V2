@@ -15,6 +15,27 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-08-27 · Worklist rebuild + banner rename — BUILT
+
+- **Discussion:** user said "go ahead and build it, rename the banner too."
+- **Change (built, not yet committed at time of writing):**
+  - Landing rebuilt as a **single worklist** (tabs removed): status filter chips with
+    date-scoped counts (Needs-attention ignores the date filter), inline date/sort controls +
+    Mine-only, a pinned **Needs your attention** block (overdue + run-but-undecided; oldest-first;
+    never paginates; ignores date filter; hidden on any single-status/attention chip; attributed
+    per-row `⋯` dismissal + Dismiss-all confirm), grouped list with a **Coming up** section for
+    inert future joiners, pagination (25/50/100, resets on filter/sort change), and **URL state**
+    (`?f/?d/?s/?mine/?p`, `?candidateId` when a check is open) so the Back button restores the view.
+  - **~60 seeded demo candidates** (`buildSeeds()`) so counts/overdue/pagination are real; fixed
+    demo "today" = 15 Aug 2026. Seeds have no photos (clicking opens the check page); Rahul/Arjun/
+    Meera remain the interactive three.
+  - **Banner renamed** to **Verified / Needs review / Not verified** (`reportSummary` titles);
+    human-vouched stays neutral grey (not green) to keep model-vs-human legible.
+  - Verified by the render harness (**47 assertions, 0 syntax errors**) + a live DOM pass
+    (chips sum to 67, attention 3, pagination inside Confirmed pages to "26–44 of 44", open→URL→
+    Back all correct, dismissal records reason/who/when, Coming-up group renders).
+- NOTES.md §A and §D moved to BUILT; §E now lists only the quality-gate model as pending.
+
 ## 2026-08-27 · Worklist rebuild — SIGNED OFF (build next)
 
 - **Discussion:** walked the six open questions on the worklist rebuild wireframe; user answered

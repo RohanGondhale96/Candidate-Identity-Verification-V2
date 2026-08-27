@@ -132,11 +132,13 @@
 <script>
 "use strict";
 var TODAY = '12 Aug 2026';
+/* worklist demo "today" — overdue ages are computed against this fixed date */
+var WL_TODAY_MS = Date.parse('2026-08-15T00:00:00Z');
 var TONES = { clear:{bg:'#DDE4E9',fg:'#9FADB8'}, soft:{bg:'#E4E8EA',fg:'#B4BDC4'}, dark:{bg:'#8E979E',fg:'#6E777E'} };
 
 var CANDIDATES = [
   { id:'c1', name:'Rahul Deshmukh', rhid:'RH48213', email:'rahul.deshmukh@gmail.com', phone:'+91 98204 44471',
-    req:'Senior Backend Engineer', reqid:'REQ-2291', stage:'Onboarding', eligible:true, joining:'12 Aug 2026',
+    req:'Senior Backend Engineer', reqid:'REQ-2291', stage:'Onboarding', eligible:true, joining:'15 Aug 2026', joiningISO:'2026-08-15', owner:'me',
     photos:[
       {label:'Application photo', src:'application', date:'14 Apr 2026', by:null, score:94, tone:'clear'},
       {label:'Round 1 — screening', src:'interview', date:'06 May 2026, 10:15', by:'K. Deshpande', score:92, tone:'clear'},
@@ -148,7 +150,7 @@ var CANDIDATES = [
       {label:'Driving licence', src:'document', date:'Identity document', by:null, score:22}
     ]},
   { id:'c2', name:'Arjun Reddy', rhid:'RH47980', email:'arjun.reddy@outlook.com', phone:'+91 99872 08802',
-    req:'Product Designer', reqid:'REQ-2244', stage:'Hired', eligible:true, joining:'12 Aug 2026',
+    req:'Product Designer', reqid:'REQ-2244', stage:'Hired', eligible:true, joining:'15 Aug 2026', joiningISO:'2026-08-15', owner:'me',
     photos:[
       {label:'Application photo', src:'application', date:'21 Mar 2026', by:null, score:96, tone:'clear'},
       {label:'Round 1 — portfolio review', src:'interview', date:'09 Apr 2026, 12:00', by:'N. Bhatia', score:93, tone:'clear'},
@@ -158,7 +160,7 @@ var CANDIDATES = [
       {label:'Driving licence', src:'document', date:'Identity document', by:null, score:79}
     ]},
   { id:'c3', name:'Meera Krishnan', rhid:'RH48466', email:'meera.k@yahoo.in', phone:'+91 91234 51129',
-    req:'Data Analyst', reqid:'REQ-2310', stage:'Onboarding', eligible:true, joining:'13 Aug 2026', photos:[] }
+    req:'Data Analyst', reqid:'REQ-2310', stage:'Onboarding', eligible:true, joining:'16 Aug 2026', joiningISO:'2026-08-16', owner:'me', photos:[] }
 ];
 
 var USERS = [
@@ -179,7 +181,10 @@ var state = {
   rows:[], open:null, running:false, done:false, shared:[],
   upErr:'', drag:false, showShare:false, picked:[], pickQ:'',
   toast:'', roundsConfigured:true, lightbox:null, history:[], hasCamera:true, deepMiss:null,
-  confirmReshoot:false, viewingHistory:false, decision:null, decisionErr:'', entry:null, tab:'joining', _refocus:null
+  confirmReshoot:false, viewingHistory:false, decision:null, decisionErr:'', entry:null, tab:'joining', _refocus:null,
+  /* worklist */
+  filter:'all', dateRange:'all', wlSort:'overdue', mineOnly:true, page:1, perPage:25,
+  dismissed:{}, wlMenu:null, wlConfirmAll:false
 };
 
 var _tt=null, _steptimers=[];
@@ -223,8 +228,9 @@ function lightboxImg(p, seed){
 }
 
 /* ---------- logic ---------- */
-function select(c){
-  setState({ cand:c, searchOpen:false, q:'', photo:null, consent:false, rows:[], open:null, running:false, done:false, shared:[], upErr:'', lightbox:null });
+function select(c, noPush){
+  setState({ cand:c, searchOpen:false, q:'', photo:null, consent:false, rows:[], open:null, running:false, done:false, shared:[], upErr:'', lightbox:null, viewingHistory:false, decision:null, decisionErr:'', entry:null });
+  if(!noPush) wlSyncUrl(false);
 }
 function reset(extra){
   clearTimers();
@@ -437,16 +443,16 @@ function reportSummary(rows){
     var bits = [matched+' of '+Y+' comparable photos match'];
     if(need>0) bits.push(need+' need'+(need>1?'':'s')+' review');
     bits.push(m===1 ? "1 doesn’t match" : m+" don’t match");
-    return out({tier:'mismatch', color:'#D93025', bg:'#FDECEC', title:'Possible mismatch', sub:bits.join(' · ')+cantNote, suggest:"Suggested: Can’t confirm"});
+    return out({tier:'mismatch', color:'#D93025', bg:'#FDECEC', title:'Not verified', sub:bits.join(' · ')+cantNote, suggest:"Suggested: Can’t confirm"});
   }
   if(openReview>0 || unsure>0){
     var n = openReview + unsure;
     return out({tier:'review', color:'#B7791F', bg:'#FBF1DE', title:'Needs review', sub:matched+' of '+Y+' comparable photos match · '+n+' need'+(n>1?'':'s')+' a closer look'+cantNote, suggest:'Your call'});
   }
   if(vouchPos>0){
-    return out({tier:'reviewed', color:'#444441', bg:'#F1EFE8', title:'Reviewed by A. Sharma', sub:modelMatch+' photo'+(modelMatch===1?'':'s')+' matched · '+vouchPos+' confirmed by your review'+cantNote, suggest:'Suggested: Confirm'});
+    return out({tier:'reviewed', color:'#444441', bg:'#F1EFE8', title:'Verified', sub:modelMatch+' photo'+(modelMatch===1?'':'s')+' matched · '+vouchPos+' confirmed by your review'+cantNote, suggest:'Suggested: Confirm'});
   }
-  return out({tier:'match', color:'#1a8a3a', bg:'#E7F4EC', title:'Match', sub:matched+' of '+Y+' comparable photos match'+cantNote, suggest:'Suggested: Confirm'});
+  return out({tier:'match', color:'#1a8a3a', bg:'#E7F4EC', title:'Verified', sub:matched+' of '+Y+' comparable photos match'+cantNote, suggest:'Suggested: Confirm'});
 }
 function bannerIcon(tier, color){
   if(tier==='review')       return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>';
@@ -532,6 +538,248 @@ function jumpStrip(rows){
   '</button>';
 }
 
+/* ================= WORKLIST (single list, filters, attention, pagination) ================= */
+function isMine(c){ return c.owner!=='other'; }
+function isDismissed(c){ return !!state.dismissed[c.id]; }
+function wlStatus(c){
+  var lc = latestCheck(c.id);
+  if(lc){ var d=lc.hh.decision; if(d) return d.action==='confirm'?'confirmed':'cantconfirm'; return 'awaiting'; }
+  return (c.wl && c.wl.status) || 'toverify';
+}
+function dayDiff(c){ return Math.round((WL_TODAY_MS - Date.parse(c.joiningISO+'T00:00:00Z'))/86400000); } // +past, -future, 0 today
+function isFuture(c){ return dayDiff(c) < 0; }
+function isOverdue(c){ if(isDismissed(c)) return false; var st=wlStatus(c); return dayDiff(c)>0 && (st==='toverify'||st==='awaiting'); }
+function inDateRange(c){ var d=dayDiff(c), r=state.dateRange;
+  if(r==='today')  return d===0;
+  if(r==='past7')  return d>=0 && d<=7;
+  if(r==='past30') return d>=0 && d<=30;
+  if(r==='next7')  return d<=0 && d>=-7;
+  return true; /* all */
+}
+function wlBase(){ var l=CANDIDATES.filter(function(c){ return c.eligible!==false && c.joiningISO; }); if(state.mineOnly) l=l.filter(isMine); return l; }
+function wlCount(status){
+  var b=wlBase();
+  if(status==='attention') return b.filter(isOverdue).length;
+  var inr=b.filter(inDateRange);
+  if(status==='all') return inr.length;
+  return inr.filter(function(c){ return wlStatus(c)===status; }).length;
+}
+function wlSortList(l){ var s=state.wlSort;
+  return l.slice().sort(function(a,c){
+    if(s==='name')   return a.name.localeCompare(c.name);
+    if(s==='newest') return Date.parse(c.joiningISO)-Date.parse(a.joiningISO);
+    var fa=isFuture(a)?1:0, fc=isFuture(c)?1:0; if(fa!==fc) return fa-fc; /* future last */
+    return dayDiff(c)-dayDiff(a); /* most overdue first */
+  });
+}
+function wlList(){
+  var b=wlBase();
+  if(state.filter==='attention') return b.filter(isOverdue).sort(function(a,c){ return dayDiff(c)-dayDiff(a); });
+  var l=b.filter(inDateRange);
+  if(state.filter!=='all') l=l.filter(function(c){ return wlStatus(c)===state.filter; });
+  return wlSortList(l);
+}
+function fmtDate(iso){
+  var d=new Date(Date.parse(iso+'T00:00:00Z'));
+  var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  return wd[d.getUTCDay()]+' '+d.getUTCDate()+' '+mo[d.getUTCMonth()];
+}
+function wlPill(status){
+  if(status==='toverify')  return _pill('To verify','#5F5E5A','#ECEEF1');
+  if(status==='awaiting')  return _pill('Awaiting decision','#8a6414','#FBF1DE');
+  if(status==='confirmed') return _pill('Confirmed','#1a8a3a','#E7F4EC');
+  return _pill("Can’t confirm",'#D93025','#FDECEC');
+}
+function wlReason(c){
+  var lc = latestCheck(c.id);
+  if(lc){ var d=lc.hh.decision;
+    if(d && d.action==='confirm')     return 'Confirmed by '+d.by+' · '+d.at;
+    if(d && d.action==='cantconfirm') return 'Flagged for review by '+d.by;
+    var v=reportSummary(lc.hh.rows); return v.unresolved>0 ? (v.unresolved+' photo'+(v.unresolved>1?'s':'')+' need review') : 'Checked · decision not made';
+  }
+  if(c.wl && c.wl.reason) return c.wl.reason;
+  return (c.photos && c.photos.length) ? '' : 'No photos on file';
+}
+
+/* worklist actions (each resets to page 1 where relevant and syncs the URL) */
+function wlSetFilter(f){ setState({filter:f, page:1, wlMenu:null, wlConfirmAll:false}); wlSyncUrl(true); }
+function wlSetDate(d){ setState({dateRange:d, page:1}); wlSyncUrl(true); }
+function wlSetSort(s){ setState({wlSort:s, page:1}); wlSyncUrl(true); }
+function wlToggleMine(){ setState({mineOnly:!state.mineOnly, page:1}); wlSyncUrl(true); }
+function wlSetPage(p){ setState({page:p}); wlSyncUrl(true); window.scrollTo({top:0,behavior:'smooth'}); }
+function wlSetPer(n){ setState({perPage:Number(n), page:1}); wlSyncUrl(true); }
+function wlToggleMenu(id){ setState({wlMenu: state.wlMenu===id?null:id}); }
+function wlDismiss(id, reason){ var m=Object.assign({}, state.dismissed); m[id]={reason:reason, by:'A. Sharma', at:'now'}; setState({dismissed:m, wlMenu:null}); }
+function wlToggleConfirmAll(){ setState({wlConfirmAll:!state.wlConfirmAll}); }
+function wlDismissAll(){
+  var reason=(document.getElementById('wl-all-reason')||{}).value || 'Date changed';
+  var m=Object.assign({}, state.dismissed);
+  wlBase().filter(isOverdue).forEach(function(c){ m[c.id]={reason:reason, by:'A. Sharma', at:'now'}; });
+  setState({dismissed:m, wlConfirmAll:false});
+}
+
+/* URL state so Back from a check returns to the same filtered view */
+function wlSyncUrl(replace){
+  try{
+    var p=new URLSearchParams();
+    if(state.cand) p.set('candidateId', state.cand.id);
+    else {
+      if(state.filter!=='all')     p.set('f', state.filter);
+      if(state.dateRange!=='all')  p.set('d', state.dateRange);
+      if(state.wlSort!=='overdue') p.set('s', state.wlSort);
+      if(!state.mineOnly)          p.set('mine','0');
+      if(state.page>1)             p.set('p', state.page);
+    }
+    var url=location.pathname+(p.toString()?('?'+p.toString()):'');
+    history[replace?'replaceState':'pushState']({wl:1}, '', url);
+  }catch(e){}
+}
+function wlApplyUrl(){
+  var p=new URLSearchParams(location.search);
+  var cid=p.get('candidateId');
+  if(cid){ var c=CANDIDATES.find(function(x){ return x.id===cid || x.rhid===cid; }); if(c){ select(c, true); return; } if(p.get('candidateId')){ setState({deepMiss:cid, searchOpen:true, cand:null}); return; } }
+  setState({ cand:null, searchOpen:true, done:false, running:false, rows:[], entry:null, decision:null, viewingHistory:false,
+    filter:p.get('f')||'all', dateRange:p.get('d')||'all', wlSort:p.get('s')||'overdue', mineOnly:p.get('mine')!=='0', page:parseInt(p.get('p')||'1',10)||1 });
+}
+
+function searchIcon2(){ return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#9a9a9a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>'; }
+function findCandidateCard(ok){
+  var s=state;
+  var html='<div class="rh-card" style="margin-bottom:16px">'+
+    '<label for="rh-q" style="font-size:13px;font-weight:600;color:#555">Find a candidate</label>'+
+    '<div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid #A5A5A5;padding:6px 0">'+searchIcon2()+
+      '<input id="rh-q" type="search" placeholder="Search by name, RHID or email" autocomplete="off" value="'+h(s.q)+'" oninput="onQuery(this.value)" style="flex:1;min-width:0;border:0;outline:0;background:none;font-family:inherit;font-size:14px;font-weight:500;color:#2A2A2A">'+
+    '</div>'+
+    '<div style="font-size:12px;color:#747474;margin-top:8px;display:flex;align-items:center;gap:6px"><span style="width:5px;height:5px;border-radius:50%;background:#0076FB;flex-shrink:0"></span>Onboarding and hired rounds only · reach someone who isn\'t on today\'s list</div>';
+  if(ok.length){
+    html+='<div style="margin-top:12px;border:1px solid #DDD;border-radius:6px;overflow:hidden">';
+    ok.forEach(function(x){ html+='<button type="button" onclick="pick(\''+x.id+'\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;background:#fff;border:0;border-bottom:1px solid #E0E0E0;text-align:left;cursor:pointer;font-family:inherit">'+avatar(x.name,32)+'<span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">'+h(x.name)+'</span><span style="font-size:12.5px;color:#747474">'+h(x.rhid+' · '+x.req)+'</span></span></button>'; });
+    html+='</div>';
+  } else if(s.q.trim().length>=2){ html+='<div class="note" style="margin-top:12px">No candidates match that search.</div>'; }
+  html+='</div>';
+  return html;
+}
+
+function worklistView(){
+  var s=state;
+  var chips=[['all','All'],['attention','Needs attention'],['toverify','To verify'],['awaiting','Awaiting decision'],['confirmed','Confirmed'],['cantconfirm',"Can’t confirm"]];
+  var html='<div style="display:flex;flex-wrap:nowrap;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:12px">';
+  chips.forEach(function(ch){
+    var id=ch[0], on=s.filter===id, att=id==='attention', n=wlCount(id);
+    var base='display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:12.5px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit;';
+    var style = att
+      ? base+'background:#FBF1DE;border:'+(on?'1.5px solid #B7791F':'0.5px solid #EAD9AE')+';color:#8a6414'
+      : base+'background:#fff;border:'+(on?'1.5px solid #2A2A2A;color:#2A2A2A':'0.5px solid #DDD;color:#747474');
+    html+='<button type="button" onclick="wlSetFilter(\''+id+'\')" style="'+style+'">'+(att?'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>':'')+h(ch[1])+' <span style="font-weight:600;color:'+(att?'#8a6414':'#2A2A2A')+'">'+n+'</span></button>';
+  });
+  html+='</div>';
+
+  /* controls row */
+  var dopt=function(v,l){ return '<option value="'+v+'"'+(s.dateRange===v?' selected':'')+'>'+l+'</option>'; };
+  var sopt=function(v,l){ return '<option value="'+v+'"'+(s.wlSort===v?' selected':'')+'>'+l+'</option>'; };
+  html+='<div style="display:flex;flex-wrap:nowrap;align-items:center;gap:10px;margin-bottom:16px">'+
+    '<select onchange="wlSetDate(this.value)" style="height:32px;border:1px solid #DDD;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 8px;color:#2A2A2A">'+
+      dopt('today','Joining date: Today')+dopt('past7','Past 7 days')+dopt('past30','Past 30 days')+dopt('next7','Next 7 days')+dopt('all','All dates')+'</select>'+
+    '<select onchange="wlSetSort(this.value)" style="height:32px;border:1px solid #DDD;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 8px;color:#2A2A2A">'+
+      sopt('overdue','Sort: Oldest overdue first')+sopt('newest','Joining date, newest')+sopt('name','Name A–Z')+'</select>'+
+    '<label style="margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#747474;cursor:pointer;white-space:nowrap"><input type="checkbox" '+(s.mineOnly?'checked':'')+' onchange="wlToggleMine()" style="cursor:pointer">Mine only</label>'+
+  '</div>';
+
+  /* attention block — only on the All view (rows already shown when a status/attention chip is picked) */
+  if(s.filter==='all'){
+    var over=wlBase().filter(isOverdue).sort(function(a,c){ return dayDiff(c)-dayDiff(a); });
+    if(over.length){
+      var outside=(s.dateRange!=='all') ? over.filter(function(c){ return !inDateRange(c); }).length : 0;
+      html+='<div class="rh-card" style="padding:0;border-color:#EAD9AE;margin-bottom:16px">'+
+        '<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:#FBF1DE;border-radius:8px 8px 0 0">'+
+          '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>'+
+          '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;color:#8a6414">Needs your attention · '+over.length+'</div>'+
+            '<div style="font-size:12px;color:#8a6414;margin-top:1px">Joining date has passed and the check isn\'t finished.'+(outside?(' Includes '+outside+' outside your selected dates.'):'')+'</div></div>'+
+          '<button type="button" onclick="wlToggleConfirmAll()" style="border:0.5px solid #B7791F;background:transparent;color:#8a6414;border-radius:8px;padding:5px 10px;font-size:12px;font-family:inherit;cursor:pointer;flex-shrink:0">Dismiss all</button>'+
+        '</div>';
+      if(s.wlConfirmAll){
+        html+='<div style="padding:10px 16px;background:#FBF1DE;border-top:0.5px solid #EAD9AE;font-size:12.5px;color:#8a6414">Dismiss all '+over.length+'? Pick a reason — recorded against your name.'+
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center">'+
+            '<select id="wl-all-reason" style="height:28px;border:1px solid #EAD9AE;border-radius:6px;background:#fff;font-family:inherit;font-size:12px;padding:0 6px"><option>Date changed</option><option>Not joining</option><option>Verified elsewhere</option><option>Bad date import</option></select>'+
+            '<button type="button" onclick="wlDismissAll()" style="border:0.5px solid #B7791F;background:transparent;color:#8a6414;border-radius:6px;padding:5px 10px;font-size:12px;font-family:inherit;cursor:pointer">Confirm dismiss all</button>'+
+            '<button type="button" onclick="wlToggleConfirmAll()" style="border:0.5px solid #DDD;background:#fff;color:#747474;border-radius:6px;padding:5px 10px;font-size:12px;font-family:inherit;cursor:pointer">Cancel</button>'+
+          '</div></div>';
+      }
+      over.forEach(function(c){
+        var st=wlStatus(c), d=dayDiff(c);
+        var sub = st==='awaiting'
+          ? '<span style="color:#8a6414">Checked · decision not made</span>'
+          : '<span style="color:'+(d>7?'#D93025':'#8a6414')+'">Expected '+fmtDate(c.joiningISO)+' · '+d+' day'+(d===1?'':'s')+' ago</span>';
+        html+='<div role="button" tabindex="0" onclick="pick(\''+c.id+'\')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:0.5px solid #EAD9AE;cursor:pointer">'+
+          avatar(c.name,36)+
+          '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+' <span style="font-weight:400;color:#747474;font-size:12px">· '+h(c.rhid+' · '+c.req)+'</span></div>'+
+            '<div style="font-size:12px;margin-top:2px">'+sub+'</div></div>'+
+          wlPill(st)+
+          '<button type="button" onclick="event.stopPropagation();wlToggleMenu(\''+c.id+'\')" aria-label="More actions" style="border:0;background:none;color:#9a9a9a;font-size:18px;line-height:1;padding:4px 6px;border-radius:6px;cursor:pointer;flex-shrink:0">&#8943;</button>'+
+          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg>'+
+        '</div>';
+        if(s.wlMenu===c.id){
+          html+='<div style="padding:10px 16px 12px 64px;background:#F7F8FA;border-top:0.5px solid #EAD9AE">'+
+            '<div style="font-size:12px;color:#747474;margin-bottom:7px">Dismiss from attention — pick a reason (recorded against A. Sharma · now):</div>'+
+            '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+              ['Not joining','Date changed','Verified elsewhere'].map(function(rz){ return '<button type="button" onclick="wlDismiss(\''+c.id+'\',\''+rz+'\')" style="border:0.5px solid #DDD;background:#fff;border-radius:6px;padding:5px 10px;font-size:12px;font-family:inherit;cursor:pointer;color:#2A2A2A">'+rz+'</button>'; }).join('')+
+            '</div></div>';
+        }
+      });
+      html+='</div>';
+    }
+  }
+
+  /* main list */
+  var full=wlList(), per=s.perPage, pages=Math.max(1,Math.ceil(full.length/per)), page=Math.min(s.page,pages);
+  var slice=full.slice((page-1)*per, page*per);
+  var toverifyN=full.filter(function(c){ return wlStatus(c)==='toverify'; }).length;
+  var awaitingN=full.filter(function(c){ return wlStatus(c)==='awaiting'; }).length;
+  var rangeLabel={today:'Joining today',past7:'Past 7 days',past30:'Past 30 days',next7:'Next 7 days',all:'All candidates'}[s.dateRange];
+  var summaryBits=[full.length+' candidate'+(full.length===1?'':'s')];
+  if(toverifyN) summaryBits.push(toverifyN+' to verify'); if(awaitingN) summaryBits.push(awaitingN+' awaiting decision');
+  html+='<div class="rh-card" style="padding:0">'+
+    '<div style="padding:14px 16px"><div style="font-size:16px;font-weight:600">'+h(rangeLabel)+(s.mineOnly?' · yours':'')+'</div>'+
+      '<div style="font-size:12.5px;color:#747474;margin-top:2px">'+h(summaryBits.join(' · '))+'</div></div>';
+  if(!slice.length){
+    html+='<div style="padding:18px 16px;font-size:13.5px;color:#747474;border-top:0.5px solid #E0E0E0">Nothing here for this filter.</div>';
+  } else {
+    var shownFuture=false;
+    slice.forEach(function(c){
+      if(isFuture(c) && !shownFuture){ shownFuture=true; html+='<div style="padding:9px 16px;background:#F7F8FA;border-top:0.5px solid #E0E0E0;font-size:12px;font-weight:600;color:#747474">Coming up</div>'; }
+      var fut=isFuture(c), st=wlStatus(c), reason=wlReason(c);
+      var sub=h(c.rhid+' · '+c.req)+(reason?' · '+h(reason):'');
+      if(fut){
+        html+='<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:0.5px solid #E0E0E0;opacity:0.62">'+
+          '<span class="rh-avatar" style="width:36px;height:36px;background:transparent;border:0.5px dashed #C6C6C6;color:#9a9a9a"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>'+
+          '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500">'+h(c.name)+'</div><div style="font-size:12.5px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.rhid+' · '+c.req)+'</div></div>'+
+          '<span style="font-size:12px;color:#9a9a9a;flex-shrink:0">Joining '+fmtDate(c.joiningISO)+'</span></div>';
+      } else {
+        html+='<div role="button" tabindex="0" onclick="pick(\''+c.id+'\')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:0.5px solid #E0E0E0;cursor:pointer">'+
+          avatar(c.name,36)+
+          '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+'</div><div style="font-size:12.5px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+sub+'</div></div>'+
+          wlPill(st)+
+          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg>'+
+        '</div>';
+      }
+    });
+    /* pagination footer */
+    var lo=(page-1)*per+1, hi=Math.min(page*per, full.length);
+    html+='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-top:0.5px solid #E0E0E0">'+
+      '<span style="font-size:12px;color:#747474">Showing '+lo+'–'+hi+' of '+full.length+'</span>'+
+      '<div style="margin-left:auto;display:flex;align-items:center;gap:6px">';
+    var pbtn=function(label,to,on,dis){ return '<button type="button" '+(dis?'disabled':'onclick="wlSetPage('+to+')"')+' style="height:28px;min-width:28px;border:1px solid '+(on?'#2A2A2A':'#DDD')+';border-radius:8px;background:#fff;font-family:inherit;font-size:13px;color:'+(dis?'#C6C6C6':'#2A2A2A')+';cursor:'+(dis?'default':'pointer')+';padding:0 8px">'+label+'</button>'; };
+    html+=pbtn('‹ Prev', page-1, false, page<=1);
+    for(var pi=1; pi<=pages; pi++){ html+=pbtn(String(pi), pi, pi===page, false); }
+    html+=pbtn('Next ›', page+1, false, page>=pages);
+    html+='<select onchange="wlSetPer(this.value)" style="height:28px;border:1px solid #DDD;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 6px;color:#2A2A2A">'+
+      [25,50,100].map(function(n){ return '<option value="'+n+'"'+(per===n?' selected':'')+'>'+n+' / page</option>'; }).join('')+'</select>';
+    html+='</div></div>';
+  }
+  html+='</div>';
+  return html;
+}
+
 function render(){
   var s = state, c = s.cand;
   var hits = searchHits(), ok = hits.ok;
@@ -554,86 +802,13 @@ function render(){
 
   /* 1. SEARCH */
   if(s.searchOpen){
-    html += '<div class="rh-card">'+
-      '<div style="font-size:16px;font-weight:600;line-height:1.5;margin-bottom:2px">Identity check</div>'+
-      '<p style="margin:0 0 20px;font-size:14px;color:#747474;line-height:1.55">Compare the person who showed up today against the candidate\'s application and interview photos.</p>'+
-      '<label for="rh-q" style="font-size:14px;font-weight:600;color:#555">Search candidate</label>'+
-      '<div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid #A5A5A5;padding:6px 0">'+searchIcon()+
-        '<input id="rh-q" type="search" placeholder="Search by name, RHID or email" autocomplete="off" value="'+h(s.q)+'" '+(s.roundsConfigured?'':'disabled')+' oninput="onQuery(this.value)" style="flex:1;min-width:0;border:0;outline:0;background:none;font-family:inherit;font-size:14px;font-weight:500;color:#2A2A2A">'+
-      '</div>'+
-      '<div style="font-size:12px;color:#747474;margin-top:8px;display:flex;align-items:center;gap:6px"><span style="width:5px;height:5px;border-radius:50%;background:#0076FB;flex-shrink:0"></span>Onboarding and hired rounds only</div>';
     if(noteBold||noteRest){
-      html += '<div class="note" style="margin-top:12px">'+(noteBold?'<b style="font-weight:600">'+h(noteBold)+'</b> ':'')+h(noteRest)+'</div>';
+      html += '<div class="rh-card" style="margin-bottom:16px"><div class="note">'+(noteBold?'<b style="font-weight:600">'+h(noteBold)+'</b> ':'')+h(noteRest)+'</div></div>';
     }
-    if(ok.length){
-      html += '<div style="margin-top:12px;border:1px solid #DDD;border-radius:6px;overflow:hidden">';
-      ok.forEach(function(x){
-        html += '<button type="button" onclick="pick(\''+x.id+'\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;background:#fff;border:0;border-bottom:1px solid #E0E0E0;text-align:left;cursor:pointer;font-family:inherit">'+
-          '<span style="width:34px;height:34px;border-radius:50%;background:#EFEFEF;display:grid;place-items:center;font-size:12px;font-weight:600;color:#747474;flex-shrink:0">'+h(initials(x.name))+'</span>'+
-          '<span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600;line-height:1.35">'+h(x.name)+'</span><span style="font-size:12.5px;color:#747474">'+h(x.rhid+' · '+x.req)+'</span></span>'+
-          '<span class="rh-chip chip-stage">'+h(x.stage)+'</span>'+
-        '</button>';
-      });
-      html += '</div>';
-    }
-    html += '</div>';
+    if(s.roundsConfigured) html += findCandidateCard(ok);
 
-    /* WORKLIST TABS — Joining today (default) / Checks you ran today */
-    if(s.roundsConfigured){
-      var tabBtn = function(id,label,count){
-        var active = s.tab===id;
-        return '<button type="button" onclick="setTab(\''+id+'\')" style="border:0;border-radius:7px;padding:7px 14px;font-family:inherit;font-size:13.5px;cursor:pointer;white-space:nowrap;'+(active?'background:#fff;font-weight:600;color:#2A2A2A;box-shadow:0 1px 2px rgba(0,0,0,.08)':'background:none;color:#747474;font-weight:500')+'">'+h(label)+' <span style="color:#9a9a9a;font-weight:400">'+count+'</span></button>';
-      };
-      html += '<div style="display:inline-flex;background:#F1EFE8;border-radius:9px;padding:3px;gap:2px;margin-bottom:14px;max-width:100%;overflow:auto">'+
-        tabBtn('joining','Joining today',joiningToday.length)+
-        tabBtn('checks','Checks you ran today',s.history.length)+
-      '</div>';
-
-      if(s.tab==='joining'){
-        html += '<div class="rh-card" style="padding:0">';
-        if(!joiningToday.length){
-          html += '<div style="padding:18px 20px;font-size:13.5px;color:#747474">No candidates at onboarding join today.</div>';
-        } else {
-          var todo=[], donel=[];
-          joiningToday.forEach(function(x){ var lc=latestCheck(x.id); ((lc && lc.hh.decision)?donel:todo).push(x); });
-          html += '<div style="padding:16px 20px 6px"><div style="font-size:16px;font-weight:600;line-height:1.4">Joining today</div>'+
-            '<div style="font-size:12.5px;color:#747474;margin-top:2px">'+joiningToday.length+' candidate'+(joiningToday.length===1?'':'s')+' · '+todo.length+' to verify, '+donel.length+' done</div></div>';
-          var section = function(title,list,isTodo){
-            if(!list.length) return;
-            html += '<div style="padding:11px 20px 6px;border-top:1px solid #E0E0E0;font-size:12px;font-weight:600;color:#747474">'+title+'</div>';
-            list.forEach(function(x){
-              var lc = latestCheck(x.id);
-              var onclick = lc ? ('openHistory('+lc.idx+')') : ('pick(\''+x.id+'\')');
-              html += '<div role="button" tabindex="0" onclick="'+onclick+'" style="display:flex;align-items:center;gap:12px;padding:12px 20px;border-top:1px solid #E0E0E0;cursor:pointer">'+
-                avatar(x.name,34)+
-                '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(x.name)+'</div><div style="font-size:12.5px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(x.rhid+' · '+x.req)+'</div></div>'+
-                worklistBadge(x.id)+
-                '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg>'+
-              '</div>';
-            });
-          };
-          section('To verify',todo,true);
-          section('Done',donel,false);
-        }
-        html += '</div>';
-      } else {
-        html += '<div class="rh-card" style="padding:0">'+
-          '<div style="padding:16px 20px 6px"><div style="font-size:16px;font-weight:600;line-height:1.4">Your checks today</div>'+
-            '<div style="font-size:12.5px;color:#747474;margin-top:2px">'+(s.history.length?(s.history.length+' check'+(s.history.length===1?'':'s')):'No checks run yet')+'</div></div>';
-        s.history.forEach(function(hh,idx){
-          html += '<button type="button" class="rh-histrow" onclick="openHistory('+idx+')" style="display:flex;align-items:center;gap:12px;width:100%;padding:12px 20px;border:0;border-top:1px solid #E0E0E0;background:none;text-align:left;font-family:inherit;cursor:pointer">'+
-            avatar(hh.cand.name,34)+
-            '<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">'+
-              '<span style="font-size:14px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(hh.cand.name)+'</span>'+
-              '<span style="font-size:12px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(hh.cand.rhid+' · '+hh.cand.req)+'</span></span>'+
-            entryBadge(hh)+
-            '<span class="rh-histtime" style="font-size:12px;color:#747474;flex-shrink:0;white-space:nowrap">'+h(hh.at)+'</span>'+
-            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M9 6l6 6-6 6"/></svg>'+
-          '</button>';
-        });
-        html += '</div>';
-      }
-    }
+    /* single worklist (replaces the old Joining-today / Checks-you-ran tabs) */
+    if(s.roundsConfigured){ html += worklistView(); }
   }
 
   /* (context band removed - back arrow in the page header returns to search) */
@@ -885,9 +1060,9 @@ function render(){
 /* ---------- handlers (global) ---------- */
 function onQuery(v){ state._refocus='rh-q'; setState({q:v, deepMiss:null}); }
 function onPickQuery(v){ state._refocus='rh-pick'; setState({pickQ:v}); }
-function pick(id){ var c=CANDIDATES.find(function(x){return x.id===id;}); if(c) select(c); }
+function pick(id){ var c=CANDIDATES.find(function(x){return x.id===id;}); if(!c) return; var lc=latestCheck(id); if(lc) openHistory(lc.idx); else select(c); }
 function setTab(t){ setState({tab:t}); }
-function changeCandidate(){ reset({roundsConfigured:state.roundsConfigured}); }
+function changeCandidate(){ setState({cand:null, searchOpen:true, done:false, running:false, rows:[], entry:null, decision:null, decisionErr:'', viewingHistory:false}); wlSyncUrl(true); window.scrollTo({top:0,behavior:'smooth'}); }
 function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click(); }
 function openPicker(){ var el=document.getElementById('rh-file'); if(el) el.click(); }
 function onFileInput(e){ handleFile(e.target.files[0]); }
@@ -950,24 +1125,52 @@ function togglePick(id){ var on=state.picked.indexOf(id)>=0; setState({picked: o
 function downloadPdf(){ toast('PDF downloaded'); }
 function revoke(id){ var u=state.shared.find(function(x){return x.id===id;}); setState({shared:state.shared.filter(function(x){return x.id!==id;})}); if(u) toast('Access revoked for '+u.name); }
 function verifyAnother(){ reset({roundsConfigured:state.roundsConfigured}); window.scrollTo({top:0,behavior:'smooth'}); }
-function openHistory(idx){ var hh=state.history[idx]; setState({ cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, searchOpen:false, running:false, done:true, open:null, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'' }); }
+function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, searchOpen:false, running:false, done:true, open:null, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'' }); if(!noPush) wlSyncUrl(false); }
+
+/* ---------- seeded demo worklist data ---------- */
+function fmtLong(iso){ var d=new Date(Date.parse(iso+'T00:00:00Z')); var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return d.getUTCDate()+' '+mo[d.getUTCMonth()]+' '+d.getUTCFullYear(); }
+function hhmm(n){ var hh=9+(n%8), mm=(n*7)%60; return (hh<10?'0':'')+hh+':'+(mm<10?'0':'')+mm; }
+/* DEMO ONLY: ~60 seeded candidates so the chip counts, overdue ages and pagination are
+   real. Seeds have no photos; clicking one opens the check page. The three interactive
+   candidates (Rahul c1, Arjun c2, Meera c3) are the ones with real on-file photos. */
+function buildSeeds(){
+  var first=['Ananya','Rohit','Kavya','Sameer','Neha','Vikas','Divya','Isha','Pooja','Nikhil','Sneha','Karan','Aditya','Riya','Suresh','Tara','Manish','Lakshmi','Varun','Anita','Deepak','Swati','Gaurav','Kiran','Ritu','Ajay','Nisha','Harsh','Preeti','Vivek','Shreya','Rakesh','Anjali','Sanjay','Payal','Amit','Ruchi','Yash','Komal','Farhan','Ishita','Naveen','Bhavna','Rohan','Simran','Alia','Kabir','Zoya','Mira','Veer','Diya','Ayaan','Sara','Krish','Myra','Reyansh','Anaya','Aryan','Tanya','Dhruv'];
+  var last=['Rao','Verma','Iyer','Menon','Gupta','Reddy','Patel','Bose','Ghosh','Kaur','Singh','Das','Pillai','Joshi','Kulkarni','Malhotra','Chopra','Nanda','Sinha','Bhat'];
+  var roles=['Backend Engineer','QA Analyst','Product Manager','UX Designer','Data Engineer','SDET','DevOps Engineer','Business Analyst','Support Lead','Frontend Engineer','Recruiter','Account Manager'];
+  var i=0, id=1;
+  function push(name, st, iso, owner, reason){
+    CANDIDATES.push({ id:'s'+id, name:name, rhid:'RH'+(49000+id), req:roles[id%roles.length], reqid:'REQ-'+(2400+id), stage:'Onboarding', eligible:true, joiningISO:iso, joining:fmtLong(iso), owner:owner, photos:[], wl:{status:st, by:'A. Sharma', at:hhmm(id), reason:reason} });
+    id++;
+  }
+  function nm(){ var n=first[i%first.length]+' '+last[(i*3)%last.length]; i++; return n; }
+  push('Vikram Nair','toverify','2026-08-04','me','');
+  push('Priya Sharma','toverify','2026-08-12','me','');
+  push('Imran Shaikh','awaiting','2026-08-13','me','Checked · decision not made');
+  for(var k=0;k<44;k++){ push(nm(),'confirmed','2026-08-'+(('0'+(5+(k%10))).slice(-2)),'me','Confirmed by A. Sharma · '+hhmm(k+2)); }
+  for(k=0;k<8;k++){ push(nm(),'toverify', k<5?'2026-08-15':'2026-08-16','me',''); }
+  for(k=0;k<3;k++){ push(nm(),'awaiting','2026-08-15','me','Checked · decision not made'); }
+  push(nm(),'cantconfirm','2026-08-10','me','Flagged for review');
+  push(nm(),'cantconfirm','2026-08-11','me','Flagged for review');
+  for(k=0;k<4;k++){ push(nm(),'toverify','2026-08-'+(17+k),'me',''); }
+  push(nm(),'toverify','2026-08-06','other','');
+  push(nm(),'confirmed','2026-08-08','other','Confirmed by K. Menon · 11:20');
+  push(nm(),'awaiting','2026-08-09','other','Checked · decision not made');
+  for(k=0;k<5;k++){ push(nm(), k%2?'confirmed':'toverify', '2026-08-'+(('0'+(7+k)).slice(-2)), 'other', k%2?('Confirmed by F. Qureshi · 10:0'+k):''); }
+}
 
 /* ---------- entry ---------- */
 (function init(){
   // attach real on-file photos (injected as data-URIs) to the matching candidate
   if(window.RH_IMAGES){ Object.keys(window.RH_IMAGES).forEach(function(cid){ var cc=CANDIDATES.find(function(x){return x.id===cid;}); if(cc) cc.photos.forEach(function(p,i){ if(window.RH_IMAGES[cid][i]) p.img=window.RH_IMAGES[cid][i]; }); }); }
+  buildSeeds();
   var params = new URLSearchParams(location.search);
-  var deep = params.get('candidateId');
-  var entry = params.get('entry') || 'direct';
+  if((params.get('entry')||'')==='norounds') state.roundsConfigured=false;
   // "Take photo" is a mobile-only affordance (desktop shows Choose file only)
   function isMobile(){ return (window.matchMedia && (window.matchMedia('(pointer:coarse)').matches || window.matchMedia('(max-width: 767px)').matches)) || false; }
   state.hasCamera = isMobile();
   window.addEventListener('resize', function(){ var m=isMobile(); if(m!==state.hasCamera) setState({hasCamera:m}); });
-
-  var c = deep && CANDIDATES.find(function(x){ return x.id===deep || x.rhid===deep; });
-  if(c) select(c);
-  else if(deep) setState({deepMiss:deep});
-  else applyEntry(entry);
+  window.addEventListener('popstate', function(){ wlApplyUrl(); });
+  wlApplyUrl();
 })();
 </script>
 </body>
