@@ -984,9 +984,6 @@ function render(){
               '<div><div style="font-size:13px;color:#747474;margin-bottom:6px">'+h(r.label)+'</div><div style="width:100%;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+photoTile(r,(c?c.id:'')+r.label,'contain')+'</div></div>'+
             '</div>'+
             (r.by ? '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px"><span style="font-size:12.5px;color:#747474;display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#747474" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>Interviewed by '+h(r.by)+'</span>'+
-              (r.asked
-                ? '<span style="font-size:12.5px;color:#1a8a3a;font-weight:600;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#1a8a3a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Asked '+h(r.by)+' to confirm</span>'
-                : '<button type="button" onclick="askInterviewer('+i+')" style="border:1px solid #DDD;background:#fff;border-radius:6px;padding:5px 12px;font-size:12.5px;font-weight:600;color:#0076FB;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Ask '+h(r.by)+' to confirm</button>') +
             '</div>' : '')+
             '<div style="font-size:12px;color:#9a9a9a;margin-top:10px">Model similarity '+r.score+'% · match bar for '+(r.src==='document'?'documents is 65%':'photos is 85%')+'</div>'+
             (needsCode ? reasonCodes(i, r) : '')+

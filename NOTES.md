@@ -80,9 +80,9 @@ never flips to a clean "Match" off human vouching.
   **change the row badge** to a single combined state: *Reviewed · same person* (green) or
   *Reviewed · different person* (red). One badge carries both the model finding and the human
   answer — never two competing badges.
-- **Escalation:** each interviewer row has an **"Ask &lt;name&gt; to confirm"** button. After a
-  retake still fails, the person who sat with the candidate for 45 minutes is better evidence
-  than any score, and the tool already knows who that is. (Mocked — toast only, no real message.)
+- The expanded panel shows **"Interviewed by &lt;name&gt;"** (the person who ran that round). An
+  **"Ask &lt;name&gt; to confirm"** escalation button was prototyped here and **removed 2026-08-27**
+  (not wanted); the interviewer name stays as context.
 
 ## Recruiter decision — Confirm / Can't confirm
 
@@ -133,7 +133,6 @@ Nothing here persists to a server — it lives in the browser session and resets
 - **Decisions** (Confirm/Can't confirm), reason codes, and their audit trail — stored in-session
   on the check record.
 - **Per-photo scores** — seeded, not from a live model (see the scoring-engine note above).
-- **"Ask &lt;interviewer&gt; to confirm"** — toast only, no real message sent.
 - **"Can't confirm" flag destination** — no real escalation owner is notified yet.
 - **Share report** — in-page only (no real recipients/notifications). Currently hidden behind
   `SHOW_REPORT_ACTIONS`. (The earlier "Shared with you" mock list was removed.)
