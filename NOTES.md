@@ -3,6 +3,9 @@
 Context and intentional decisions behind the Verify Identity prototype, so nothing here
 looks like an accident.
 
+> See `DECISIONS.md` for the chronological log — the research and discussions that led to each
+> change. This file is the current state; that one is the story.
+
 ## Hidden behind feature flags (in `index.html`)
 
 These are built and working but intentionally hidden for now. To bring one back, flip its
