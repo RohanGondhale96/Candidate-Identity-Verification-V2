@@ -188,3 +188,95 @@ Nothing here persists to a server — it lives in the browser session and resets
 - Full loop to demo: **Joining today** → open a candidate → upload a photo → run → resolve the
   flagged rows → **Confirm** or **Can't confirm** → go back; the candidate moves to **Done** with
   the decision badge, and also appears under **Checks you ran today**.
+
+---
+
+# Design decisions in progress — DISCUSSED, NOT YET BUILT
+
+Everything above describes what is actually in the code. Everything **below** is design
+discussion that has **not been built** — do not read it as current behaviour. Status per item:
+**[agreed]** settled in discussion · **[rec]** my recommendation, awaiting sign-off · **[open]**
+undecided.
+
+## A. Overall verdict — vocabulary and logic
+
+- **[rec]** Rename the banner tiers to **Verified / Needs review / Not verified** — reads as the
+  status of the *check*, not a judgment of the *person* (same reason we dropped "reject").
+- **[agreed]** The overall status is **computed by the system** from the resolved per-row states —
+  the recruiter never types the verdict. Not a single **%** (vague, blends heterogeneous
+  references and unreliable scores).
+- **[rec]** Status turns on **confident contradiction, not the count.** A single *high-confidence*
+  "not a match" holds the status at **Needs review** until a human resolves that row; a
+  *low-confidence* dissenter (old/poor reference) folds into **Verified**. **No unanimity
+  requirement** — multi-reference verification fuses evidence (NIST FRVT); requiring every
+  reference to agree would false-reject legitimate hires, and error rates skew by demographic.
+  (This is already how `reportSummary()` behaves; the change is mainly the tier names.)
+
+## B. Legal / compliance posture (India + EU)
+
+- **[agreed]** The tool **must never auto-reject** a candidate. It outputs *status + "reviewed by
+  [name]"*; the hire/no-hire decision is a separate, human, downstream call.
+- **[agreed]** The recruiter **must keep genuine override authority.** GDPR Art 22 + the CJEU
+  *SCHUFA* ruling: a human who merely records/forwards the system's output is a rubber stamp, and
+  the decision still counts as "solely automated" — unlawful for decisions with significant
+  effect. So "the recruiter just submits" is only safe *because* they can override per row.
+- **[agreed]** Stay **verification-only** (1:1 "is this the same person"), never database search
+  / identification — this keeps the EU AI Act's **verification-purpose exemption** from the
+  high-risk track (high-risk obligations took full effect Aug 2026).
+- **[rec]** Add a **retention schedule** for the joining-day photo and keep purpose limited to
+  this check (India DPDP Act 2023: biometric = sensitive personal data; consent + notice +
+  purpose limitation + retention). Consent line already exists.
+- **Not legal advice** — run the final decision flow past counsel before shipping anything that
+  can affect employment. Key sources: GDPR Art 22 / SCHUFA; EU AI Act Annex III verification
+  exemption; NIST FRVT demographic report (IR 8429); India DPDP Act 2023.
+
+## C. AI quality gate + per-row review (report surface)
+
+- **[rec]** Row state = **(confidence × similarity)**, confidence gates: low confidence (quality
+  problem) → **Needs review** regardless of score; high confidence + high similarity → **Match**;
+  high confidence + low similarity → **Not a match**; no usable face → **Couldn't compare**.
+- **[agreed]** Surface the **AI reason** with a Needs-review tag: blurry / not facing camera /
+  looking away / possible group photo / face occluded — so the recruiter knows what to check.
+- **[agreed]** **Headgear → facial-occlusion rule.** The AI must **never** classify "religious vs
+  non-religious" headwear (technically unreliable, discrimination/DPDP risk). Flag only when the
+  **face itself is occluded**, whatever is covering it. A turban/hijab/kippah that leaves the face
+  clear is not flagged.
+- **[agreed]** **No-photo / no-face is NOT "Not a match"** — it stays **Couldn't compare** (a data
+  problem, not an accusation). "Not a match" means only: confidently a different person.
+- **[rec]** Quality check runs in **two places**: the **source (joining) photo** gets a
+  **pre-flight** check at upload (soft warn → retake / run anyway, never a hard block); each
+  **evidence photo** is checked per-row after the run.
+- **[rec]** Recruiter actions **replace the four reason codes** built in `261c9e9`:
+  on **Needs review** → `Same person` / `Not a match` / `Ignore this photo (+reason)`;
+  on **Not a match** → `Same person` / `Ignore this photo (+reason)`. "Can't tell" dropped
+  (dead-end). Mapping: Same person = positive vouch, Not a match = negative, Ignore = excluded
+  from the denominator. Ignore reasons: not this candidate / too blurry-dark-lowres / face not
+  visible / too old / document unreadable / duplicate.
+- **[agreed]** **Audit stores both layers** on every row, permanently: the **AI** tag + reason(s)
+  + raw scores (similarity, confidence), AND the **recruiter** action + reason + who + when. The
+  record reads e.g. *"AI: Needs review (not facing camera) → A. Sharma marked Same person · 10:14."*
+
+## D. Landing worklist rebuild (driver: stale joining-date → unverified joiner)
+
+- **[rec]** Kill the tabs → **one list**. Four row states: **To verify** / **Awaiting decision**
+  (amber) / **Confirmed** / **Can't confirm**. (Splits the old overloaded "Decision pending".)
+- **[rec]** Status **filter chips with counts** (Needs-attention chip amber-tinted); second control
+  row: joining-date range + sort + **Mine-only** toggle.
+- **[rec]** Pinned **"Needs your attention"** block for overdue checks (joining date passed and
+  check unfinished): **never paginates, ignores the date filter, persists until verified or
+  dismissed, hidden when filtered to a single status, per-row attributable dismissal**
+  (Not joining / Date changed, records who + when).
+- **[rec]** Main list flat; header + work summary phrased as remaining work ("12 to verify, 4
+  awaiting decision"), never "0 done"; reason line under each name; **future joiners inert** (no
+  pill, no chevron); **pagination + URL state** (filter/sort/page) so Back returns to the view.
+- **[open]** Does "Needs attention" show **only the recruiter's** overdue rows or **everyone's**?
+  Building **mine-only for now**; a shared/team queue is the real question at multi-recruiter
+  scale (same silent-gap failure, relocated).
+- **[open, out of scope]** **Row ownership / assignment does not exist today.** It's the
+  prerequisite for ever making the attention block a shared team queue — noted here so it isn't
+  lost, but not part of the current change.
+
+## E. Still awaiting sign-off before any of C / D is built
+
+The worklist (six confirmations) and the quality-gate model (five confirmations) were put to the
+user and are **not yet confirmed**. Nothing in C or D should be built until they are.
