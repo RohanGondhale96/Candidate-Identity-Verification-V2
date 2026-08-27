@@ -29,6 +29,15 @@
   @keyframes rh-sweep{0%{top:-34%}100%{top:100%}}
   @keyframes rh-shim{0%{background-position:120% 0}100%{background-position:-120% 0}}
   @keyframes rh-spin{to{transform:rotate(360deg)}}
+  /* gooey metaball loader (blur + contrast makes the blobs merge) */
+  .rh-goo{position:relative;width:60px;height:22px;flex-shrink:0;filter:blur(3px) contrast(16)}
+  .rh-goo b{position:absolute;top:5px;width:12px;height:12px;border-radius:50%;background:#0076FB}
+  .rh-goo b:nth-child(1){left:6px;animation:rh-goo1 1.4s ease-in-out infinite}
+  .rh-goo b:nth-child(2){left:6px;animation:rh-goo2 1.4s ease-in-out infinite}
+  .rh-goo b:nth-child(3){left:6px;animation:rh-goo3 1.4s ease-in-out infinite}
+  @keyframes rh-goo1{0%,100%{transform:translateX(0) scale(.85)}50%{transform:translateX(21px) scale(1.15)}}
+  @keyframes rh-goo2{0%,100%{transform:translateX(21px) scale(.85)}50%{transform:translateX(42px) scale(1.15)}}
+  @keyframes rh-goo3{0%,100%{transform:translateX(42px) scale(.85)}50%{transform:translateX(0) scale(1.15)}}
 
   /* ===== TopNav ===== */
   .rh-nav{background:#000;color:#fff;height:72px;display:flex;align-items:center;gap:26px;padding:0 24px}
@@ -871,7 +880,7 @@ function render(){
         '</div>';
       // source-photo quality pre-flight — soft (informational), never blocks Run verification
       if(s.qualityChecking){
-        html += '<div style="display:flex;align-items:center;gap:9px;margin-top:14px;padding:10px 13px;background:#F7F8FA;border:1px solid #E0E0E0;border-radius:6px;font-size:13px;color:#747474"><span style="width:14px;height:14px;border:2px solid #E0E0E0;border-top-color:#0076FB;border-radius:50%;animation:rh-spin .7s linear infinite;flex-shrink:0"></span>Checking photo quality…</div>';
+        html += '<div style="display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 14px;background:#F7F8FA;border:1px solid #E0E0E0;border-radius:6px;font-size:13px;color:#747474"><span class="rh-goo" aria-hidden="true"><b></b><b></b><b></b></span>Checking photo quality…</div>';
       } else if(s.quality && s.quality.usable){
         html += '<div style="display:flex;align-items:center;gap:8px;margin-top:14px;padding:10px 13px;background:#E7F4EC;border:1px solid #BFE3CC;border-radius:6px;font-size:13px;color:#1a6b34"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1a8a3a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Photo looks good to compare.</div>';
       } else if(s.quality){
