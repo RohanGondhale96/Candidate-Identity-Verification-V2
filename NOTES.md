@@ -271,12 +271,14 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
 - Kill the tabs → **one list**. Four row states: **To verify** / **Awaiting decision** (amber) /
   **Confirmed** / **Can't confirm**. (Splits the old overloaded "Decision pending".) Pills are all
   **filled** — colour carries the meaning, no outlined/filled mix.
-- Status is a **dropdown** (not chips), sitting inline with the date-range and sort dropdowns +
-  **Mine-only** toggle — a tidier, consistent control row. The per-status **counts are kept inside
-  each option** ("Needs attention (8)", "To verify (21)"). This is a deliberate UX trade: chips
-  showed every count at a glance, the dropdown hides them behind one click; the tidier look was
-  chosen over the always-visible dashboard (2026-08-27, with the trade acknowledged).
-- **Chip counts follow the active date range + Mine scope** — EXCEPT **Needs attention, which
+- Status is a **dropdown** (not chips), sitting inline with the date-range and sort dropdowns — a
+  tidier, consistent control row. The per-status **counts are kept inside each option** ("Needs
+  attention (8)", "To verify (21)"). This is a deliberate UX trade: chips showed every count at a
+  glance, the dropdown hides them behind one click; the tidier look was chosen over the
+  always-visible dashboard (2026-08-27, with the trade acknowledged).
+- **No Mine-only toggle** — removed 2026-08-27. There's no ownership concept yet, so the list shows
+  **all** candidates; a per-recruiter scope only becomes meaningful once row assignment exists.
+- **Counts follow the active date range** — EXCEPT **Needs attention, which
   ignores the date filter entirely** (that is its safety property; it must never be filtered away).
   Because the attention count can then exceed what's visible in the range, the block header says so:
   *"Includes N outside your selected dates."*
@@ -305,8 +307,10 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
   at different ages (one ~3d amber, one ~11d red), one overdue-because-undecided, one future joiner,
   one with no photos on file, and enough **Confirmed** that filtering to it pages (pagination must
   be demonstrable inside a single status, not just on All). Labelled as demo data.
-- **[open]** Needs-attention is **mine-only for now**; whether it should show the whole team's
-  overdue rows is the real multi-recruiter question (same silent-gap failure, relocated).
+- **[open]** With Mine-only removed, the worklist (and the attention block) now shows **everyone's**
+  candidates. Once row ownership exists, the real question returns: should a recruiter see only her
+  own overdue rows, or the whole team's? (A shared view risks "someone else has it"; a scoped view
+  risks the silent gap.) Parked until assignment is built.
 - **[open, out of scope]** **Row ownership / assignment does not exist today** — it is the
   prerequisite for a shared team attention queue. Noted so it isn't lost; not in this change.
 - **Demo limitation:** ~60 candidates are **seeded** (in `buildSeeds()`) so counts, overdue ages,

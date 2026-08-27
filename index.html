@@ -556,7 +556,7 @@ function inDateRange(c){ var d=dayDiff(c), r=state.dateRange;
   if(r==='next7')  return d<=0 && d>=-7;
   return true; /* all */
 }
-function wlBase(){ var l=CANDIDATES.filter(function(c){ return c.eligible!==false && c.joiningISO; }); if(state.mineOnly) l=l.filter(isMine); return l; }
+function wlBase(){ return CANDIDATES.filter(function(c){ return c.eligible!==false && c.joiningISO; }); }
 function wlCount(status){
   var b=wlBase();
   if(status==='attention') return b.filter(isOverdue).length;
@@ -675,7 +675,6 @@ function worklistView(){
       dopt('today','Joining date: Today')+dopt('past7','Past 7 days')+dopt('past30','Past 30 days')+dopt('next7','Next 7 days')+dopt('all','All dates')+'</select>'+
     '<select onchange="wlSetSort(this.value)" style="height:32px;border:1px solid #DDD;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 8px;color:#2A2A2A">'+
       sopt('overdue','Sort: Oldest overdue first')+sopt('newest','Joining date, newest')+sopt('name','Name A–Z')+'</select>'+
-    '<label style="margin-left:auto;display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#747474;cursor:pointer;white-space:nowrap"><input type="checkbox" '+(s.mineOnly?'checked':'')+' onchange="wlToggleMine()" style="cursor:pointer">Mine only</label>'+
   '</div>';
 
   /* attention block — only on the All view (rows already shown when a status/attention chip is picked) */
@@ -732,7 +731,7 @@ function worklistView(){
   var summaryBits=[full.length+' candidate'+(full.length===1?'':'s')];
   if(toverifyN) summaryBits.push(toverifyN+' to verify'); if(awaitingN) summaryBits.push(awaitingN+' awaiting decision');
   html+='<div class="rh-card" style="padding:0">'+
-    '<div style="padding:14px 16px"><div style="font-size:16px;font-weight:600">'+h(rangeLabel)+(s.mineOnly?' · yours':'')+'</div>'+
+    '<div style="padding:14px 16px"><div style="font-size:16px;font-weight:600">'+h(rangeLabel)+'</div>'+
       '<div style="font-size:12.5px;color:#747474;margin-top:2px">'+h(summaryBits.join(' · '))+'</div></div>';
   if(!slice.length){
     html+='<div style="padding:18px 16px;font-size:13.5px;color:#747474;border-top:0.5px solid #E0E0E0">Nothing here for this filter.</div>';
