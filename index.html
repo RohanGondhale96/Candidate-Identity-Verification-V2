@@ -183,7 +183,7 @@ var state = {
   toast:'', roundsConfigured:true, lightbox:null, history:[], hasCamera:true, deepMiss:null,
   confirmReshoot:false, viewingHistory:false, decision:null, decisionErr:'', entry:null, tab:'joining', _refocus:null,
   /* worklist */
-  filter:'all', dateRange:'all', wlSort:'overdue', mineOnly:true, page:1, perPage:25,
+  filter:'all', dateRange:'all', wlSort:'overdue', mineOnly:true, page:1, perPage:10,
   dismissed:{}, wlMenu:null, wlConfirmAll:false
 };
 
@@ -773,7 +773,7 @@ function worklistView(){
     for(var pi=1; pi<=pages; pi++){ html+=pbtn(String(pi), pi, pi===page, false); }
     html+=pbtn('Next ›', page+1, false, page>=pages);
     html+='<select onchange="wlSetPer(this.value)" style="height:28px;border:1px solid #DDD;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 6px;color:#2A2A2A">'+
-      [25,50,100].map(function(n){ return '<option value="'+n+'"'+(per===n?' selected':'')+'>'+n+' / page</option>'; }).join('')+'</select>';
+      [10,25,50].map(function(n){ return '<option value="'+n+'"'+(per===n?' selected':'')+'>'+n+' / page</option>'; }).join('')+'</select>';
     html+='</div></div>';
   }
   html+='</div>';

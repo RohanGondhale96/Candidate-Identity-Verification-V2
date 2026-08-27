@@ -291,8 +291,8 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
 - Main list flat; header + work summary phrased as remaining work ("12 to verify, 4 awaiting
   decision"), never "0 done"; reason line under each name ("1 photo needs review", "Confirmed by
   A. Sharma · 09:41", "Escalated to R. Menon · 10:12"); **future joiners inert** (no pill, no
-  chevron, neutral "Joining Mon 18 Aug"); **pagination** (25/50/100 per page, resets to page 1 on
-  any filter/sort change) + **URL state** (filter/sort/page) so opening a check and hitting Back
+  chevron, neutral "Joining Mon 18 Aug"); **pagination** (10 per page by default, 10/25/50 options,
+  resets to page 1 on any filter/sort change) + **URL state** (filter/sort/page) so opening a check and hitting Back
   returns to the same view.
 - Keep the **candidate search** ("Find a candidate", onboarding/hired rounds scope note) — demoted
   but important: it's how you reach someone who isn't where the system says they are, which is the
