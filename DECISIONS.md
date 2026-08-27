@@ -15,6 +15,31 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-08-27 · Source-photo quality pre-flight (live Gemini) + provenance attestation — BUILT
+
+- **Discussion:** on the upload step, run a quality check on the joining-day photo; if good, the
+  recruiter can proceed. And require a **second checkbox** attesting the photo is a genuine
+  same-day capture of the person who joined (not a random/old/supplied image), separate from the
+  existing consent checkbox.
+- **Corrected a misconception:** I'd said the source pre-flight "needs the vision model" as if that
+  were a new system. It isn't — **Gemini does quality/occlusion/face-presence well** (describable
+  attributes); only the similarity *number* needs a real embedding engine. "Can't be seeded" just
+  meant it needs a live call, and Gemini is that call. User chose to build it **live (Option A)**.
+- **Built:**
+  - `api/quality.js` serverless (key-safe, same proxy pattern as compare) + `geminiQuality()` in
+    the source (swapped to `/api/quality` at build); `USE_LIVE_QUALITY = true`.
+  - On upload, `checkQuality()` runs; a **soft** banner shows Checking / "looks good" / "may be
+    hard to compare — retake or run anyway". Never blocks; a failed call falls back to usable.
+    Prompt judges **facial occlusion only, never headwear type/religion**.
+  - **Attestation checkbox** (second, distinct from consent) is a **hard gate**: Run verification
+    stays disabled until both consent and attestation are ticked. Stored on the check record;
+    shown in the report header for audit.
+  - Verified: harness 52 assertions + live DOM (gating: consent-alone doesn't enable Run, both
+    does; quality warning is soft) + a **real Gemini quality call** returning
+    `{usable:true, reason:"ok", …}` for a good photo.
+- **Now live for real** (not seeded): the quality pre-flight. Still seeded/pending: the similarity
+  score (needs the embedding engine).
+
 ## 2026-08-27 · Quality gate + per-row review model — LOCKED + BUILT
 
 - **Discussion:** user locked all five §C questions and approved seeded quality flags for the

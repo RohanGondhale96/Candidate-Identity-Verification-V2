@@ -261,14 +261,23 @@ All five locked; seeded quality flags approved for the prototype.
 - **Audit stores both layers** per row: AI tag + reason + score, and the recruiter's action +
   ignore-reason + who + when. Shown in the expanded panel: *"Audit: AI marked Needs review (Not
   facing the camera) → Ignore this photo · Face not clearly visible by A. Sharma · 10:14."*
-- **Seeded, not live:** quality flags (`quality`/`qreason`) are seeded per photo, same as scores
-  (`USE_LIVE_SCORING`), so the states/reasons are demonstrable. Real blur/pose/occlusion/
-  face-presence detection needs the vision model (a genuine capability of it, unlike the
-  similarity number, which needs the embedding engine).
-- **DEFERRED — source-photo pre-flight (#4).** The soft "retake / run anyway" warning on the
-  *joining-day upload* is **not built**: it can't be seeded (the uploaded photo is arbitrary), so
-  it needs the live vision model. The per-evidence quality gate above is fully built; the
-  source-side pre-flight is the one piece waiting on real detection.
+- **Per-evidence quality is seeded** (`quality`/`qreason` per on-file photo, like the scores under
+  `USE_LIVE_SCORING`) so the states/reasons are demonstrable.
+- **Source-photo pre-flight (#4) is LIVE, via Gemini** (`USE_LIVE_QUALITY = true`, on by default).
+  When the recruiter adds the joining-day photo, `geminiQuality()` (→ `api/quality.js` serverless,
+  same key-safe proxy as compare) checks it and returns `{usable, reason, message}`. Quality /
+  occlusion / face-presence are describable attributes Gemini genuinely does well — unlike the
+  similarity *number*, which it fakes — so this one runs for real. The prompt judges **facial
+  occlusion only, never headwear type/religion**. The result is a **soft** banner: "Photo looks
+  good" / "…may be hard to compare — retake, or run anyway" / "Checking photo…" — it never blocks
+  Run verification (a call failure falls back to usable, so it can't trap the recruiter). Flip
+  `USE_LIVE_QUALITY` off to mock it (assumed-pass).
+- **Provenance attestation checkbox** (a second checkbox, distinct from the consent one) gates Run
+  verification: *"I confirm this photo was taken today, on the joining day, of the person who
+  reported to join — not a stored, downloaded, or supplied image."* Unlike the quality warning,
+  this is a **hard gate** (Run stays disabled until both consent and attestation are ticked) — it's
+  a deliberate statement of authenticity. Stored on the check record and shown in the report header
+  ("Attested as a joining-day photo…") for audit.
 
 ## D. Landing worklist rebuild (driver: stale joining-date → unverified joiner) — BUILT 2026-08-27
 
@@ -331,8 +340,10 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
 
 ## E. Status
 
-§A (banner rename), §D (worklist), and §C (quality gate + per-row review) are all **built**. The
-only pieces still pending a real model/engine, not sign-off:
-- the **source-photo pre-flight** (§C, deferred — needs live vision detection on the upload);
-- the **real scoring engine** (Rekognition / Azure Face / ArcFace) behind `USE_LIVE_SCORING`;
+§A (banner rename), §D (worklist), and §C (quality gate + per-row review, incl. the live source
+pre-flight and the attestation checkbox) are all **built**. Still pending a real model/engine, not
+sign-off:
+- the **real scoring engine** (Rekognition / Azure Face / ArcFace) behind `USE_LIVE_SCORING` — the
+  similarity number is still seeded; Gemini can't measure it. (The quality pre-flight already runs
+  live because that task suits Gemini.)
 - **row ownership / assignment** (prerequisite for a per-recruiter or shared attention queue).

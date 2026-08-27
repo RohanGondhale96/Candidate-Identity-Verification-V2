@@ -182,6 +182,7 @@ var state = {
   upErr:'', drag:false, showShare:false, picked:[], pickQ:'',
   toast:'', roundsConfigured:true, lightbox:null, history:[], hasCamera:true, deepMiss:null,
   confirmReshoot:false, viewingHistory:false, decision:null, decisionErr:'', entry:null, tab:'joining', _refocus:null,
+  attest:false, qualityChecking:false, quality:null,
   /* worklist */
   filter:'all', dateRange:'all', wlSort:'overdue', mineOnly:true, page:1, perPage:10,
   dismissed:{}, wlMenu:null, wlConfirmAll:false
@@ -258,7 +259,7 @@ function handleFile(f){
     img.onload = function(){
       if(img.width<200 || img.height<200) return setState({upErr:'Photo is too small to compare reliably.'});
       // downscale so the request stays well under the serverless body limit (mobile cameras shoot several MB)
-      setState({photo:downscalePhoto(img, 1280, 0.85), consent:false, upErr:''});
+      setState({photo:downscalePhoto(img, 1280, 0.85), consent:false, attest:false, quality:null, qualityChecking:false, upErr:''}, checkQuality);
     };
     img.onerror = function(){ setState({upErr:"That image couldn't be read. Try another photo."}); };
     img.src = r.result;
@@ -286,6 +287,13 @@ function geminiCompare(joiningUri, onFileUri){
       body:JSON.stringify({ joining:{mime:a.mime,data:a.data}, onfile:{mime:b.mime,data:b.data} }) })
     .then(function(res){ return res.json().catch(function(){return {};}).then(function(j){ if(!res.ok) throw new Error(j.error||('Compare failed ('+res.status+')')); return j; }); })
     .then(function(j){ return { similarity:_clampPct(j.similarity), confidence:_clampPct(j.confidence), samePerson:!!j.same_person, reason:j.reason||'' }; });
+}
+function geminiQuality(uri){
+  var a=_dataUri(uri);
+  return fetch('/api/quality', { method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ photo:{mime:a.mime,data:a.data} }) })
+    .then(function(res){ return res.json().catch(function(){return {};}).then(function(j){ if(!res.ok) throw new Error(j.error||('Quality check failed ('+res.status+')')); return j; }); })
+    .then(function(j){ return { usable:!!j.usable, reason:j.reason||'', message:j.message||'' }; });
 }
 
 var _runToken=0;
@@ -323,7 +331,7 @@ function settleRow(i, token, res, err){
     var allSettled = rows.every(function(r){ return r.status==='done' || r.status==='error'; });
     if(!allSettled) return {rows:rows};
     var at = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-    var entry = {cand:prev.cand, photo:prev.photo, rows:rows, shared:prev.shared, at:at, decision:null};
+    var entry = {cand:prev.cand, photo:prev.photo, rows:rows, shared:prev.shared, at:at, decision:null, attest:prev.attest, quality:prev.quality};
     return {rows:rows, running:false, done:true, history:prev.history.concat([entry]), entry:entry, decision:null, decisionErr:''};
   });
 }
@@ -369,6 +377,9 @@ function pageheader(){
    have real spread. Flip to true to call Gemini again; the real fix is a face
    embedding engine (Rekognition / Azure Face / ArcFace) - see NOTES.md. */
 var USE_LIVE_SCORING = false;
+/* The source-photo quality pre-flight DOES run live: quality/occlusion/face-presence are
+   describable attributes Gemini handles well (unlike the faked similarity score). Flip off to mock. */
+var USE_LIVE_QUALITY = true;
 
 /* colour ramp for the raw score, shown only in the expanded row */
 function scoreColor(s){ return s>=85 ? '#1a8a3a' : s>=50 ? '#B7791F' : '#EB4040'; }
@@ -857,11 +868,23 @@ function render(){
         '<div style="flex:1 1 200px;min-width:0"><div style="font-size:16px;font-weight:600;line-height:1.5;margin-bottom:4px">Ready to compare</div>'+
           '<p style="font-size:13.5px;color:#747474;margin:0 0 12px;line-height:1.5">Every photo on file is compared separately. Scores are never averaged.</p>'+
           '<button class="rh-btn tertiary sm" onclick="retake()">Use a different photo</button></div>'+
-        '</div>'+
-        '<div style="display:flex;gap:10px;align-items:flex-start;margin:16px 0 14px;padding:12px 14px;background:#F7F8FA;border:1px solid #E0E0E0;border-radius:4px">'+
+        '</div>';
+      // source-photo quality pre-flight — soft (informational), never blocks Run verification
+      if(s.qualityChecking){
+        html += '<div style="display:flex;align-items:center;gap:9px;margin-top:14px;padding:10px 13px;background:#F7F8FA;border:1px solid #E0E0E0;border-radius:6px;font-size:13px;color:#747474"><span style="width:14px;height:14px;border:2px solid #E0E0E0;border-top-color:#0076FB;border-radius:50%;animation:rh-spin .7s linear infinite;flex-shrink:0"></span>Checking photo quality…</div>';
+      } else if(s.quality && s.quality.usable){
+        html += '<div style="display:flex;align-items:center;gap:8px;margin-top:14px;padding:10px 13px;background:#E7F4EC;border:1px solid #BFE3CC;border-radius:6px;font-size:13px;color:#1a6b34"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1a8a3a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Photo looks good to compare.</div>';
+      } else if(s.quality){
+        html += '<div style="display:flex;align-items:flex-start;gap:9px;margin-top:14px;padding:11px 13px;background:#FBF1DE;border:1px solid #EAD9AE;border-radius:6px;font-size:13px;color:#8a6414">'+
+          '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>'+
+          '<span style="flex:1">'+h(s.quality.message||qualityFallback(s.quality.reason))+' You can retake it, or run the check anyway.</span>'+
+          '<button class="rh-btn tertiary sm" onclick="retake()" style="flex-shrink:0">Retake</button></div>';
+      }
+      html += '<div style="display:flex;flex-direction:column;gap:12px;margin:16px 0 14px;padding:12px 14px;background:#F7F8FA;border:1px solid #E0E0E0;border-radius:4px">'+
           '<label class="rh-cb"><input type="checkbox" '+(s.consent?'checked':'')+' onchange="toggleConsent()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>I have the candidate’s consent to take and submit this photo for identity verification.</span></label>'+
+          '<label class="rh-cb"><input type="checkbox" '+(s.attest?'checked':'')+' onchange="toggleAttest()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>I confirm this photo was taken today, on the joining day, of the person who reported to join — not a stored, downloaded, or supplied image.</span></label>'+
         '</div>'+
-        '<button class="rh-btn primary full" '+(s.photo&&s.consent?'':'disabled')+' onclick="run()">Run verification</button>'+
+        '<button class="rh-btn primary full" '+(s.photo&&s.consent&&s.attest?'':'disabled')+' onclick="run()">Run verification</button>'+
       '</div>';
     }
     if(s.upErr){ html += '<div style="margin-top:12px;padding:11px 13px;border:1px solid #EB4040;border-radius:4px;background:#FDECEC;color:#EB4040;font-size:13px;line-height:1.45">'+h(s.upErr)+'</div>'; }
@@ -884,7 +907,9 @@ function render(){
       html += '<div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid #E0E0E0">'+
         '<div style="width:48px;height:60px;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;flex-shrink:0;position:relative">'+uploadedImg()+'</div>'+
         '<div style="flex:1 1 180px;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.4">Photo taken today</div>'+
-          '<div style="font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · 12 Aug 2026, 09:41 IST</div></div>'+
+          '<div style="font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · 12 Aug 2026, 09:41 IST</div>'+
+          ((s.attest||(s.entry&&s.entry.attest)) ? '<div style="font-size:12px;color:#1a6b34;margin-top:3px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Attested as a joining-day photo of the person who reported to join</div>' : '')+
+          '</div>'+
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
           (!s.viewingHistory ? '<button class="rh-btn secondary sm" onclick="askReshoot()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Use a different photo</button>' : '')+
           (SHOW_REPORT_ACTIONS ? ('<button class="rh-iconbtn" title="Download PDF" onclick="downloadPdf()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M29 44H42.1765V42.1176H29V44ZM42.1765 33.6471H38.4118V28H32.7647V33.6471H29L35.5882 40.2353L42.1765 33.6471Z"></path></svg></button>'+
@@ -1074,7 +1099,7 @@ function changeCandidate(){ setState({cand:null, searchOpen:true, done:false, ru
 function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click(); }
 function openPicker(){ var el=document.getElementById('rh-file'); if(el) el.click(); }
 function onFileInput(e){ handleFile(e.target.files[0]); }
-function retake(){ clearTimers(); _runToken++; setState({photo:null, consent:false, upErr:'', done:false, running:false, rows:[], open:null, decision:null, decisionErr:'', entry:null}); }
+function retake(){ clearTimers(); _runToken++; _qtoken++; setState({photo:null, consent:false, attest:false, quality:null, qualityChecking:false, upErr:'', done:false, running:false, rows:[], open:null, decision:null, decisionErr:'', entry:null}); }
 /* recruiter's final Confirm / Can't-confirm decision on the current check.
    Never gated: the human can always decide, including deciding the tool is wrong.
    A note is required to flag, or to confirm while rows are still unreviewed -
@@ -1133,6 +1158,19 @@ function cancelReshoot(){ setState({confirmReshoot:false}); }
 function doReshoot(){ setState({confirmReshoot:false}); retake(); window.scrollTo({top:0,behavior:'smooth'}); }
 function scrimReshoot(e){ if(e.target===e.currentTarget) cancelReshoot(); }
 function toggleConsent(){ setState({consent:!state.consent}); }
+function toggleAttest(){ setState({attest:!state.attest}); }
+function qualityFallback(reason){ return ({blurry:'This photo looks blurry.', not_facing:"The person isn’t facing the camera.", face_obscured:'The face is partly covered.', multiple_faces:'More than one face is visible.', no_face:'No clear face was detected.'})[reason] || 'This photo may be hard to compare.'; }
+/* run the source-photo quality pre-flight (soft — never blocks Run verification) */
+var _qtoken=0;
+function checkQuality(){
+  if(!state.photo) return;
+  if(!USE_LIVE_QUALITY){ setState({qualityChecking:false, quality:{usable:true, reason:'ok', message:'', mock:true}}); return; }
+  var tok=++_qtoken;
+  setState({qualityChecking:true, quality:null});
+  geminiQuality(state.photo)
+    .then(function(res){ if(tok!==_qtoken) return; setState({qualityChecking:false, quality:res}); })
+    .catch(function(){ if(tok!==_qtoken) return; setState({qualityChecking:false, quality:{usable:true, reason:'error', message:"Couldn’t check photo quality — you can still run the check."}}); });
+}
 function dragOver(e){ e.preventDefault(); if(!state.drag) setState({drag:true}); }
 function dragLeave(e){ e.preventDefault(); setState({drag:false}); }
 function drop(e){ e.preventDefault(); setState({drag:false}); handleFile(e.dataTransfer.files[0]); }
@@ -1147,7 +1185,7 @@ function togglePick(id){ var on=state.picked.indexOf(id)>=0; setState({picked: o
 function downloadPdf(){ toast('PDF downloaded'); }
 function revoke(id){ var u=state.shared.find(function(x){return x.id===id;}); setState({shared:state.shared.filter(function(x){return x.id!==id;})}); if(u) toast('Access revoked for '+u.name); }
 function verifyAnother(){ reset({roundsConfigured:state.roundsConfigured}); window.scrollTo({top:0,behavior:'smooth'}); }
-function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, searchOpen:false, running:false, done:true, open:null, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'' }); if(!noPush) wlSyncUrl(false); }
+function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, attest:!!hh.attest, quality:hh.quality||null, searchOpen:false, running:false, done:true, open:null, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'' }); if(!noPush) wlSyncUrl(false); }
 
 /* ---------- seeded demo worklist data ---------- */
 function fmtLong(iso){ var d=new Date(Date.parse(iso+'T00:00:00Z')); var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return d.getUTCDate()+' '+mo[d.getUTCMonth()]+' '+d.getUTCFullYear(); }
