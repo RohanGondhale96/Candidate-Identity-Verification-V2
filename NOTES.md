@@ -334,9 +334,12 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
 - **Demo limitation:** ~60 candidates are **seeded** (in `buildSeeds()`) so counts, overdue ages,
   and pagination are real. Seeds have **no on-file photos** — clicking one opens the check page
   (empty upload). Only the three interactive candidates (Rahul `c1`, Arjun `c2`, Meera `c3`) have
-  real photos and a full check flow. Overdue is computed against a fixed demo "today" (15 Aug 2026,
-  `WL_TODAY_MS`). URL routing (`?f`/`?d`/`?s`/`?mine`/`?p`, and `?candidateId` when a check is
-  open) drives filter/sort/page and the Back button.
+  real photos and a full check flow. **Rahul and Arjun are seeded as overdue "To verify"** (joining
+  3 and 5 Aug vs the fixed demo "today" of 15 Aug, `WL_TODAY_MS`) so they sit at the **top of Needs
+  your attention and page 1** — otherwise the default oldest-overdue sort buries them behind the
+  seeds. Clicking either runs the real check. Meera is a future joiner with no photos (the empty-
+  state case; reach her via search or `?candidateId=RH48466`). URL routing (`?f`/`?d`/`?s`/`?p`,
+  and `?candidateId` when a check is open) drives filter/sort/page and the Back button.
 
 ## E. Status
 
