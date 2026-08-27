@@ -291,8 +291,9 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
   otherwise show twice). Age line amber, **red past ~7 days**.
 - **Dismissal is demoted** (a `⋯` menu, not a full-weight button — the row's primary action is
   opening the check, with a chevron). Per-row dismissal **requires a reason** (Not joining / Date
-  changed / Verified elsewhere) and **records who + when**. **Dismiss all** has a **confirm step**
-  + required reason (it exists for bad date imports, not as a one-tap way to empty the block).
+  changed / Verified elsewhere) and **records who + when**. The bulk **Dismiss all** was
+  **removed** (2026-08-27) — dismissal is per-row only, so every removal stays an individual,
+  attributed decision rather than a one-tap way to empty the safety block.
 - Main list flat; header + work summary phrased as remaining work ("12 to verify, 4 awaiting
   decision"), never "0 done"; reason line under each name ("1 photo needs review", "Confirmed by
   A. Sharma · 09:41", "Escalated to R. Menon · 10:12"); **future joiners inert** (no pill, no

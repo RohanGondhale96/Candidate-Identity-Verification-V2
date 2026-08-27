@@ -15,6 +15,18 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-08-27 · Worklist visual + interaction refinements — BUILT
+
+Small follow-ups from the user reviewing the live build:
+- Default page size 25 → **10** (pagination shows immediately; options 10/25/50).
+- **Mine-only toggle and the "· yours" label removed** — no ownership concept exists yet, so the
+  list shows all candidates; header reads "All candidates".
+- Attention block: amber confined to the **header banner only** (card border + row dividers
+  neutralised), then the header itself set to a **white background** with title `#2a2a2a` /
+  subtitle `#747474` — the warning triangle is the only accent left.
+- **Bulk "Dismiss all" removed** — dismissal is per-row only (attributed reason + who/when), so
+  the safety block can't be emptied in one tap.
+
 ## 2026-08-27 · Status filter: chips → dropdown (tidier, UX trade accepted) — BUILT
 
 - **Discussion:** user asked why status isn't a dropdown like date/sort, defaulting to All or
