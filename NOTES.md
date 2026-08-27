@@ -334,9 +334,12 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
 - **Demo limitation:** a small set — **7 seeded candidates + the 3 real ones = 10 total** (in
   `buildSeeds()`), covering every state, the attention block, and a "Coming up" future joiner
   (kept small on purpose, so it fits one page — pagination still works but won't trigger here).
-  Seeds have **no on-file photos** — clicking one opens the check page
-  (empty upload). Only the three interactive candidates (Rahul `c1`, Arjun `c2`, Meera `c3`) have
-  real photos and a full check flow. **Rahul and Arjun are seeded as overdue "To verify"** (joining
+  **Every candidate now has an on-file photo except Meera** (kept deliberately empty as the
+  "no photos on file" case). Each of the 7 seeds has **one AI-generated application headshot**
+  (distinct synthetic person, matched to the name), embedded via `_inject2.js` under keys `s1`–`s7`
+  and given a seeded score so its report works if opened. Rahul (`c1`) and Arjun (`c2`) keep their
+  fuller real sets (application + interview + documents). **Rahul and Arjun are seeded as overdue
+  "To verify"** (joining
   3 and 5 Aug vs the fixed demo "today" of 15 Aug, `WL_TODAY_MS`) so they sit at the **top of Needs
   your attention and page 1** — otherwise the default oldest-overdue sort buries them behind the
   seeds. Clicking either runs the real check. Meera is a future joiner with no photos (the empty-

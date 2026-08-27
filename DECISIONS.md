@@ -83,6 +83,25 @@ Small follow-ups from the user reviewing the live build:
 - **Also:** default page size dropped 25 → **10** so pagination shows immediately (10/25/50).
 - **Change:** built + verified (harness green, live DOM check). Committed.
 
+## 2026-08-27 · Every candidate gets a profile photo (AI-generated) except Meera — BUILT
+
+- **Discussion:** user wanted every candidate to have some image in their profile; Meera stays
+  photo-less (the "no photos on file" case). Chose Option A: generate synthetic headshots.
+- **Tooling reality (worth recording):** the `baoyu-imagine` skill needs `bun`, which couldn't be
+  fetched — `npx bun` fails behind the corporate TLS intercept (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`),
+  and the skill has no vendored deps. Node 22 fetch hit the same wall until run with
+  **`node --use-system-ca`** (uses the Windows trust store, which has the corporate root — same
+  reason the browser works). OpenAI worked but the account is **out of credits**, so we generated
+  via **Google Gemini image model** (`gemini-2.5-flash-image`) using the app's existing key
+  (`scratchpad/gen_gemini.js`). Downscaled 1024px PNGs → ~400px JPEGs (~15 KB each) with PowerShell
+  System.Drawing before embedding, so the page grew only ~110 KB total.
+- **Built:** 7 distinct headshots → `D:/Codebase/Images/seed-*.jpg`, embedded by `_inject2.js` under
+  `s1`–`s7`; `buildSeeds()` attaches one application photo (+ a status-aligned score) to each seed.
+  Meera (`c3`) left with `photos: []`. Verified live: each seed shows its headshot in the on-file
+  table; Meera shows "No photos on file"; harness still 10 candidates / 0 syntax errors.
+- **Repro:** `node --use-system-ca scratchpad/gen_gemini.js "<prompt>" out.png` (GKEY=app Gemini
+  key) → PowerShell resize → `_inject2.js` → `build_repo.js`.
+
 ## 2026-08-27 · Worklist rebuild + banner rename — BUILT
 
 - **Discussion:** user said "go ahead and build it, rename the banner too."
