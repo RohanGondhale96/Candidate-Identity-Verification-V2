@@ -15,6 +15,24 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-08-27 · Quality gate + per-row review model — LOCKED + BUILT
+
+- **Discussion:** user locked all five §C questions and approved seeded quality flags for the
+  prototype. Decisions: (1) confidence gates the score; (2) no-photo/no-face = Couldn't compare,
+  never Not-a-match; (3) headgear → facial-occlusion only, never classify religion; (4) source
+  pre-flight as a soft warning; (5) replace the four reason codes with Same person / Not a match /
+  Ignore(+reason).
+- **Built:** `photoState` now quality-gates the score; `aiReason` surfaces the flag reason (shown
+  under review rows + in the expanded panel as "AI flagged this: …"); the four reason codes are
+  replaced by the action model (`resolveRow`/`setIgnoreReason`), with **Ignore excluded from the
+  denominator** and a per-row **audit line** ("AI marked … → <action> by A. Sharma · time"); the
+  banner recomputes from the resolved states. Seeded a poor-quality high-scoring row (Rahul Round
+  3) so the "quality overrides score" case is demonstrable. Verified: harness 52 assertions, 0
+  syntax errors, + live DOM pass (Round 3 → Needs review · Not facing the camera; ignore drops the
+  denominator 7→6 and writes the audit line).
+- **Deferred:** the **source-photo pre-flight (#4)** — can't be seeded (arbitrary upload), so it
+  waits on the live vision model. Everything else in §C is built.
+
 ## 2026-08-27 · Worklist visual + interaction refinements — BUILT
 
 Small follow-ups from the user reviewing the live build:

@@ -143,7 +143,7 @@ var CANDIDATES = [
       {label:'Application photo', src:'application', date:'14 Apr 2026', by:null, score:94, tone:'clear'},
       {label:'Round 1 — screening', src:'interview', date:'06 May 2026, 10:15', by:'K. Deshpande', score:92, tone:'clear'},
       {label:'Round 2 — technical', src:'interview', date:'02 Jun 2026, 15:20', by:'R. Menon', score:61, tone:'dark'},
-      {label:'Round 3 — manager round', src:'interview', date:'18 Jun 2026, 11:05', by:'S. Iyer', score:91, tone:'clear'},
+      {label:'Round 3 — manager round', src:'interview', date:'18 Jun 2026, 11:05', by:'S. Iyer', score:91, tone:'clear', quality:'poor', qreason:'Not facing the camera'},
       {label:'Round 4 — HR discussion', src:'interview', date:'27 Jun 2026, 16:40', by:'A. Sharma', score:89, tone:'soft'},
       {label:'Aadhaar card', src:'document', date:'Identity document', by:null, score:71},
       {label:'PAN card', src:'document', date:'Identity document', by:null, cant:true},
@@ -378,34 +378,45 @@ function scoreColor(s){ return s>=85 ? '#1a8a3a' : s>=50 ? '#B7791F' : '#EB4040'
 function photoBar(r){ return (r && r.src==='document') ? 65 : 85; }
 function reviewFloor(r){ return (r && r.src==='document') ? 40 : 50; }
 
-/* the state the model produced for a row: match | review | nomatch | cant | null(not scored yet) */
+/* AI/model state for a row BEFORE any human action: match | review | nomatch | cant | null.
+   Quality gates the score (confidence): a poor-quality photo is Needs review whatever the number
+   says, because a score you can't trust is not a match or a mismatch. No usable face -> cant. */
 function photoState(r){
   if(!r) return null;
   if(r.status==='error') return 'cant';
   if(r.status!=='done' || typeof r.score!=='number') return null;
+  if(r.quality==='poor') return 'review';               // confidence gate — quality overrides score
   if(r.score >= photoBar(r)) return 'match';
-  if(r.score >= reviewFloor(r)) return 'review';
-  return 'nomatch';
+  if(r.score >= reviewFloor(r)) return 'review';        // borderline similarity
+  return 'nomatch';                                     // confident: different person
 }
 function rowMatched(r){ return photoState(r)==='match'; }
+/* the AI's reason for flagging, surfaced so the recruiter knows what to look at */
+function aiReason(r){
+  var st=photoState(r);
+  if(st==='cant') return r.err || 'No face detected';
+  if(st==='review') return r.quality==='poor' ? (r.qreason||'Low photo quality') : 'Borderline similarity';
+  if(st==='nomatch') return 'Looks like a different person';
+  return '';
+}
+function aiStateLabel(r){ var st=photoState(r); return st==='cant'?"Couldn’t compare":(st==='nomatch'?'Not a match':(st==='review'?'Needs review':'Match')); }
 
-/* reason codes a human records on a review / no-match row (structured, not free text) */
-var CODE_LABELS = { quality:"Same person · poor photo quality", appearance:"Same person · appearance changed", different:"Different person", unsure:"Can’t tell" };
-var CODE_ORDER = ['quality','appearance','different','unsure'];
-/* pos = human vouches it is the same person, neg = human says different, open = unsure / undecided */
-function codeOutcome(code){ return (code==='quality'||code==='appearance') ? 'pos' : (code==='different' ? 'neg' : 'open'); }
-/* a review/nomatch row still needs a human once it has no resolving answer */
-function rowUnresolved(r){ var st=photoState(r); if(st!=='review'&&st!=='nomatch') return false; return codeOutcome(r.review||'')!=='pos' && codeOutcome(r.review||'')!=='neg'; }
+/* the human's action on a flagged row (structured, non-binding on the number) */
+var ACTIONS = { same:'Same person', notmatch:'Not a match', ignore:'Ignore this photo' };
+var IGNORE_REASONS = ['Wrong photo (not this candidate)','Too blurry / dark / low-res','Face not clearly visible','Too old — appearance changed','Document scan unreadable','Duplicate of another photo'];
+/* pos = human vouches same person, neg = says different, excluded = ignore the photo, open = undecided */
+function codeOutcome(code){ return code==='same'?'pos':(code==='notmatch'?'neg':(code==='ignore'?'excluded':'open')); }
+function rowExcluded(r){ return photoState(r)==='cant' || codeOutcome((r&&r.review)||'')==='excluded'; }
+/* a review/nomatch row still needs a human until it has any action */
+function rowUnresolved(r){ var st=photoState(r); if(st!=='review'&&st!=='nomatch') return false; return codeOutcome(r.review||'')==='open'; }
 
-/* single per-row badge: the model finding, replaced by the human answer once reviewed */
+/* single per-row badge: the model finding, replaced by the human answer once acted on */
 function rowBadge(r){
-  var st = photoState(r);
-  if(st==='cant') return _pill("Couldn’t compare",'#5F5E5A','#EFEFEF');
-  if(r.review){
-    var o = codeOutcome(r.review);
-    if(o==='pos') return _pill('Reviewed · same person','#1a8a3a','#E7F4EC');
-    if(o==='neg') return _pill('Reviewed · different person','#D93025','#FDECEC');
-  }
+  var st=photoState(r), o = r.review ? codeOutcome(r.review) : null;
+  if(o==='pos') return _pill('Reviewed · same person','#1a8a3a','#E7F4EC');
+  if(o==='neg') return _pill('Reviewed · different person','#D93025','#FDECEC');
+  if(o==='excluded') return _pill('Ignored','#5F5E5A','#EFEFEF');
+  if(st==='cant')    return _pill("Couldn’t compare",'#5F5E5A','#EFEFEF');
   if(st==='match')   return _pill('Match','#1a8a3a','#E7F4EC');
   if(st==='review')  return _pill('Needs review','#B7791F','#FBF1DE');
   if(st==='nomatch') return _pill('Not a match','#D93025','#FDECEC');
@@ -413,46 +424,49 @@ function rowBadge(r){
 }
 
 /* banner state machine: reports the current state, never invents a fresh verdict,
-   and never turns green off human vouching. Keeps model-matched vs human-vouched legible. */
+   and never turns green off human vouching. Ignored + couldn't-compare drop out of the count. */
 function reportSummary(rows){
   var scored = (rows||[]).filter(function(r){ return photoState(r)!==null; });
-  var cant = scored.filter(function(r){ return photoState(r)==='cant'; }).length;
-  var comparable = scored.filter(function(r){ return photoState(r)!=='cant'; });
+  var cant=0, ignored=0, comparable=[];
+  scored.forEach(function(r){
+    if(photoState(r)==='cant'){ cant++; return; }
+    if(codeOutcome(r.review||'')==='excluded'){ ignored++; return; }
+    comparable.push(r);
+  });
   var Y = comparable.length;
-  var modelMatch=0, vouchPos=0, vouchNeg=0, unsure=0, openReview=0, openNoMatch=0;
+  var modelMatch=0, vouchPos=0, vouchNeg=0, openReview=0, openNoMatch=0;
   comparable.forEach(function(r){
     var st=photoState(r), o = r.review ? codeOutcome(r.review) : null;
     if(o==='pos'){ vouchPos++; return; }
     if(o==='neg'){ vouchNeg++; return; }
-    if(r.review==='unsure'){ unsure++; return; }
     if(st==='match') modelMatch++;
     else if(st==='review') openReview++;
     else if(st==='nomatch') openNoMatch++;
   });
   var matched = modelMatch + vouchPos;
-  var unresolved = openReview + openNoMatch + unsure;
+  var unresolved = openReview + openNoMatch;
   var reviewedCount = vouchPos + vouchNeg;
-  var cantNote = cant ? (' · '+cant+' document'+(cant>1?'s':'')+" couldn’t be read") : '';
-  var base = {matched:matched, total:Y, cant:cant, unresolved:unresolved, reviewedCount:reviewedCount, vouchPos:vouchPos};
+  var extras=[]; if(cant) extras.push(cant+" couldn’t be read"); if(ignored) extras.push(ignored+' ignored');
+  var extraNote = extras.length ? (' · '+extras.join(' · ')) : '';
+  var base = {matched:matched, total:Y, cant:cant, ignored:ignored, unresolved:unresolved, reviewedCount:reviewedCount, vouchPos:vouchPos};
   function out(o){ for(var k in base) o[k]=base[k]; return o; }
   if(Y===0){
-    return out({tier:'inconclusive', color:'#5F5E5A', bg:'#F1EFE8', title:"Couldn’t run the check", sub:'No readable photos to compare against.'+cantNote, suggest:"Can’t verify — nothing to compare"});
+    return out({tier:'inconclusive', color:'#5F5E5A', bg:'#F1EFE8', title:"Couldn’t run the check", sub:'No readable photos to compare against.'+extraNote, suggest:"Can’t verify — nothing to compare"});
   }
   if(vouchNeg>0 || openNoMatch>0){
-    var m = vouchNeg + openNoMatch, need = openReview + unsure;
+    var m = vouchNeg + openNoMatch;
     var bits = [matched+' of '+Y+' comparable photos match'];
-    if(need>0) bits.push(need+' need'+(need>1?'':'s')+' review');
+    if(openReview>0) bits.push(openReview+' need'+(openReview>1?'':'s')+' review');
     bits.push(m===1 ? "1 doesn’t match" : m+" don’t match");
-    return out({tier:'mismatch', color:'#D93025', bg:'#FDECEC', title:'Not verified', sub:bits.join(' · ')+cantNote, suggest:"Suggested: Can’t confirm"});
+    return out({tier:'mismatch', color:'#D93025', bg:'#FDECEC', title:'Not verified', sub:bits.join(' · ')+extraNote, suggest:"Suggested: Can’t confirm"});
   }
-  if(openReview>0 || unsure>0){
-    var n = openReview + unsure;
-    return out({tier:'review', color:'#B7791F', bg:'#FBF1DE', title:'Needs review', sub:matched+' of '+Y+' comparable photos match · '+n+' need'+(n>1?'':'s')+' a closer look'+cantNote, suggest:'Your call'});
+  if(openReview>0){
+    return out({tier:'review', color:'#B7791F', bg:'#FBF1DE', title:'Needs review', sub:matched+' of '+Y+' comparable photos match · '+openReview+' need'+(openReview>1?'':'s')+' a closer look'+extraNote, suggest:'Your call'});
   }
   if(vouchPos>0){
-    return out({tier:'reviewed', color:'#444441', bg:'#F1EFE8', title:'Verified', sub:modelMatch+' photo'+(modelMatch===1?'':'s')+' matched · '+vouchPos+' confirmed by your review'+cantNote, suggest:'Suggested: Confirm'});
+    return out({tier:'reviewed', color:'#444441', bg:'#F1EFE8', title:'Verified', sub:modelMatch+' photo'+(modelMatch===1?'':'s')+' matched · '+vouchPos+' confirmed by your review'+extraNote, suggest:'Suggested: Confirm'});
   }
-  return out({tier:'match', color:'#1a8a3a', bg:'#E7F4EC', title:'Verified', sub:matched+' of '+Y+' comparable photos match'+cantNote, suggest:'Suggested: Confirm'});
+  return out({tier:'match', color:'#1a8a3a', bg:'#E7F4EC', title:'Verified', sub:matched+' of '+Y+' comparable photos match'+extraNote, suggest:'Suggested: Confirm'});
 }
 function bannerIcon(tier, color){
   if(tier==='review')       return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>';
@@ -460,21 +474,31 @@ function bannerIcon(tier, color){
   if(tier==='inconclusive') return '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.6v.1"/></svg>';
   return '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="'+color+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 }
-/* structured reason codes inside an expanded review / no-match row */
+function nowTime(){ return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+/* per-row human action (Same person / Not a match / Ignore) + the AI finding + an audit line */
 function reasonCodes(i, r){
-  var out = '<div style="font-size:13px;font-weight:600;margin-top:14px">What did you find?</div>'+
+  var st = photoState(r);
+  var codes = st==='nomatch' ? ['same','ignore'] : ['same','notmatch','ignore'];
+  var out = '<div style="font-size:12.5px;color:#8a6414;background:#FBF1DE;border-radius:6px;padding:7px 10px;margin-top:14px;display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>AI flagged this: '+h(aiReason(r))+'</div>';
+  out += '<div style="font-size:13px;font-weight:600;margin-top:12px">What did you find?</div>'+
     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">';
-  CODE_ORDER.forEach(function(code){
-    var on = r.review===code, neg = code==='different';
+  codes.forEach(function(code){
+    var on = r.review===code, neg = code==='notmatch';
     var bd = neg?'#E24B4A':'#378ADD', bg = neg?'#FDECEC':'#E6F1FB', col = neg?'#A32D2D':'#185FA5';
-    out += '<button type="button" onclick="resolveRow('+i+',\''+code+'\')" style="border:'+(on?('2px solid '+bd):'1px solid #DDD')+';background:'+(on?bg:'#fff')+';color:'+(on?col:'#444')+';border-radius:8px;padding:'+(on?'7px 11px':'8px 12px')+';font-size:12.5px;font-weight:'+(on?'600':'400')+';cursor:pointer;font-family:inherit">'+h(CODE_LABELS[code])+'</button>';
+    out += '<button type="button" onclick="resolveRow('+i+',\''+code+'\')" style="border:'+(on?('2px solid '+bd):'1px solid #DDD')+';background:'+(on?bg:'#fff')+';color:'+(on?col:'#444')+';border-radius:8px;padding:'+(on?'7px 11px':'8px 12px')+';font-size:12.5px;font-weight:'+(on?'600':'400')+';cursor:pointer;font-family:inherit">'+h(ACTIONS[code])+'</button>';
   });
   out += '</div>';
+  if(r.review==='ignore'){
+    out += '<div style="margin-top:10px;font-size:12.5px;color:#555">Why ignore this photo?'+
+      '<select onchange="setIgnoreReason('+i+',this.value)" style="display:block;margin-top:6px;height:32px;border:1px solid #DDD;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 8px;color:#2A2A2A;max-width:100%">'+
+      IGNORE_REASONS.map(function(rz){ return '<option'+((r.ignoreReason||IGNORE_REASONS[0])===rz?' selected':'')+'>'+h(rz)+'</option>'; }).join('')+'</select></div>';
+  }
   if(r.review){
-    var o = codeOutcome(r.review), col = o==='neg'?'#D93025':(o==='pos'?'#1a8a3a':'#B7791F');
-    out += '<div style="font-size:12px;color:'+col+';margin-top:9px;display:inline-flex;align-items:center;gap:5px">'+
-      (o==='open' ? '' : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>')+
-      'Recorded: '+h(CODE_LABELS[r.review])+'</div>';
+    var o = codeOutcome(r.review), col = o==='neg'?'#D93025':(o==='excluded'?'#5F5E5A':'#1a8a3a');
+    var detail = r.review==='ignore' ? (' · '+(r.ignoreReason||IGNORE_REASONS[0])) : '';
+    out += '<div style="font-size:12px;color:#747474;margin-top:10px;line-height:1.5;border-top:1px solid #E0E0E0;padding-top:8px">'+
+      '<b style="font-weight:600">Audit:</b> AI marked <b style="font-weight:600">'+h(aiStateLabel(r))+'</b>'+(aiReason(r)?(' ('+h(aiReason(r))+')'):'')+' → '+
+      '<span style="color:'+col+';font-weight:600">'+h(ACTIONS[r.review])+detail+'</span> by '+h(r.reviewedBy||'A. Sharma')+(r.reviewedAt?(' · '+h(r.reviewedAt)):'')+'</div>';
   }
   return out;
 }
@@ -527,7 +551,7 @@ function jumpStrip(rows){
   var v = reportSummary(rows);
   var pending = v.unresolved + (v.tier==='mismatch' ? 0 : 0);
   var parts = [];
-  var need = (rows||[]).filter(function(r){ return photoState(r)==='review' && rowUnresolved(r); }).length + (rows||[]).filter(function(r){ return r.review==='unsure'; }).length;
+  var need = (rows||[]).filter(function(r){ return photoState(r)==='review' && rowUnresolved(r); }).length;
   var no  = (rows||[]).filter(function(r){ var st=photoState(r); return (st==='nomatch' && rowUnresolved(r)) || codeOutcome(r.review||'')==='neg'; }).length;
   if(need>0) parts.push(need+' photo'+(need>1?'s':'')+' need'+(need>1?'':'s')+' review');
   if(no>0)   parts.push(no+(no>1?" don’t match":" doesn’t match"));
@@ -913,6 +937,7 @@ function render(){
             '<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><span style="font-size:14px;font-weight:600;line-height:1.35">'+h(r.label)+'</span>'+
               '<span style="font-size:12.5px;color:#747474">'+h(r.date)+'</span>'+
               (isCant ? '<span style="font-size:12px;color:#8a8a8a;line-height:1.35">'+h(r.err||'No face detected in this document')+'</span>' : '')+
+              ((st==='review' && !r.review) ? '<span style="font-size:12px;color:#8a6414;line-height:1.35">'+h(aiReason(r))+'</span>' : '')+
             '</span>'+
             badgeCell+
             (expandable ? chevron(s.open===i?'180deg':'0deg') : '<span style="width:18px;flex-shrink:0"></span>')+
@@ -1067,11 +1092,25 @@ function decide(action){
   setState({decision:dec, decisionErr:''});
 }
 function changeDecision(){ if(state.entry) state.entry.decision = null; setState({decision:null, decisionErr:''}); }
-/* record a structured reason code on a review / no-match row (non-binding on the verdict) */
+/* record a human action (same / notmatch / ignore) on a review / no-match row.
+   Non-binding on the AI score; both the AI tag and this action are kept for audit. */
 function resolveRow(i, code){
-  var rows = state.rows.slice();
-  rows[i] = Object.assign({}, rows[i], {review: (rows[i].review===code ? null : code)});
+  var rows = state.rows.slice(), cur = rows[i];
+  var next = (cur.review===code) ? null : code;
+  rows[i] = Object.assign({}, cur, {
+    review: next,
+    reviewedBy: next ? 'A. Sharma' : null,
+    reviewedAt: next ? nowTime() : null,
+    ignoreReason: next==='ignore' ? (cur.ignoreReason || IGNORE_REASONS[0]) : null
+  });
   if(state.entry) state.entry.rows = rows;   // keep the saved check record in sync
+  setState({rows:rows});
+}
+/* set the reason on an ignored photo */
+function setIgnoreReason(i, reason){
+  var rows = state.rows.slice();
+  rows[i] = Object.assign({}, rows[i], {review:'ignore', ignoreReason:reason, reviewedBy:'A. Sharma', reviewedAt:nowTime()});
+  if(state.entry) state.entry.rows = rows;
   setState({rows:rows});
 }
 /* escalation: ask the interviewer who sat with this candidate to confirm (mocked) */

@@ -236,31 +236,39 @@ undecided.
   can affect employment. Key sources: GDPR Art 22 / SCHUFA; EU AI Act Annex III verification
   exemption; NIST FRVT demographic report (IR 8429); India DPDP Act 2023.
 
-## C. AI quality gate + per-row review (report surface)
+## C. AI quality gate + per-row review (report surface) — BUILT 2026-08-27 (five questions locked)
 
-- **[rec]** Row state = **(confidence × similarity)**, confidence gates: low confidence (quality
-  problem) → **Needs review** regardless of score; high confidence + high similarity → **Match**;
-  high confidence + low similarity → **Not a match**; no usable face → **Couldn't compare**.
-- **[agreed]** Surface the **AI reason** with a Needs-review tag: blurry / not facing camera /
-  looking away / possible group photo / face occluded — so the recruiter knows what to check.
-- **[agreed]** **Headgear → facial-occlusion rule.** The AI must **never** classify "religious vs
+All five locked; seeded quality flags approved for the prototype.
+
+- **Confidence gates the score** (`photoState`): a poor-quality photo (`quality:'poor'`) is
+  **Needs review** whatever the number says; high confidence + high similarity → **Match**; high
+  confidence + low similarity → **Not a match**; no usable face → **Couldn't compare**. A number
+  you can't trust never reads as a match or a mismatch.
+- The **AI reason is surfaced** (`aiReason`): shown under the row for Needs-review ("Not facing
+  the camera", "Borderline similarity") and inside the expanded panel ("AI flagged this: …").
+- **Headgear → facial-occlusion rule.** The AI must **never** classify "religious vs
   non-religious" headwear (technically unreliable, discrimination/DPDP risk). Flag only when the
-  **face itself is occluded**, whatever is covering it. A turban/hijab/kippah that leaves the face
-  clear is not flagged.
-- **[agreed]** **No-photo / no-face is NOT "Not a match"** — it stays **Couldn't compare** (a data
-  problem, not an accusation). "Not a match" means only: confidently a different person.
-- **[rec]** Quality check runs in **two places**: the **source (joining) photo** gets a
-  **pre-flight** check at upload (soft warn → retake / run anyway, never a hard block); each
-  **evidence photo** is checked per-row after the run.
-- **[rec]** Recruiter actions **replace the four reason codes** built in `261c9e9`:
-  on **Needs review** → `Same person` / `Not a match` / `Ignore this photo (+reason)`;
-  on **Not a match** → `Same person` / `Ignore this photo (+reason)`. "Can't tell" dropped
-  (dead-end). Mapping: Same person = positive vouch, Not a match = negative, Ignore = excluded
-  from the denominator. Ignore reasons: not this candidate / too blurry-dark-lowres / face not
-  visible / too old / document unreadable / duplicate.
-- **[agreed]** **Audit stores both layers** on every row, permanently: the **AI** tag + reason(s)
-  + raw scores (similarity, confidence), AND the **recruiter** action + reason + who + when. The
-  record reads e.g. *"AI: Needs review (not facing camera) → A. Sharma marked Same person · 10:14."*
+  **face itself is occluded**. (Enforced at the seeding/spec level — reasons are occlusion-based,
+  never garment-type.)
+- **No-photo / no-face is NOT "Not a match"** — stays **Couldn't compare** (a data problem, not an
+  accusation). "Not a match" means only: confidently a different person.
+- **Recruiter actions replaced the four reason codes** from `261c9e9`: on **Needs review** →
+  `Same person` / `Not a match` / `Ignore this photo (+reason)`; on **Not a match** →
+  `Same person` / `Ignore this photo (+reason)`. "Can't tell" dropped. Mapping: Same person =
+  positive vouch, Not a match = negative, **Ignore = excluded from the denominator** (like
+  Couldn't-compare; noted in the banner sub as "N ignored"). Ignore reasons: not this candidate /
+  too blurry-dark-lowres / face not visible / too old / document unreadable / duplicate.
+- **Audit stores both layers** per row: AI tag + reason + score, and the recruiter's action +
+  ignore-reason + who + when. Shown in the expanded panel: *"Audit: AI marked Needs review (Not
+  facing the camera) → Ignore this photo · Face not clearly visible by A. Sharma · 10:14."*
+- **Seeded, not live:** quality flags (`quality`/`qreason`) are seeded per photo, same as scores
+  (`USE_LIVE_SCORING`), so the states/reasons are demonstrable. Real blur/pose/occlusion/
+  face-presence detection needs the vision model (a genuine capability of it, unlike the
+  similarity number, which needs the embedding engine).
+- **DEFERRED — source-photo pre-flight (#4).** The soft "retake / run anyway" warning on the
+  *joining-day upload* is **not built**: it can't be seeded (the uploaded photo is arbitrary), so
+  it needs the live vision model. The per-evidence quality gate above is fully built; the
+  source-side pre-flight is the one piece waiting on real detection.
 
 ## D. Landing worklist rebuild (driver: stale joining-date → unverified joiner) — BUILT 2026-08-27
 
@@ -321,7 +329,10 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
   `WL_TODAY_MS`). URL routing (`?f`/`?d`/`?s`/`?mine`/`?p`, and `?candidateId` when a check is
   open) drives filter/sort/page and the Back button.
 
-## E. Still awaiting sign-off before it is built
+## E. Status
 
-Only the **quality-gate + per-row review model (§C)** remains unconfirmed. The worklist (§D) and
-the verdict-vocabulary rename (§A) are built.
+§A (banner rename), §D (worklist), and §C (quality gate + per-row review) are all **built**. The
+only pieces still pending a real model/engine, not sign-off:
+- the **source-photo pre-flight** (§C, deferred — needs live vision detection on the upload);
+- the **real scoring engine** (Rekognition / Azure Face / ArcFace) behind `USE_LIVE_SCORING`;
+- **row ownership / assignment** (prerequisite for a per-recruiter or shared attention queue).
