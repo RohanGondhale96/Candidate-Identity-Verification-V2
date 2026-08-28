@@ -368,11 +368,11 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
   "no photos on file" case). Each of the 7 seeds has **one AI-generated application headshot**
   (distinct synthetic person, matched to the name), embedded via `_inject2.js` under keys `s1`–`s7`
   and given a seeded score so its report works if opened. Rahul (`c1`) and Arjun (`c2`) keep their
-  fuller real sets (application + interview + documents). **Rahul and Arjun are seeded as overdue
-  "To verify"** (joining
-  3 and 5 Aug vs the fixed demo "today" of 15 Aug, `WL_TODAY_MS`) so they sit at the **top of Needs
-  your attention and page 1** — otherwise the default oldest-overdue sort buries them behind the
-  seeds. Clicking either runs the real check. Meera is a future joiner with no photos (the empty-
+  fuller real sets (application + interview + documents). The **"Needs your attention" block holds
+  exactly three** (per the demo): **Rahul** (12 days overdue "To verify", a real interactive
+  candidate — top of the block and page 1), **Priya** (3 days), and **Imran** (2 days, "In review").
+  Arjun and Vikram sit at "joining today" so they stay in the list but out of attention. Clicking
+  Rahul runs the real check. Meera is a future joiner with no photos (the empty-
   state case; reach her via search or `?candidateId=RH48466`). URL routing (`?f`/`?d`/`?s`/`?p`,
   and `?candidateId` when a check is open) drives filter/sort/page and the Back button.
 

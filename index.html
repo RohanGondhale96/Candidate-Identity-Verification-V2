@@ -159,7 +159,7 @@ var CANDIDATES = [
       {label:'Driving licence', src:'document', date:'Identity document', by:null, score:22, cause:'the face on this document differs from today\'s photo across several features.'}
     ]},
   { id:'c2', name:'Arjun Reddy', rhid:'RH47980', email:'arjun.reddy@outlook.com', phone:'+91 99872 08802',
-    req:'Product Designer', reqid:'REQ-2244', stage:'Hired', eligible:true, joining:'5 Aug 2026', joiningISO:'2026-08-05', owner:'me',
+    req:'Product Designer', reqid:'REQ-2244', stage:'Hired', eligible:true, joining:'15 Aug 2026', joiningISO:'2026-08-15', owner:'me',
     photos:[
       {label:'Application photo', src:'application', date:'21 Mar 2026', by:null, score:96, tone:'clear'},
       {label:'Round 1 — portfolio review', src:'interview', date:'09 Apr 2026, 12:00', by:'N. Bhatia', score:93, tone:'clear'},
@@ -1288,7 +1288,7 @@ function hhmm(n){ var hh=9+(n%8), mm=(n*7)%60; return (hh<10?'0':'')+hh+':'+(mm<
 function buildSeeds(){
   // Small demo set: 7 seeds + the 3 real candidates (Rahul, Arjun, Meera) = 10 total.
   var seeds=[
-    {name:'Vikram Nair',  req:'Data Engineer',     st:'toverify',    iso:'2026-08-04', reason:'', score:91},
+    {name:'Vikram Nair',  req:'Data Engineer',     st:'toverify',    iso:'2026-08-15', reason:'', score:91},
     {name:'Priya Sharma', req:'QA Analyst',        st:'toverify',    iso:'2026-08-12', reason:'', score:88},
     {name:'Imran Shaikh', req:'UX Designer',       st:'inreview',    iso:'2026-08-13', reason:'Checked · not submitted', score:63, cause:'the reference is soft and unevenly lit, which lowers confidence in the match.'},
     {name:'Ananya Rao',   req:'Product Manager',   st:'verified',    iso:'2026-08-14', reason:'Submitted by A. Sharma · 11:14', score:94},
