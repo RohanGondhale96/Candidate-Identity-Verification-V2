@@ -72,8 +72,9 @@ never flips to a clean "Match" off human vouching.
 - **Flagged rows are open by default.** Unresolved **Needs review** / **Not a match** rows expand
   automatically (the accordion allows multiple open at once, `effectiveOpen()` / `openRows`), so the
   work needing the recruiter's judgment is front and centre. **Match** and **Couldn't-compare** rows
-  stay collapsed. Recording an action **auto-collapses** that row (leaving only what's still
-  outstanding open); any row is still clickable to toggle.
+  stay collapsed. Recording a verdict (Same person / Not a match / Ignore) **leaves the row open**
+  (showing the recorded action + audit) — no abrupt auto-collapse; the recruiter collapses it by
+  clicking the row. (Changed 2026-08-28 — auto-collapse-on-resolve felt jarring.)
 
 Each expanded row (`reasonCodes()` + the expanded panel in `render()`) shows:
 

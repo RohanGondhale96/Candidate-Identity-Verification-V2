@@ -1201,7 +1201,7 @@ function resolveRow(i, code){
     reviewedBy: next ? 'A. Sharma' : null, reviewedAt: next ? nowTime() : null
   });
   var openRows = Object.assign({}, state.openRows);
-  if(next) openRows[i] = false;   // resolved -> auto-collapse
+  if(next) openRows[i] = true;    // keep the row open after the verdict (no abrupt collapse)
   else delete openRows[i];        // cleared -> revert to default (unresolved -> open)
   if(state.entry) state.entry.rows = rows;
   setState({rows:rows, openRows:openRows});
@@ -1221,7 +1221,7 @@ function confirmReason(){
   if(m.reason==='Other' && !note){ setState({rmodal:Object.assign({}, m, {note:note, err:'Add a note describing the reason.'})}); return; }
   var rows=state.rows.slice();
   rows[m.i]=Object.assign({}, rows[m.i], {review:m.action, reasonLabel:m.reason, reasonNote:note, reviewedBy:'A. Sharma', reviewedAt:nowTime()});
-  var openRows=Object.assign({}, state.openRows); openRows[m.i]=false;   // resolved -> auto-collapse
+  var openRows=Object.assign({}, state.openRows); openRows[m.i]=true;   // keep the row open after the verdict
   if(state.entry) state.entry.rows=rows;
   setState({rows:rows, rmodal:null, openRows:openRows});
 }
