@@ -86,13 +86,20 @@ Open a **Needs review** or **Not a match** row (`reasonCodes()` + the expanded p
   this photo** (a no-match row drops the redundant "Not a match" card). No "reason required" label.
 - **Same person** applies immediately (toggle). **Not a match** and **Ignore** open a **reason
   popup** (`openReasonModal` → `confirmReason`): pick a reason (Not-a-match: *Clearly a different
-  person / Facial features don't match / Other*; Ignore: the six `IGNORE_REASONS`) + an optional
-  note, Confirm disabled until a reason is picked, Cancel leaves the row unresolved.
+  person / Facial features don't match / Other*; Ignore: the six `IGNORE_REASONS` **plus Other**) +
+  a note, Confirm needs a reason, Cancel leaves the row unresolved. **Picking "Other" makes the
+  note mandatory** — Confirm is blocked with an inline error until it's filled (otherwise the note
+  is optional).
+- **"Ignore this photo" = exclude that whole comparison from the verdict.** Ignoring the Round 2
+  photo drops Round 2 out of the calculation; the identity confirmation is computed over the
+  remaining rounds only. The row stays visible with an **"Ignored"** badge + reason (audit), the
+  banner notes "N ignored", and the denominator drops (5 of 7 → 5 of 6). If every row is ignored →
+  "Couldn't run the check".
 - Actions are **non-binding on the verdict**; they change the row to a single combined badge
-  (*Reviewed · same person* green / *Reviewed · different person* red / *Ignored* grey — Ignore also
-  drops the row from the denominator). Both layers are kept in the **audit line** ("AI marked … →
-  &lt;action&gt; · &lt;reason&gt; · &lt;note&gt; by A. Sharma · time"). **Structured reasons, not
-  free text** — searchable, defensible, and a dataset for tuning thresholds in v2.
+  (*Reviewed · same person* green / *Reviewed · different person* red / *Ignored* grey). Both layers
+  are kept in the **audit line** ("AI marked … → &lt;action&gt; · &lt;reason&gt; · &lt;note&gt; by
+  A. Sharma · time"). **Structured reasons, not free text** — searchable, defensible, and a dataset
+  for tuning thresholds in v2.
 
 ## Recruiter decision — Confirm / Can't confirm
 

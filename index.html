@@ -423,7 +423,7 @@ function aiStateLabel(r){ var st=photoState(r); return st==='cant'?"Couldn’t c
 
 /* the human's action on a flagged row (structured, non-binding on the number) */
 var ACTIONS = { same:'Same person', notmatch:'Not a match', ignore:'Ignore this photo' };
-var IGNORE_REASONS = ['Wrong photo (not this candidate)','Too blurry / dark / low-res','Face not clearly visible','Too old — appearance changed','Document scan unreadable','Duplicate of another photo'];
+var IGNORE_REASONS = ['Wrong photo (not this candidate)','Too blurry / dark / low-res','Face not clearly visible','Too old — appearance changed','Document scan unreadable','Duplicate of another photo','Other'];
 /* pos = human vouches same person, neg = says different, excluded = ignore the photo, open = undecided */
 function codeOutcome(code){ return code==='same'?'pos':(code==='notmatch'?'neg':(code==='ignore'?'excluded':'open')); }
 function rowExcluded(r){ return photoState(r)==='cant' || codeOutcome((r&&r.review)||'')==='excluded'; }
@@ -1129,7 +1129,8 @@ function render(){
       '<div class="dbody">'+
         '<p style="margin:0 0 6px;font-size:12.5px;color:#747474">Pick a reason — recorded against your name.</p>'+
         rmReasons.map(function(rz,idx){ var on=rm.reason===rz; return '<button type="button" onclick="pickModalReason('+idx+')" style="display:block;width:100%;box-sizing:border-box;text-align:left;border:'+(on?'1.5px solid #378ADD':'1px solid #DDD')+';background:'+(on?'#E6F1FB':'#fff')+';color:'+(on?'#185FA5':'#2A2A2A')+';border-radius:8px;margin-top:7px;padding:9px 11px;font-size:13px;font-weight:'+(on?'600':'400')+';cursor:pointer;font-family:inherit">'+h(rz)+'</button>'; }).join('')+
-        '<textarea id="rh-reason-note" placeholder="Add a note (optional)" style="width:100%;box-sizing:border-box;margin-top:10px;min-height:48px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid #DDD;border-radius:8px">'+h(rm.note||'')+'</textarea>'+
+        '<textarea id="rh-reason-note" placeholder="'+(rm.reason==='Other'?'Add a note (required)':'Add a note (optional)')+'" style="width:100%;box-sizing:border-box;margin-top:10px;min-height:48px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid '+(rm.err?'#EB4040':'#DDD')+';border-radius:8px">'+h(rm.note||'')+'</textarea>'+
+        (rm.err ? '<div style="font-size:12.5px;color:#EB4040;margin-top:6px">'+h(rm.err)+'</div>' : '')+
       '</div>'+
       '<footer><span style="flex:1"></span><button class="rh-btn tertiary sm" onclick="cancelReason()">Cancel</button><button class="rh-btn primary sm" '+(rm.reason?'':'disabled')+' onclick="confirmReason()">Confirm</button></footer>'+
     '</div></div>';
@@ -1189,13 +1190,14 @@ function pickModalReason(idx){
   var m=state.rmodal; if(!m) return;
   var list = m.action==='notmatch' ? NOTMATCH_REASONS : IGNORE_REASONS;
   var el=document.getElementById('rh-reason-note'); var note=el?el.value:(m.note||'');
-  setState({rmodal:Object.assign({}, m, {reason:list[idx], note:note})});
+  setState({rmodal:Object.assign({}, m, {reason:list[idx], note:note, err:''})});
 }
 function cancelReason(){ setState({rmodal:null}); }
 function scrimReason(e){ if(e.target===e.currentTarget) cancelReason(); }
 function confirmReason(){
   var m=state.rmodal; if(!m || !m.reason) return;
   var el=document.getElementById('rh-reason-note'); var note=el?el.value.trim():((m.note||'').trim());
+  if(m.reason==='Other' && !note){ setState({rmodal:Object.assign({}, m, {note:note, err:'Add a note describing the reason.'})}); return; }
   var rows=state.rows.slice();
   rows[m.i]=Object.assign({}, rows[m.i], {review:m.action, reasonLabel:m.reason, reasonNote:note, reviewedBy:'A. Sharma', reviewedAt:nowTime()});
   if(state.entry) state.entry.rows=rows;
