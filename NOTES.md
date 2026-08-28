@@ -67,22 +67,32 @@ never flips to a clean "Match" off human vouching.
   because on a fail the person who ran that round is who you'd call, and that belongs next to the
   comparison, not cluttering the list.
 
-## Per-photo review — structured reason codes
+## Per-photo review — the expanded row (redesigned 2026-08-28)
 
-- Open a **Needs review** or **Not a match** row to see the two photos side by side, the raw
-  similarity %, "Interviewed by …", and **four reason codes** (radio-style, pick one):
-  *Same person · poor photo quality* / *Same person · appearance changed* / *Different person* /
-  *Can't tell*. See `reasonCodes()` / `resolveRow()`.
-- **Structured codes, not a free-text note** — on purpose. Free text is unsearchable, useless in
-  a dispute, and recruiters type "ok" in it. Codes give a dataset on *why* the model was
-  uncertain, which is how thresholds get tuned in v2. Collected structurally from day one.
-- Codes are **non-binding on the verdict** (the human still owns the overall call) but they
-  **change the row badge** to a single combined state: *Reviewed · same person* (green) or
-  *Reviewed · different person* (red). One badge carries both the model finding and the human
-  answer — never two competing badges.
-- The expanded panel shows **"Interviewed by &lt;name&gt;"** (the person who ran that round). An
-  **"Ask &lt;name&gt; to confirm"** escalation button was prototyped here and **removed 2026-08-27**
-  (not wanted); the interviewer name stays as context.
+Open a **Needs review** or **Not a match** row (`reasonCodes()` + the expanded panel in `render()`):
+
+- **Two photos side by side, captions overlaid on each** (bottom, over a dark scrim): **reference
+  on the left**, **"Photo taken today" on the right** (deliberately swapped). The reference caption
+  carries a **relative age** ("02 Jun 2026 · 74 days earlier", `reportRelAge()` vs the demo today).
+- A **model-similarity bar** (`similarityBar()`): the score filled in, coloured by state
+  (green/amber/red), with the **match threshold marked** — "Photos match at 85%" / "Documents match
+  at 65%".
+- A full-sentence **likely-cause callout**, labelled **"Likely cause for review:"** or
+  **"Likely cause for not match:"** by state. The sentence is seeded per flagged photo (`cause`
+  field), falling back to the short `aiReason()`; the live version comes from the model.
+- **"Interviewed by &lt;name&gt;"** as context (an "Ask … to confirm" button was prototyped here
+  and removed).
+- **Three action cards** under "WHAT DID YOU FIND?": **Same person** / **Not a match** / **Ignore
+  this photo** (a no-match row drops the redundant "Not a match" card). No "reason required" label.
+- **Same person** applies immediately (toggle). **Not a match** and **Ignore** open a **reason
+  popup** (`openReasonModal` → `confirmReason`): pick a reason (Not-a-match: *Clearly a different
+  person / Facial features don't match / Other*; Ignore: the six `IGNORE_REASONS`) + an optional
+  note, Confirm disabled until a reason is picked, Cancel leaves the row unresolved.
+- Actions are **non-binding on the verdict**; they change the row to a single combined badge
+  (*Reviewed · same person* green / *Reviewed · different person* red / *Ignored* grey — Ignore also
+  drops the row from the denominator). Both layers are kept in the **audit line** ("AI marked … →
+  &lt;action&gt; · &lt;reason&gt; · &lt;note&gt; by A. Sharma · time"). **Structured reasons, not
+  free text** — searchable, defensible, and a dataset for tuning thresholds in v2.
 
 ## Recruiter decision — Confirm / Can't confirm
 

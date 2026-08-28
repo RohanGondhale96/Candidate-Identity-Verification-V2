@@ -151,12 +151,12 @@ var CANDIDATES = [
     photos:[
       {label:'Application photo', src:'application', date:'14 Apr 2026', by:null, score:94, tone:'clear'},
       {label:'Round 1 — screening', src:'interview', date:'06 May 2026, 10:15', by:'K. Deshpande', score:92, tone:'clear'},
-      {label:'Round 2 — technical', src:'interview', date:'02 Jun 2026, 15:20', by:'R. Menon', score:61, tone:'dark'},
-      {label:'Round 3 — manager round', src:'interview', date:'18 Jun 2026, 11:05', by:'S. Iyer', score:91, tone:'clear', quality:'poor', qreason:'Not facing the camera'},
+      {label:'Round 2 — technical', src:'interview', date:'02 Jun 2026, 15:20', by:'R. Menon', score:61, tone:'dark', cause:'the reference frame catches the candidate mid-turn, so much of the face is out of view.'},
+      {label:'Round 3 — manager round', src:'interview', date:'18 Jun 2026, 11:05', by:'S. Iyer', score:91, tone:'clear', quality:'poor', qreason:'Not facing the camera', cause:'the candidate is turned away from the camera in this reference, so key facial features are hard to line up.'},
       {label:'Round 4 — HR discussion', src:'interview', date:'27 Jun 2026, 16:40', by:'A. Sharma', score:89, tone:'soft'},
       {label:'Aadhaar card', src:'document', date:'Identity document', by:null, score:71},
       {label:'PAN card', src:'document', date:'Identity document', by:null, cant:true},
-      {label:'Driving licence', src:'document', date:'Identity document', by:null, score:22}
+      {label:'Driving licence', src:'document', date:'Identity document', by:null, score:22, cause:'the face on this document differs from today\'s photo across several features.'}
     ]},
   { id:'c2', name:'Arjun Reddy', rhid:'RH47980', email:'arjun.reddy@outlook.com', phone:'+91 99872 08802',
     req:'Product Designer', reqid:'REQ-2244', stage:'Hired', eligible:true, joining:'5 Aug 2026', joiningISO:'2026-08-05', owner:'me',
@@ -191,7 +191,7 @@ var state = {
   upErr:'', drag:false, showShare:false, picked:[], pickQ:'',
   toast:'', roundsConfigured:true, lightbox:null, history:[], hasCamera:true, deepMiss:null,
   confirmReshoot:false, viewingHistory:false, decision:null, decisionErr:'', entry:null, tab:'joining', _refocus:null,
-  attest:false, qualityChecking:false, quality:null,
+  attest:false, qualityChecking:false, quality:null, rmodal:null,
   /* worklist */
   filter:'all', dateRange:'all', wlSort:'overdue', mineOnly:true, page:1, perPage:10,
   dismissed:{}, wlMenu:null, wlConfirmAll:false
@@ -495,30 +495,56 @@ function bannerIcon(tier, color){
   return '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="'+color+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 }
 function nowTime(){ return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
-/* per-row human action (Same person / Not a match / Ignore) + the AI finding + an audit line */
+var NOTMATCH_REASONS = ['Clearly a different person','Facial features don\'t match','Other'];
+/* full-sentence "likely cause" — seeded per flagged photo for the demo; live version comes from the model */
+function causeText(r){ return (r && r.cause) || aiReason(r); }
+/* relative age of a reference photo vs today's joining photo (WL_TODAY_MS) */
+var _RMON={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+function reportRelAge(r){
+  var m=/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/.exec((r&&r.date)||'');
+  if(!m) return '';
+  var ms=Date.UTC(+m[3], _RMON[m[2]]||0, +m[1]);
+  var d=Math.round((WL_TODAY_MS - ms)/86400000);
+  return d>0 ? (d+' day'+(d===1?'':'s')+' earlier') : '';
+}
+/* model-similarity bar with the source-aware match threshold marked */
+function similarityBar(r){
+  var st=photoState(r), pct=Math.max(0,Math.min(100, r.score||0)), bar=photoBar(r);
+  var col = st==='match' ? '#1a8a3a' : (st==='nomatch' ? '#EB4040' : '#B7791F');
+  var label = r.src==='document' ? 'Documents match at 65%' : 'Photos match at 85%';
+  return '<div style="display:flex;align-items:baseline;justify-content:space-between;margin:18px 0 6px"><span style="font-size:13px;color:#747474">Model similarity</span><span style="font-size:15px;font-weight:600;color:'+col+'">'+r.score+'%</span></div>'+
+    '<div style="position:relative;height:8px;border-radius:999px;background:#EFEFEF">'+
+      '<div style="position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:'+col+';width:'+pct+'%"></div>'+
+      '<div style="position:absolute;top:-4px;bottom:-4px;left:'+bar+'%;width:2px;background:#2A2A2A;opacity:.55"></div></div>'+
+    '<div style="display:flex;justify-content:space-between;margin-top:6px;font-size:11.5px;color:#9a9a9a"><span>0%</span><span>'+label+'</span></div>';
+}
+/* likely-cause callout + the three action cards (Same person / Not a match / Ignore) + audit line */
 function reasonCodes(i, r){
   var st = photoState(r);
-  var codes = st==='nomatch' ? ['same','ignore'] : ['same','notmatch','ignore'];
-  var out = '<div style="font-size:12.5px;color:#8a6414;background:#FBF1DE;border-radius:6px;padding:7px 10px;margin-top:14px;display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>AI flagged this: '+h(aiReason(r))+'</div>';
-  out += '<div style="font-size:13px;font-weight:600;margin-top:12px">What did you find?</div>'+
-    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">';
-  codes.forEach(function(code){
-    var on = r.review===code, neg = code==='notmatch';
-    var bd = neg?'#E24B4A':'#378ADD', bg = neg?'#FDECEC':'#E6F1FB', col = neg?'#A32D2D':'#185FA5';
-    out += '<button type="button" onclick="resolveRow('+i+',\''+code+'\')" style="border:'+(on?('2px solid '+bd):'1px solid #DDD')+';background:'+(on?bg:'#fff')+';color:'+(on?col:'#444')+';border-radius:8px;padding:'+(on?'7px 11px':'8px 12px')+';font-size:12.5px;font-weight:'+(on?'600':'400')+';cursor:pointer;font-family:inherit">'+h(ACTIONS[code])+'</button>';
+  var causeLabel = st==='nomatch' ? 'Likely cause for not match:' : 'Likely cause for review:';
+  var out = '<div style="display:flex;gap:9px;margin-top:16px;padding:11px 13px;background:#FBF1DE;border:0.5px solid #EAD9AE;border-radius:8px;font-size:13px;color:#8a6414;line-height:1.5">'+
+    '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>'+
+    '<span><span style="font-weight:600">'+causeLabel+'</span> '+h(causeText(r))+'</span></div>';
+  out += '<div style="font-size:12px;font-weight:600;color:#747474;letter-spacing:.03em;margin-top:16px">WHAT DID YOU FIND?</div>';
+  var acts = st==='nomatch'
+    ? [['same','Same person','Faces match despite the score'],['ignore','Ignore this photo','Reference can\'t be used']]
+    : [['same','Same person','Faces match despite the score'],['notmatch','Not a match','Different person'],['ignore','Ignore this photo','Reference can\'t be used']];
+  out += '<div style="display:grid;grid-template-columns:repeat('+acts.length+',minmax(0,1fr));gap:10px;margin-top:8px">';
+  acts.forEach(function(a){
+    var code=a[0], on=r.review===code;
+    var onclick = code==='same' ? ('resolveRow('+i+',\'same\')') : ('openReasonModal('+i+',\''+code+'\')');
+    out += '<button type="button" onclick="'+onclick+'" style="text-align:left;border:'+(on?'2px solid #378ADD':'1px solid #C6C6C6')+';background:'+(on?'#E6F1FB':'#fff')+';border-radius:10px;padding:12px;cursor:pointer;font-family:inherit">'+
+      '<div style="font-size:14px;font-weight:600;color:#2A2A2A">'+h(a[1])+'</div>'+
+      '<div style="font-size:12px;color:#747474;margin-top:3px">'+h(a[2])+'</div></button>';
   });
   out += '</div>';
-  if(r.review==='ignore'){
-    out += '<div style="margin-top:10px;font-size:12.5px;color:#555">Why ignore this photo?'+
-      '<select onchange="setIgnoreReason('+i+',this.value)" style="display:block;margin-top:6px;height:32px;border:1px solid #DDD;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 8px;color:#2A2A2A;max-width:100%">'+
-      IGNORE_REASONS.map(function(rz){ return '<option'+((r.ignoreReason||IGNORE_REASONS[0])===rz?' selected':'')+'>'+h(rz)+'</option>'; }).join('')+'</select></div>';
-  }
   if(r.review){
     var o = codeOutcome(r.review), col = o==='neg'?'#D93025':(o==='excluded'?'#5F5E5A':'#1a8a3a');
-    var detail = r.review==='ignore' ? (' · '+(r.ignoreReason||IGNORE_REASONS[0])) : '';
-    out += '<div style="font-size:12px;color:#747474;margin-top:10px;line-height:1.5;border-top:1px solid #E0E0E0;padding-top:8px">'+
-      '<b style="font-weight:600">Audit:</b> AI marked <b style="font-weight:600">'+h(aiStateLabel(r))+'</b>'+(aiReason(r)?(' ('+h(aiReason(r))+')'):'')+' → '+
-      '<span style="color:'+col+';font-weight:600">'+h(ACTIONS[r.review])+detail+'</span> by '+h(r.reviewedBy||'A. Sharma')+(r.reviewedAt?(' · '+h(r.reviewedAt)):'')+'</div>';
+    var detail = ((r.review==='notmatch'||r.review==='ignore') && r.reasonLabel) ? (' · '+r.reasonLabel) : '';
+    var noteDetail = r.reasonNote ? (' · “'+r.reasonNote+'”') : '';
+    out += '<div style="font-size:12px;color:#747474;margin-top:12px;line-height:1.5;border-top:1px solid #E0E0E0;padding-top:8px">'+
+      '<b style="font-weight:600">Audit:</b> AI marked <b style="font-weight:600">'+h(aiStateLabel(r))+'</b> → '+
+      '<span style="color:'+col+';font-weight:600">'+h(ACTIONS[r.review]+detail)+'</span>'+h(noteDetail)+' by '+h(r.reviewedBy||'A. Sharma')+(r.reviewedAt?(' · '+h(r.reviewedAt)):'')+'</div>';
   }
   return out;
 }
@@ -978,14 +1004,20 @@ function render(){
           '</button>';
         if(_done && s.open===i && !isCant){
           var needsCode = (st==='review' || st==='nomatch');
+          var rel = reportRelAge(r);
+          var capStyle='position:absolute;left:0;right:0;bottom:0;padding:20px 11px 9px;background:linear-gradient(to top,rgba(0,0,0,.68),rgba(0,0,0,0));color:#fff';
+          var paneStyle='position:relative;width:100%;aspect-ratio:4/5;border-radius:8px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD';
+          var refPane='<div style="'+paneStyle+'">'+photoTile(r,(c?c.id:'')+r.label,'contain')+
+            '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+h(r.label)+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(r.date)+(rel?(' · '+h(rel)):'')+'</div></div></div>';
+          var todayPane='<div style="'+paneStyle+'">'+uploadedImg('contain')+
+            '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">Photo taken today</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">15 Aug 2026, 09:41</div></div></div>';
           html += '<div style="padding:0 20px 18px;background:#F7F8FA">'+
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+
-              '<div><div style="font-size:13px;color:#747474;margin-bottom:6px">Photo taken today</div><div style="width:100%;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+uploadedImg('contain')+'</div></div>'+
-              '<div><div style="font-size:13px;color:#747474;margin-bottom:6px">'+h(r.label)+'</div><div style="width:100%;aspect-ratio:4/5;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+photoTile(r,(c?c.id:'')+r.label,'contain')+'</div></div>'+
+              '<div>'+refPane+'</div>'+
+              '<div>'+todayPane+'</div>'+
             '</div>'+
-            (r.by ? '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px"><span style="font-size:12.5px;color:#747474;display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#747474" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>Interviewed by '+h(r.by)+'</span>'+
-            '</div>' : '')+
-            '<div style="font-size:12px;color:#9a9a9a;margin-top:10px">Model similarity '+r.score+'% · match bar for '+(r.src==='document'?'documents is 65%':'photos is 85%')+'</div>'+
+            (r.by ? '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px"><span style="font-size:12.5px;color:#747474;display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#747474" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>Interviewed by '+h(r.by)+'</span></div>' : '')+
+            similarityBar(r)+
             (needsCode ? reasonCodes(i, r) : '')+
           '</div>';
         }
@@ -1087,6 +1119,22 @@ function render(){
     '</div></div>';
   }
 
+  /* REASON POPUP — Not a match / Ignore this photo */
+  if(s.rmodal){
+    var rm = s.rmodal;
+    var rmReasons = rm.action==='notmatch' ? NOTMATCH_REASONS : IGNORE_REASONS;
+    var rmTitle = rm.action==='notmatch' ? 'Why is this not a match?' : 'Why ignore this photo?';
+    html += '<div class="rh-scrim" onclick="scrimReason(event)"><div class="rh-dialog" style="width:420px">'+
+      '<header><h2>'+rmTitle+'</h2><button class="x" onclick="cancelReason()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
+      '<div class="dbody">'+
+        '<p style="margin:0 0 6px;font-size:12.5px;color:#747474">Pick a reason — recorded against your name.</p>'+
+        rmReasons.map(function(rz,idx){ var on=rm.reason===rz; return '<button type="button" onclick="pickModalReason('+idx+')" style="display:block;width:100%;box-sizing:border-box;text-align:left;border:'+(on?'1.5px solid #378ADD':'1px solid #DDD')+';background:'+(on?'#E6F1FB':'#fff')+';color:'+(on?'#185FA5':'#2A2A2A')+';border-radius:8px;margin-top:7px;padding:9px 11px;font-size:13px;font-weight:'+(on?'600':'400')+';cursor:pointer;font-family:inherit">'+h(rz)+'</button>'; }).join('')+
+        '<textarea id="rh-reason-note" placeholder="Add a note (optional)" style="width:100%;box-sizing:border-box;margin-top:10px;min-height:48px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid #DDD;border-radius:8px">'+h(rm.note||'')+'</textarea>'+
+      '</div>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn tertiary sm" onclick="cancelReason()">Cancel</button><button class="rh-btn primary sm" '+(rm.reason?'':'disabled')+' onclick="confirmReason()">Confirm</button></footer>'+
+    '</div></div>';
+  }
+
   /* TOAST */
   if(s.toast){ html += '<div role="status" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2A2A2A;color:#fff;padding:11px 18px;border-radius:4px;font-size:13.5px;z-index:60;box-shadow:0 3px 6px rgba(0,0,0,.2)">'+h(s.toast)+'</div>'; }
 
@@ -1123,34 +1171,35 @@ function decide(action){
   setState({decision:dec, decisionErr:''});
 }
 function changeDecision(){ if(state.entry) state.entry.decision = null; setState({decision:null, decisionErr:''}); }
-/* record a human action (same / notmatch / ignore) on a review / no-match row.
-   Non-binding on the AI score; both the AI tag and this action are kept for audit. */
+/* record a human action on a review / no-match row. Non-binding on the AI score; both the AI
+   tag and the human action are kept for audit. "Same person" applies immediately (and toggles
+   off); "Not a match" / "Ignore this photo" capture a reason in a popup first. */
 function resolveRow(i, code){
   var rows = state.rows.slice(), cur = rows[i];
   var next = (cur.review===code) ? null : code;
   rows[i] = Object.assign({}, cur, {
-    review: next,
-    reviewedBy: next ? 'A. Sharma' : null,
-    reviewedAt: next ? nowTime() : null,
-    ignoreReason: next==='ignore' ? (cur.ignoreReason || IGNORE_REASONS[0]) : null
+    review: next, reasonLabel: null, reasonNote: '',
+    reviewedBy: next ? 'A. Sharma' : null, reviewedAt: next ? nowTime() : null
   });
-  if(state.entry) state.entry.rows = rows;   // keep the saved check record in sync
-  setState({rows:rows});
-}
-/* set the reason on an ignored photo */
-function setIgnoreReason(i, reason){
-  var rows = state.rows.slice();
-  rows[i] = Object.assign({}, rows[i], {review:'ignore', ignoreReason:reason, reviewedBy:'A. Sharma', reviewedAt:nowTime()});
   if(state.entry) state.entry.rows = rows;
   setState({rows:rows});
 }
-/* escalation: ask the interviewer who sat with this candidate to confirm (mocked) */
-function askInterviewer(i){
-  var r = state.rows[i]; if(!r || !r.by) return;
-  var rows = state.rows.slice(); rows[i] = Object.assign({}, rows[i], {asked:true});
-  if(state.entry) state.entry.rows = rows;
-  setState({rows:rows});
-  toast('Asked '+r.by+' to confirm — request sent');
+function openReasonModal(i, action){ setState({rmodal:{i:i, action:action, reason:null, note:''}}); }
+function pickModalReason(idx){
+  var m=state.rmodal; if(!m) return;
+  var list = m.action==='notmatch' ? NOTMATCH_REASONS : IGNORE_REASONS;
+  var el=document.getElementById('rh-reason-note'); var note=el?el.value:(m.note||'');
+  setState({rmodal:Object.assign({}, m, {reason:list[idx], note:note})});
+}
+function cancelReason(){ setState({rmodal:null}); }
+function scrimReason(e){ if(e.target===e.currentTarget) cancelReason(); }
+function confirmReason(){
+  var m=state.rmodal; if(!m || !m.reason) return;
+  var el=document.getElementById('rh-reason-note'); var note=el?el.value.trim():((m.note||'').trim());
+  var rows=state.rows.slice();
+  rows[m.i]=Object.assign({}, rows[m.i], {review:m.action, reasonLabel:m.reason, reasonNote:note, reviewedBy:'A. Sharma', reviewedAt:nowTime()});
+  if(state.entry) state.entry.rows=rows;
+  setState({rows:rows, rmodal:null});
 }
 /* jump strip: open and scroll to the first row that still needs attention */
 function jumpToReview(){
@@ -1204,17 +1253,17 @@ function buildSeeds(){
   var seeds=[
     {name:'Vikram Nair',  req:'Data Engineer',     st:'toverify',    iso:'2026-08-04', reason:'', score:91},
     {name:'Priya Sharma', req:'QA Analyst',        st:'toverify',    iso:'2026-08-12', reason:'', score:88},
-    {name:'Imran Shaikh', req:'UX Designer',       st:'awaiting',    iso:'2026-08-13', reason:'Checked · decision not made', score:63},
+    {name:'Imran Shaikh', req:'UX Designer',       st:'awaiting',    iso:'2026-08-13', reason:'Checked · decision not made', score:63, cause:'the reference is soft and unevenly lit, which lowers confidence in the match.'},
     {name:'Ananya Rao',   req:'Product Manager',   st:'confirmed',   iso:'2026-08-14', reason:'Confirmed by A. Sharma · 11:14', score:94},
     {name:'Rohit Menon',  req:'SDET',              st:'confirmed',   iso:'2026-08-15', reason:'Confirmed by A. Sharma · 09:32', score:92},
-    {name:'Sana Kapoor',  req:'Frontend Engineer', st:'cantconfirm', iso:'2026-08-13', reason:'Flagged for review', score:22},
+    {name:'Sana Kapoor',  req:'Frontend Engineer', st:'cantconfirm', iso:'2026-08-13', reason:'Flagged for review', score:22, cause:'the face here doesn\'t line up with today\'s photo across several features.'},
     {name:'Dev Patel',    req:'Mobile Engineer',   st:'toverify',    iso:'2026-08-18', reason:'', score:90}
   ];
   seeds.forEach(function(x,i){
     var key='s'+(i+1);
     var img=(window.RH_IMAGES && window.RH_IMAGES[key] && window.RH_IMAGES[key][0]) || null;
     CANDIDATES.push({ id:key, name:x.name, rhid:'RH'+(49001+i), req:x.req, reqid:'REQ-'+(2401+i), stage:'Onboarding', eligible:true, joiningISO:x.iso, joining:fmtLong(x.iso), owner:'me',
-      photos:[{label:'Application photo', src:'application', date:'02 Apr 2026', by:null, score:x.score, img:img}],
+      photos:[{label:'Application photo', src:'application', date:'02 Apr 2026', by:null, score:x.score, img:img, cause:(x.cause||null)}],
       wl:{status:x.st, by:'A. Sharma', at:hhmm(i+2), reason:x.reason} });
   });
 }

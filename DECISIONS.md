@@ -83,6 +83,24 @@ Small follow-ups from the user reviewing the live build:
 - **Also:** default page size dropped 25 → **10** so pagination shows immediately (10/25/50).
 - **Change:** built + verified (harness green, live DOM check). Committed.
 
+## 2026-08-28 · Expanded review row redesign + reason popup — BUILT
+
+- **Discussion:** user brought a wireframe and iterated on it in chat. Confirmed via two wireframe
+  rounds (captions overlaid on the photos; panes swapped so reference is on the left).
+- **Built into the report expanded panel:**
+  - Photos **swapped** (reference left, today right) with **captions overlaid** on each (scrim);
+    reference shows **relative age** (`reportRelAge()`).
+  - **Similarity bar** (`similarityBar()`) with the source-aware **match threshold marked** (85% /
+    65%), coloured by state.
+  - Full-sentence **"Likely cause for review:" / "Likely cause for not match:"** callout, seeded per
+    flagged photo (`cause`), `aiReason()` fallback.
+  - Three **action cards** (Same person / Not a match / Ignore); "reason required" text dropped.
+  - **Reason popup** for Not-a-match and Ignore (`openReasonModal`/`confirmReason`, `rmodal` state):
+    reason list + optional note, Confirm gated on a reason. Same-person applies inline. Replaced the
+    old inline ignore dropdown and the four radio codes.
+- Verified: harness 52 assertions + live DOM (labels, bar, overlay caption, popup open→pick→confirm
+  writes the badge + audit line, no-match variant). NOTES.md updated.
+
 ## 2026-08-27 · Every candidate gets a profile photo (AI-generated) except Meera — BUILT
 
 - **Discussion:** user wanted every candidate to have some image in their profile; Meera stays
