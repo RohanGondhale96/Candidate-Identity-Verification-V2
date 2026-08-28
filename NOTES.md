@@ -69,7 +69,13 @@ never flips to a clean "Match" off human vouching.
 
 ## Per-photo review — the expanded row (redesigned 2026-08-28)
 
-Open a **Needs review** or **Not a match** row (`reasonCodes()` + the expanded panel in `render()`):
+- **Flagged rows are open by default.** Unresolved **Needs review** / **Not a match** rows expand
+  automatically (the accordion allows multiple open at once, `effectiveOpen()` / `openRows`), so the
+  work needing the recruiter's judgment is front and centre. **Match** and **Couldn't-compare** rows
+  stay collapsed. Recording an action **auto-collapses** that row (leaving only what's still
+  outstanding open); any row is still clickable to toggle.
+
+Each expanded row (`reasonCodes()` + the expanded panel in `render()`) shows:
 
 - **Two photos side by side, captions overlaid on each** (bottom, over a dark scrim): **reference
   on the left**, **"Photo taken today" on the right** (deliberately swapped). The reference caption

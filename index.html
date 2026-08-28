@@ -187,7 +187,7 @@ var SHOW_REPORT_ACTIONS = false;  // Download PDF + Share report buttons in the 
 
 var state = {
   q:'', searchOpen:true, cand:null, photo:null, consent:false,
-  rows:[], open:null, running:false, done:false, shared:[],
+  rows:[], open:null, openRows:{}, running:false, done:false, shared:[],
   upErr:'', drag:false, showShare:false, picked:[], pickQ:'',
   toast:'', roundsConfigured:true, lightbox:null, history:[], hasCamera:true, deepMiss:null,
   confirmReshoot:false, viewingHistory:false, decision:null, decisionErr:'', entry:null, tab:'joining', _refocus:null,
@@ -312,7 +312,7 @@ function run(){
   if(!state.photo){ setState({upErr:'Upload a joining-day photo first.'}); return; }
   // all rows start scanning at once; each settles independently as its Gemini call returns
   var rows = state.cand.photos.map(function(p){ return Object.assign({}, p, {status:'running', score:null, reason:'', err:'', review:null, asked:false}); });
-  setState({ rows:rows, running:true, done:false, open:null, shared:[], viewingHistory:false, decision:null, decisionErr:'', entry:null }, function(){
+  setState({ rows:rows, running:true, done:false, open:null, openRows:{}, shared:[], viewingHistory:false, decision:null, decisionErr:'', entry:null }, function(){
     var photos = state.cand.photos;
     if(!photos.length){ setState({running:false, done:true}); return; }
     photos.forEach(function(p, i){
@@ -1000,9 +1000,9 @@ function render(){
               ((st==='review' && !r.review) ? '<span style="font-size:12px;color:#8a6414;line-height:1.35">'+h(aiReason(r))+'</span>' : '')+
             '</span>'+
             badgeCell+
-            (expandable ? chevron(s.open===i?'180deg':'0deg') : '<span style="width:18px;flex-shrink:0"></span>')+
+            (expandable ? chevron(effectiveOpen(i,r)?'180deg':'0deg') : '<span style="width:18px;flex-shrink:0"></span>')+
           '</button>';
-        if(_done && s.open===i && !isCant){
+        if(_done && !isCant && effectiveOpen(i,r)){
           var needsCode = (st==='review' || st==='nomatch');
           var rel = reportRelAge(r);
           var capStyle='position:absolute;left:0;right:0;bottom:0;padding:20px 11px 9px;background:linear-gradient(to top,rgba(0,0,0,.68),rgba(0,0,0,0));color:#fff';
@@ -1154,7 +1154,7 @@ function changeCandidate(){ setState({cand:null, searchOpen:true, done:false, ru
 function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click(); }
 function openPicker(){ var el=document.getElementById('rh-file'); if(el) el.click(); }
 function onFileInput(e){ handleFile(e.target.files[0]); }
-function retake(){ clearTimers(); _runToken++; _qtoken++; setState({photo:null, consent:false, attest:false, quality:null, qualityChecking:false, upErr:'', done:false, running:false, rows:[], open:null, decision:null, decisionErr:'', entry:null}); }
+function retake(){ clearTimers(); _runToken++; _qtoken++; setState({photo:null, consent:false, attest:false, quality:null, qualityChecking:false, upErr:'', done:false, running:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null}); }
 /* recruiter's final Confirm / Can't-confirm decision on the current check.
    Never gated: the human can always decide, including deciding the tool is wrong.
    A note is required to flag, or to confirm while rows are still unreviewed -
@@ -1182,8 +1182,11 @@ function resolveRow(i, code){
     review: next, reasonLabel: null, reasonNote: '',
     reviewedBy: next ? 'A. Sharma' : null, reviewedAt: next ? nowTime() : null
   });
+  var openRows = Object.assign({}, state.openRows);
+  if(next) openRows[i] = false;   // resolved -> auto-collapse
+  else delete openRows[i];        // cleared -> revert to default (unresolved -> open)
   if(state.entry) state.entry.rows = rows;
-  setState({rows:rows});
+  setState({rows:rows, openRows:openRows});
 }
 function openReasonModal(i, action){ setState({rmodal:{i:i, action:action, reason:null, note:''}}); }
 function pickModalReason(idx){
@@ -1200,13 +1203,15 @@ function confirmReason(){
   if(m.reason==='Other' && !note){ setState({rmodal:Object.assign({}, m, {note:note, err:'Add a note describing the reason.'})}); return; }
   var rows=state.rows.slice();
   rows[m.i]=Object.assign({}, rows[m.i], {review:m.action, reasonLabel:m.reason, reasonNote:note, reviewedBy:'A. Sharma', reviewedAt:nowTime()});
+  var openRows=Object.assign({}, state.openRows); openRows[m.i]=false;   // resolved -> auto-collapse
   if(state.entry) state.entry.rows=rows;
-  setState({rows:rows, rmodal:null});
+  setState({rows:rows, rmodal:null, openRows:openRows});
 }
 /* jump strip: open and scroll to the first row that still needs attention */
 function jumpToReview(){
   for(var i=0;i<state.rows.length;i++){ if(rowUnresolved(state.rows[i]) || codeOutcome(state.rows[i].review||'')==='neg'){
-    setState({open:i}, function(){ var el=document.getElementById('rpt-row-'+i); if(el) el.scrollIntoView({behavior:'smooth', block:'center'}); });
+    var m=Object.assign({}, state.openRows); m[i]=true;
+    setState({openRows:m}, function(){ var el=document.getElementById('rpt-row-'+i); if(el) el.scrollIntoView({behavior:'smooth', block:'center'}); });
     return;
   } }
 }
@@ -1231,7 +1236,19 @@ function checkQuality(){
 function dragOver(e){ e.preventDefault(); if(!state.drag) setState({drag:true}); }
 function dragLeave(e){ e.preventDefault(); setState({drag:false}); }
 function drop(e){ e.preventDefault(); setState({drag:false}); handleFile(e.dataTransfer.files[0]); }
-function toggleRow(i){ if(state.done) setState({open: state.open===i?null:i}); }
+/* accordion: unresolved flagged rows are open by default; a user toggle overrides that default.
+   cant rows never open. Once a row is resolved it auto-collapses (see resolveRow/confirmReason). */
+function effectiveOpen(i, r){
+  if(!r || photoState(r)==='cant') return false;
+  if(state.openRows && Object.prototype.hasOwnProperty.call(state.openRows, i)) return !!state.openRows[i];
+  return rowUnresolved(r);
+}
+function toggleRow(i){
+  if(!state.done) return;
+  var r=state.rows[i]; if(!r || photoState(r)==='cant') return;
+  var m=Object.assign({}, state.openRows); m[i]=!effectiveOpen(i, r);
+  setState({openRows:m});
+}
 function openLightbox(i){ setState({lightbox:i}); }
 function closeLightbox(){ setState({lightbox:null}); }
 function scrimLb(e){ if(e.target===e.currentTarget) closeLightbox(); }
@@ -1242,7 +1259,7 @@ function togglePick(id){ var on=state.picked.indexOf(id)>=0; setState({picked: o
 function downloadPdf(){ toast('PDF downloaded'); }
 function revoke(id){ var u=state.shared.find(function(x){return x.id===id;}); setState({shared:state.shared.filter(function(x){return x.id!==id;})}); if(u) toast('Access revoked for '+u.name); }
 function verifyAnother(){ reset({roundsConfigured:state.roundsConfigured}); window.scrollTo({top:0,behavior:'smooth'}); }
-function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, attest:!!hh.attest, quality:hh.quality||null, searchOpen:false, running:false, done:true, open:null, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'' }); if(!noPush) wlSyncUrl(false); }
+function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, attest:!!hh.attest, quality:hh.quality||null, searchOpen:false, running:false, done:true, open:null, openRows:{}, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'' }); if(!noPush) wlSyncUrl(false); }
 
 /* ---------- seeded demo worklist data ---------- */
 function fmtLong(iso){ var d=new Date(Date.parse(iso+'T00:00:00Z')); var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return d.getUTCDate()+' '+mo[d.getUTCMonth()]+' '+d.getUTCFullYear(); }

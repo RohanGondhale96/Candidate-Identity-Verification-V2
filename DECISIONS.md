@@ -83,6 +83,21 @@ Small follow-ups from the user reviewing the live build:
 - **Also:** default page size dropped 25 → **10** so pagination shows immediately (10/25/50).
 - **Change:** built + verified (harness green, live DOM check). Committed.
 
+## 2026-08-28 · Flagged rows open by default (multi-open accordion) + "Other" requires a note — BUILT
+
+- **Discussion:** user asked whether the review/no-match rows (where recruiter input is needed)
+  should be open by default; agreed on **open all unresolved flagged rows, auto-collapse on resolve**.
+  Also: picking **"Other"** in either reason popup must **require a note** (and Ignore gains an
+  "Other" option).
+- **Built:** accordion switched from single-open (`state.open`) to multi-open (`openRows` +
+  `effectiveOpen()`); unresolved Needs-review / Not-a-match rows default open, match/cant stay
+  collapsed, resolving a row (`resolveRow`/`confirmReason`) auto-collapses it, still toggleable.
+  Reason popups: "Other" added to Ignore (7 options), and "Other" makes the note mandatory (inline
+  error, blocks Confirm). Verified: harness + live DOM (default-open set correct, auto-collapse on
+  resolve, match-row toggle, Other-note gate). Also confirmed the final-verdict model is as agreed
+  (system status Verified/Needs review/Not verified, confident-contradiction, human decides, never
+  auto-rejects) — no change, just reviewed.
+
 ## 2026-08-28 · Expanded review row redesign + reason popup — BUILT
 
 - **Discussion:** user brought a wireframe and iterated on it in chat. Confirmed via two wireframe
