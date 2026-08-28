@@ -527,27 +527,33 @@ function reasonCodes(i, r){
   var out = '<div style="display:flex;gap:9px;margin-top:16px;padding:11px 13px;background:#FBF1DE;border:0.5px solid #EAD9AE;border-radius:8px;font-size:13px;color:#8a6414;line-height:1.5">'+
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>'+
     '<span><span style="font-weight:600">'+causeLabel+'</span> '+h(causeText(r))+'</span></div>';
+  // already reviewed → a clean one-line record with a Change link (cards are hidden until Change)
+  if(r.review){
+    var o = codeOutcome(r.review);
+    var dot = o==='neg' ? '#D93025' : (o==='excluded' ? '#5F5E5A' : '#1a8a3a');
+    var lead = r.review==='same' ? 'Same person' : (r.review==='notmatch' ? 'Not a match' : 'Ignored');
+    var tail = r.review==='same' ? ', confirmed by review'
+             : (r.reasonLabel ? (r.review==='notmatch' ? (', '+r.reasonLabel) : (' · '+r.reasonLabel)) : '');
+    out += '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px;border-top:1px solid #E0E0E0;padding-top:12px">'+
+      '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#747474"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex-shrink:0"></span><b style="font-weight:600;color:#2A2A2A">'+h(lead)+'</b>'+h(tail)+(r.reviewedAt?(' · '+h(r.reviewedAt)):'')+'</span>'+
+      '<button type="button" onclick="clearRowVerdict('+i+')" style="margin-left:auto;border:0;background:none;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Change</button>'+
+      (r.reasonNote ? '<div style="flex-basis:100%;font-size:12px;color:#9a9a9a">“'+h(r.reasonNote)+'”</div>' : '')+
+    '</div>';
+    return out;
+  }
   out += '<div style="font-size:12px;font-weight:600;color:#747474;letter-spacing:.03em;margin-top:16px">WHAT DID YOU FIND?</div>';
   var acts = st==='nomatch'
     ? [['same','Same person','Faces match despite the score'],['ignore','Ignore this photo','Reference can\'t be used']]
     : [['same','Same person','Faces match despite the score'],['notmatch','Not a match','Different person'],['ignore','Ignore this photo','Reference can\'t be used']];
   out += '<div style="display:grid;grid-template-columns:repeat('+acts.length+',minmax(0,1fr));gap:10px;margin-top:8px">';
   acts.forEach(function(a){
-    var code=a[0], on=r.review===code;
+    var code=a[0];
     var onclick = code==='same' ? ('resolveRow('+i+',\'same\')') : ('openReasonModal('+i+',\''+code+'\')');
-    out += '<button type="button" onclick="'+onclick+'" style="text-align:left;border:'+(on?'2px solid #378ADD':'1px solid #C6C6C6')+';background:'+(on?'#E6F1FB':'#fff')+';border-radius:10px;padding:12px;cursor:pointer;font-family:inherit">'+
+    out += '<button type="button" onclick="'+onclick+'" style="text-align:left;border:1px solid #C6C6C6;background:#fff;border-radius:10px;padding:12px;cursor:pointer;font-family:inherit">'+
       '<div style="font-size:14px;font-weight:600;color:#2A2A2A">'+h(a[1])+'</div>'+
       '<div style="font-size:12px;color:#747474;margin-top:3px">'+h(a[2])+'</div></button>';
   });
   out += '</div>';
-  if(r.review){
-    var o = codeOutcome(r.review), col = o==='neg'?'#D93025':(o==='excluded'?'#5F5E5A':'#1a8a3a');
-    var detail = ((r.review==='notmatch'||r.review==='ignore') && r.reasonLabel) ? (' · '+r.reasonLabel) : '';
-    var noteDetail = r.reasonNote ? (' · “'+r.reasonNote+'”') : '';
-    out += '<div style="font-size:12px;color:#747474;margin-top:12px;line-height:1.5;border-top:1px solid #E0E0E0;padding-top:8px">'+
-      '<b style="font-weight:600">Audit:</b> AI marked <b style="font-weight:600">'+h(aiStateLabel(r))+'</b> → '+
-      '<span style="color:'+col+';font-weight:600">'+h(ACTIONS[r.review]+detail)+'</span>'+h(noteDetail)+' by '+h(r.reviewedBy||'A. Sharma')+(r.reviewedAt?(' · '+h(r.reviewedAt)):'')+'</div>';
-  }
   return out;
 }
 
@@ -1207,6 +1213,14 @@ function resolveRow(i, code){
   if(next) openRows[i] = true;    // keep the row open after the verdict (no abrupt collapse)
   else delete openRows[i];        // cleared -> revert to default (unresolved -> open)
   if(state.entry) state.entry.rows = rows;
+  setState({rows:rows, openRows:openRows});
+}
+/* "Change" on a reviewed row — clear the verdict and re-show the action cards (row stays open) */
+function clearRowVerdict(i){
+  var rows=state.rows.slice();
+  rows[i]=Object.assign({}, rows[i], {review:null, reasonLabel:null, reasonNote:'', reviewedBy:null, reviewedAt:null});
+  var openRows=Object.assign({}, state.openRows); openRows[i]=true;
+  if(state.entry) state.entry.rows=rows;
   setState({rows:rows, openRows:openRows});
 }
 function openReasonModal(i, action){ setState({rmodal:{i:i, action:action, reason:null, note:''}}); }

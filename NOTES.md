@@ -103,10 +103,14 @@ Each expanded row (`reasonCodes()` + the expanded panel in `render()`) shows:
   banner notes "N ignored", and the denominator drops (5 of 7 → 5 of 6). If every row is ignored →
   "Couldn't run the check".
 - Actions are **non-binding on the verdict**; they change the row to a single combined badge
-  (*Reviewed · same person* green / *Reviewed · different person* red / *Ignored* grey). Both layers
-  are kept in the **audit line** ("AI marked … → &lt;action&gt; · &lt;reason&gt; · &lt;note&gt; by
-  A. Sharma · time"). **Structured reasons, not free text** — searchable, defensible, and a dataset
-  for tuning thresholds in v2.
+  (*Reviewed · same person* green / *Reviewed · different person* red / *Ignored* grey).
+- Once reviewed, the three action cards collapse into a **clean one-line record** (changed
+  2026-08-28) — a coloured dot + *"Same person, confirmed by review · time"* (or *"Not a match,
+  &lt;reason&gt; · time"* / *"Ignored · &lt;reason&gt; · time"*, note beneath) + a **Change** link
+  that re-shows the cards. The AI's original finding stays visible just above in the **likely-cause
+  callout**, so the model-vs-human context isn't lost even though the line is clean. The full record
+  (AI tag + scores + human action + reason + note + who/when) is still kept in the row data for the
+  audit trail. **Structured reasons, not free text** — searchable, defensible, tuning data for v2.
 
 ## The end of the report — Submit (recruiter does not confirm/deny identity) — changed 2026-08-28
 
@@ -285,8 +289,9 @@ All five locked; seeded quality flags approved for the prototype.
   Couldn't-compare; noted in the banner sub as "N ignored"). Ignore reasons: not this candidate /
   too blurry-dark-lowres / face not visible / too old / document unreadable / duplicate.
 - **Audit stores both layers** per row: AI tag + reason + score, and the recruiter's action +
-  ignore-reason + who + when. Shown in the expanded panel: *"Audit: AI marked Needs review (Not
-  facing the camera) → Ignore this photo · Face not clearly visible by A. Sharma · 10:14."*
+  reason + note + who + when. The expanded panel shows a clean one-line record (dot + *"Same
+  person, confirmed by review · time"* etc.) with the AI's finding still in the likely-cause callout
+  above; the full both-layers record is retained in the row data.
 - **Per-evidence quality is seeded** (`quality`/`qreason` per on-file photo, like the scores under
   `USE_LIVE_SCORING`) so the states/reasons are demonstrable.
 - **Source-photo pre-flight (#4) is LIVE, via Gemini** (`USE_LIVE_QUALITY = true`, on by default).
