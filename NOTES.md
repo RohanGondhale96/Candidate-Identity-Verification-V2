@@ -107,29 +107,32 @@ Each expanded row (`reasonCodes()` + the expanded panel in `render()`) shows:
   A. Sharma · time"). **Structured reasons, not free text** — searchable, defensible, and a dataset
   for tuning thresholds in v2.
 
-## Recruiter decision — Confirm / Can't confirm
+## The end of the report — Submit (recruiter does not confirm/deny identity) — changed 2026-08-28
 
-- The two actions are **Confirm identity** and **Can't confirm identity**. Deliberately **not
-  Accept/Reject**: this screen verifies identity, it does not make an employment decision, and
-  "reject" reads as rejecting the person. "Can't confirm" describes the recruiter's actual
-  authority and carries **no fraud allegation** — fraud is a conclusion reached after an
-  investigation, downstream of this screen. Never label anything "potential fraud / mismatch"
-  against a named person; legal would strike it, and it lives in the record permanently.
-- **"Can't confirm" = flag for review.** In production it routes to a configured escalation
-  owner (hiring manager + HR/TA ops, per-org) with a link to the frozen report, and gives the
-  recruiter a non-accusatory script for the person in the room; onboarding continues in parallel,
-  the flag does **not** hard-block day one. A flag is a **review trigger, not an adverse
-  decision**. (Destination is mocked here.)
-- **No gating.** Both buttons are always enabled — the human can always decide, including
-  deciding the tool is wrong. Blocking would trap a recruiter who genuinely can't tell with a
-  person sitting in front of her. Instead: confirming while rows are still unreviewed **requires
-  a note**, and the record permanently reads *"Confirmed with N rows unreviewed"* (audit fact,
-  nobody skips twice). A note is also required to flag.
-- **Layout is evidence → verdict → decision** (scored rows, then the banner, then the decision).
-- The "by A. Sharma" name and timestamps are **hard-coded placeholders** — in production they'd
-  come from the logged-in user and server clock.
+- **The recruiter does not personally confirm or deny the candidate's identity.** The *system*
+  carries the verdict (the Verified / Needs review / Not verified banner); the recruiter's real
+  input is the **per-row review** (Same person / Not a match / Ignore, each with a reason), and at
+  the end they **Submit the report**. Earlier this was a Confirm identity / Can't-confirm decision;
+  that was pulled back to a plain **Submit** on the user's call — the recruiter shouldn't be the one
+  declaring an identity confirmed or denied.
+- **Still legally sound.** The concern behind the old Confirm/Can't-confirm was GDPR Art 22 /
+  SCHUFA (a human who merely rubber-stamps an automated output is still "solely automated"). Here
+  the human genuinely shapes the outcome via the per-row review, so it isn't a rubber stamp — and
+  submitting **never auto-executes an adverse action**; the hire/no-hire call stays downstream.
+- **Submit takes a confirmation.** Clicking **Submit report** opens a popup requiring a **mandatory
+  checkbox — "I've reviewed all the comparisons for this candidate before submitting"** — plus an
+  optional note (**required if any comparison is still unreviewed**, and the popup says how many).
+  Submit is disabled until the checkbox is ticked. The record reads *"Report submitted by A. Sharma
+  · time"* with the system status chip and, if any, "N unreviewed". Reopen re-opens it.
+- No "fraud"/"reject" language anywhere; the escalation is carried by the **status itself** (a
+  submitted "Not verified" / "Needs review" report *is* the flag; a real routing/queue is future).
+- **Layout is evidence → verdict → submit** (scored rows, then the banner, then Submit).
+- The "by A. Sharma" name and timestamps are **hard-coded placeholders**.
 
-## Landing screen — tabbed worklist
+## Landing screen — tabbed worklist (SUPERSEDED — see the "Landing worklist rebuild" section)
+
+> This describes the original tabbed landing, which was **replaced** by the single-list worklist
+> (§ "D. Landing worklist rebuild"). Kept for history only.
 
 - Two tabs: **Joining today** (default) and **Checks you ran today**.
 - **Joining today** is a worklist: candidates split into **To verify** and **Done** (sentence-
@@ -310,8 +313,10 @@ Driver: a candidate's joining date changes, nobody updates the system, and on th
 doesn't surface anywhere → the person joins **unverified**. The worklist must make an overdue,
 unverified person impossible to lose. All items **[agreed]** unless marked otherwise.
 
-- Kill the tabs → **one list**. Four row states: **To verify** / **Awaiting decision** (amber) /
-  **Confirmed** / **Can't confirm**. (Splits the old overloaded "Decision pending".) Pills are all
+- Kill the tabs → **one list**. Five row states (updated 2026-08-28 with the Submit model):
+  **To verify** / **In review** (amber, check run but not submitted) / **Verified** (green) /
+  **Needs review** (amber) / **Not verified** (red) — the last three come from the submitted
+  report's system status. Pills are all
   **filled** — colour carries the meaning, no outlined/filled mix.
 - Status is a **dropdown** (not chips), sitting inline with the date-range and sort dropdowns — a
   tidier, consistent control row. The per-status **counts are kept inside each option** ("Needs

@@ -83,6 +83,27 @@ Small follow-ups from the user reviewing the live build:
 - **Also:** default page size dropped 25 → **10** so pagination shows immediately (10/25/50).
 - **Change:** built + verified (harness green, live DOM check). Committed.
 
+## 2026-08-28 · Recruiter submits (no personal confirm/deny) + submit confirmation — BUILT
+
+- **Discussion:** user reaffirmed the original intent — the recruiter should **submit** the report,
+  not personally confirm/deny the candidate's identity (which the earlier build did with Confirm /
+  Can't-confirm). I flagged that the old buttons came from the GDPR Art 22 / SCHUFA concern, and
+  that "just submit" stays legal because the human's real input is the per-row review (not a
+  rubber-stamp) and no adverse action is auto-executed. User then added: on Submit, take a
+  confirmation that they've reviewed all comparisons.
+- **Built:**
+  - Report decision bar → a single **Submit report** button (removed Confirm / Can't-confirm).
+    The system status (Verified / Needs review / Not verified) carries the verdict.
+  - **Submit confirmation popup** (`openSubmit`/`confirmSubmit`, `submitModal`): mandatory checkbox
+    "I've reviewed all the comparisons…", optional note (**required if any comparison is
+    unreviewed**; the popup shows how many), Submit disabled until checked. Record: *"Report
+    submitted by A. Sharma · time"* + system status chip + N-unreviewed; Reopen re-opens.
+  - **Worklist vocabulary reworked** to match: statuses are now **To verify / In review / Verified /
+    Needs review / Not verified** (`wlStatus`/`submittedStatus`/`wlPill`, the status dropdown, seed
+    remap, attention = to-verify+in-review). Submitted checks show the report's system status.
+  - Verified: harness (worklist counts + submittedStatus mapping) + live DOM (submit button, modal
+    gating on checkbox + note-when-unreviewed, submitted record + status chip, seed pills).
+
 ## 2026-08-28 · Flagged rows open by default (multi-open accordion) + "Other" requires a note — BUILT
 
 - **Discussion:** user asked whether the review/no-match rows (where recruiter input is needed)
