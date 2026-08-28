@@ -915,12 +915,15 @@ function render(){
           '<span style="flex:1">'+h(s.quality.message||qualityFallback(s.quality.reason))+' You can retake it, or run the check anyway.</span>'+
           '<button class="rh-btn tertiary sm" onclick="retake()" style="flex-shrink:0">Retake</button></div>';
       }
-      html += '<div style="display:flex;flex-direction:column;gap:12px;margin:16px 0 14px;padding:12px 14px;background:#F7F8FA;border:1px solid #E0E0E0;border-radius:4px">'+
-          '<label class="rh-cb"><input type="checkbox" '+(s.consent?'checked':'')+' onchange="toggleConsent()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>I have the candidate’s consent to take and submit this photo for identity verification.</span></label>'+
-          '<label class="rh-cb"><input type="checkbox" '+(s.attest?'checked':'')+' onchange="toggleAttest()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>I confirm this photo was taken today, on the joining day, of the person who reported to join — not a stored, downloaded, or supplied image.</span></label>'+
-        '</div>'+
-        '<button class="rh-btn primary full" '+(s.photo&&s.consent&&s.attest?'':'disabled')+' onclick="run()">Run verification</button>'+
-      '</div>';
+      // consent + attestation + Run appear only once the quality check has finished (pass or fail)
+      if(!s.qualityChecking){
+        html += '<div style="display:flex;flex-direction:column;gap:12px;margin:16px 0 14px;padding:12px 14px;background:#F7F8FA;border:1px solid #E0E0E0;border-radius:4px">'+
+            '<label class="rh-cb"><input type="checkbox" '+(s.consent?'checked':'')+' onchange="toggleConsent()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>I have the candidate’s consent to take and submit this photo for identity verification.</span></label>'+
+            '<label class="rh-cb"><input type="checkbox" '+(s.attest?'checked':'')+' onchange="toggleAttest()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>I confirm this photo was taken today, on the joining day, of the person who reported to join — not a stored, downloaded, or supplied image.</span></label>'+
+          '</div>'+
+          '<button class="rh-btn primary full" '+(s.photo&&s.consent&&s.attest?'':'disabled')+' onclick="run()">Run verification</button>';
+      }
+      html += '</div>';
     }
     if(s.upErr){ html += '<div style="margin-top:12px;padding:11px 13px;border:1px solid #EB4040;border-radius:4px;background:#FDECEC;color:#EB4040;font-size:13px;line-height:1.45">'+h(s.upErr)+'</div>'; }
     html += '<input id="rh-file" type="file" accept="image/jpeg,image/png,image/heic,image/webp" onchange="onFileInput(event)" style="display:none">'+

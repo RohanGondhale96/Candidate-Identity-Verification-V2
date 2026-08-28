@@ -294,6 +294,9 @@ All five locked; seeded quality flags approved for the prototype.
   good" / "…may be hard to compare — retake, or run anyway" / "Checking photo…" — it never blocks
   Run verification (a call failure falls back to usable, so it can't trap the recruiter). Flip
   `USE_LIVE_QUALITY` off to mock it (assumed-pass).
+- **The consent + attestation checkboxes and Run verification appear only once the quality check
+  has finished** (pass *or* fail) — while it's running, just the goo loader shows. On a fail they
+  still appear (soft: run anyway); hiding them on fail would be a hard block, which we don't do.
 - **Provenance attestation checkbox** (a second checkbox, distinct from the consent one) gates Run
   verification: *"I confirm this photo was taken today, on the joining day, of the person who
   reported to join — not a stored, downloaded, or supplied image."* Unlike the quality warning,
