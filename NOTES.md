@@ -348,12 +348,17 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
   and **records who + when** (an outside-click closes the menu). The bulk
   **Dismiss all** was **removed** (2026-08-27) — dismissal is per-row only, so every removal stays
   an individual, attributed decision rather than a one-tap way to empty the safety block.
-- Main list flat; header + work summary phrased as remaining work ("12 to verify, 4 awaiting
-  decision"), never "0 done"; reason line under each name ("1 photo needs review", "Confirmed by
-  A. Sharma · 09:41", "Escalated to R. Menon · 10:12"); **future joiners inert** (no pill, no
-  chevron, neutral "Joining Mon 18 Aug"); **pagination** (10 per page by default, 10/25/50 options,
-  resets to page 1 on any filter/sort change) + **URL state** (filter/sort/page) so opening a check and hitting Back
-  returns to the same view.
+- Main list flat; header + work summary phrased as remaining work ("6 to verify, 1 in review"),
+  never "0 done". Rows show **just name + RHID · role** (the old submission/status sub-line was
+  removed 2026-08-28 — the status pill on the right already carries it). **Future joiners** are
+  inert (dimmed name, no status pill, no chevron, neutral "Joining Mon 18 Aug").
+- Rows carry a **kebab `⋮`** with **"Change joining date"** (opens a date-picker dialog; e.g. a
+  candidate calls to reschedule) — shown on **To verify / Not verified / Coming-up** rows, where a
+  date change is most likely. Distinct from the attention-block kebab (menu keys are `l`+id vs
+  `a`+id so the same candidate in both places doesn't open both menus). Changing the date updates
+  `joiningISO`/`joining` and re-sorts/re-buckets the row (in-session only).
+- **Pagination** (10 per page by default, 10/25/50 options, resets to page 1 on any filter/sort
+  change) + **URL state** (filter/sort/page) so opening a check and hitting Back returns to the view.
 - Keep the **candidate search** ("Find a candidate", onboarding/hired rounds scope note) — demoted
   but important: it's how you reach someone who isn't where the system says they are, which is the
   whole point of the redesign.
