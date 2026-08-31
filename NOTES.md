@@ -361,7 +361,9 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
   (in-session only).
 - **Row alignment:** the status pill sits in a **fixed-width slot** (right-aligned) and the kebab
   in a reserved fixed slot (empty when a row has no kebab), so every pill and every kebab lines up
-  in its own column regardless of pill width or kebab presence (fixed 2026-08-28).
+  in its own column regardless of pill width or kebab presence. **The row chevron was removed**
+  (2026-08-28) and the status + kebab now sit at the right edge — the whole row is still clickable
+  to open the check.
 - **Pagination** (10 per page by default, 10/25/50 options, resets to page 1 on any filter/sort
   change) + **URL state** (filter/sort/page) so opening a check and hitting Back returns to the view.
 - Keep the **candidate search** ("Find a candidate", onboarding/hired rounds scope note) — demoted
