@@ -22,7 +22,9 @@ carry the dark theme). What changed:
   `setReportView`), then one card per round grouped by type. Matched / Couldn't-compare rounds
   are calm collapsible strips; Needs-review / Not-a-match are full cards. Thumbnails show only
   when a card is collapsed; a collapsed flagged card keeps its verdict in the header chip.
-  Verdict actions sit side by side with semantic icons.
+  Verdict actions sit side by side with semantic icons. The **Submit report** control is a
+  **sticky floating bar** (translucent + blur) pinned to the bottom while you scroll the rounds;
+  once a report is submitted it becomes a normal "Report submitted" confirmation card instead.
 - **Copy:** "Face-match score" (was "Model similarity"); "Match line · 85/65%" (was "Photos/
   Documents match at N%"); "Why this needs a look:" / "Why this may not match:" (was "Likely
   cause…"); the action prompt is "Is this the same person?"; recorded verdicts read "Same

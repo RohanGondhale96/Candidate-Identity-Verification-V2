@@ -15,6 +15,18 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-08-31 · Submit report → sticky floating bar — BUILT + DEPLOYED
+
+- **Discussion:** on the live report Rohan noticed the **Submit report** control was a plain card
+  at the end, not the **floating** bar from the finalized v2 mock — "i liked that floating".
+- **Decision & change:** split the verdict banner and submit apart in `reportFeed`; the submit is
+  now a sticky floating bar (`position:sticky; bottom:16px`, translucent white + blur, shadow) with
+  the review-count helper on the left and the button on the right — it floats while scrolling the
+  rounds and settles at the end. When a report is already submitted it renders the "Report
+  submitted" confirmation as a normal card (no float). Harness stayed green; rebuilt + pushed.
+
+---
+
 ## 2026-08-31 · v2 card-style UI across all three screens — BUILT + DEPLOYED (`dee44d6`)
 
 - **Discussion:** Rohan wanted a fresh UI for the joining-day flow. We prototyped it first as
