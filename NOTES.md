@@ -344,8 +344,8 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
   otherwise show twice). Age line amber, **red past ~7 days**.
 - **Dismissal is demoted** (a **vertical kebab `⋮`** on the row, not a full-weight button — the
   row's primary action is opening the check, with a chevron). The kebab opens a small **dropdown
-  menu** listing the reasons (Not joining / Date changed / Verified elsewhere); picking one
-  dismisses the row and **records who + when** (an outside-click closes the menu). The bulk
+  menu** listing the reasons (**Not joining / Joining date changed**); picking one dismisses the row
+  and **records who + when** (an outside-click closes the menu). The bulk
   **Dismiss all** was **removed** (2026-08-27) — dismissal is per-row only, so every removal stays
   an individual, attributed decision rather than a one-tap way to empty the safety block.
 - Main list flat; header + work summary phrased as remaining work ("12 to verify, 4 awaiting
