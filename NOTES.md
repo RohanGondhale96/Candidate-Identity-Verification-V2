@@ -6,6 +6,37 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## v2 card-style UI (implemented in source; light mode)
+
+The three screens (worklist → setup → report) were redesigned into a card-style system and
+implemented directly in `verify-identity.html` (the source that builds `index.html`). Light
+mode only for now — dark mode / the nav sun-moon toggle are deferred (the standalone R&D mocks
+carry the dark theme). What changed:
+
+- **Shared visual tokens** aligned to the mocks: cool-grey ground `#EEF1F5`; every `.rh-card` at
+  16px radius with the soft lifted shadow (`0 1px 2px … , 0 8px 22px …`) and `#E5E9F0` border;
+  nav slimmed to 54px on `#0C1016`; the thinner 3px multi-stop rainbow bar.
+
+- **Report** is a per-round **card feed** (`reportFeed` / `reportCard`): a candidate header
+  card, a "Photo taken today" card, an **All rounds / Needs review toggle** (`state.reportView`,
+  `setReportView`), then one card per round grouped by type. Matched / Couldn't-compare rounds
+  are calm collapsible strips; Needs-review / Not-a-match are full cards. Thumbnails show only
+  when a card is collapsed; a collapsed flagged card keeps its verdict in the header chip.
+  Verdict actions sit side by side with semantic icons.
+- **Copy:** "Face-match score" (was "Model similarity"); "Match line · 85/65%" (was "Photos/
+  Documents match at N%"); "Why this needs a look:" / "Why this may not match:" (was "Likely
+  cause…"); the action prompt is "Is this the same person?"; recorded verdicts read "Same
+  person, confirmed by review" / "Marked not a match" / "Photo ignored …".
+- **Setup:** the pre-run preview chip reads **"Not matched yet"**; the documents group is
+  labelled "scored more leniently (older, lower-quality scans)".
+- **Worklist:** rows use the candidate's own **photo as the avatar** (`candAvatar`), falling
+  back to initials; coming-up rows keep the calendar glyph. Search hint reworded.
+- The `~52`-assertion harness (`verify_report.js`) still passes — all logic functions are
+  unchanged; only render/markup/copy moved.
+- **Revert baseline:** `D:\Codebase\identity-verify-rnd\snapshot-2026-08-31\v1-original-ui\`
+  holds the pre-v2 source ("v1"). Standalone R&D mocks + this whole design system live in
+  `…\v2-card-ui\` with a README.
+
 ## Hidden behind feature flags (in `index.html`)
 
 These are built and working but intentionally hidden for now. To bring one back, flip its

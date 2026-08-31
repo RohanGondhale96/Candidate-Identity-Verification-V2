@@ -22,7 +22,7 @@
   }
   *{box-sizing:border-box}
   html,body{margin:0}
-  body{background:var(--rh-grey-50);font-family:var(--font);color:var(--rh-text-primary);font-size:14px;-webkit-font-smoothing:antialiased}
+  body{background:#EEF1F5;font-family:var(--font);color:var(--rh-text-primary);font-size:14px;-webkit-font-smoothing:antialiased}
   a{color:var(--rh-primary);text-decoration:none}
   a:hover{color:var(--rh-primary-hover);text-decoration:underline}
   button{font-family:inherit}
@@ -40,8 +40,8 @@
   @keyframes rh-goo3{0%,100%{transform:translateX(42px) scale(.85)}50%{transform:translateX(0) scale(1.15)}}
 
   /* ===== TopNav ===== */
-  .rh-nav{background:#000;color:#fff;height:72px;display:flex;align-items:center;gap:26px;padding:0 24px}
-  .rh-logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:18px;letter-spacing:.2px}
+  .rh-nav{background:#0C1016;color:#fff;height:54px;display:flex;align-items:center;gap:26px;padding:0 24px}
+  .rh-logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:16px;letter-spacing:.2px}
   .rh-logo .dots{display:inline-flex;gap:3px}
   .rh-logo .dots i{width:8px;height:8px;border-radius:50%}
   .rh-navitems{display:flex;align-items:stretch;gap:4px;height:100%;margin-left:6px}
@@ -51,7 +51,7 @@
   .rh-navitem.active{color:#fff;border-bottom-color:#fff}
   .rh-navitem:hover{color:#fff}
   .rh-nav .spacer{margin-left:auto;display:flex;align-items:center;gap:16px;color:#c9ccd1}
-  .rh-accent{height:6px;background:linear-gradient(90deg,#ED1750 0%,#8724CE 34%,#158AFF 67%,#22AF5E 100%)}
+  .rh-accent{height:3px;background:linear-gradient(90deg,#ff4d7e,#ff9a3d,#ffd23d,#3ddc84,#39b8ff,#7c6cff,#ff5db1)}
 
   /* ===== PageHeader ===== */
   .rh-ph{background:#fff;border-bottom:1px solid var(--divider);height:65px;display:flex;align-items:center;gap:12px;padding:0 24px}
@@ -63,7 +63,7 @@
   .rh-ph .sub{color:var(--rh-text-secondary);font-size:12.5px}
 
   /* ===== Card ===== */
-  .rh-card{background:#fff;border:1px solid #EBECEF;border-radius:var(--radius-md);box-shadow:var(--shadow-card);padding:20px}
+  .rh-card{background:#fff;border:1px solid #E5E9F0;border-radius:16px;box-shadow:0 1px 2px rgba(20,30,50,.06),0 8px 22px rgba(20,30,50,.08);padding:20px}
 
   /* ===== Button ===== */
   .rh-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 18px;border-radius:var(--radius-sm);
@@ -191,7 +191,7 @@ var state = {
   upErr:'', drag:false, showShare:false, picked:[], pickQ:'',
   toast:'', roundsConfigured:true, lightbox:null, history:[], hasCamera:true, deepMiss:null,
   confirmReshoot:false, viewingHistory:false, decision:null, decisionErr:'', entry:null, tab:'joining', _refocus:null,
-  attest:false, qualityChecking:false, quality:null, rmodal:null, submitModal:null,
+  attest:false, qualityChecking:false, quality:null, rmodal:null, submitModal:null, reportView:'all',
   /* worklist */
   filter:'all', dateRange:'all', wlSort:'overdue', mineOnly:true, page:1, perPage:10,
   dismissed:{}, wlMenu:null, wlConfirmAll:false, dateModal:null, notJoinModal:null
@@ -354,6 +354,12 @@ function doShare(){
 function chevron(rot){ return '<svg viewBox="25 25 22 22" width="18" height="18" fill="#747474" style="flex-shrink:0;transform:rotate('+rot+');transition:transform .18s ease"><path d="M31.41 33L36 37.58L40.59 33L42 34.41L36 40.41L30 34.41L31.41 33Z"></path></svg>'; }
 function searchIcon(sz){ sz=sz||18; return '<svg viewBox="25 25 22 22" width="'+sz+'" height="'+sz+'" fill="#747474"><path d="M39.4351 38.0629H38.7124L38.4563 37.8159C39.3528 36.773 39.8925 35.4191 39.8925 33.9463C39.8925 30.6621 37.2304 28 33.9463 28C30.6621 28 28 30.6621 28 33.9463C28 37.2304 30.6621 39.8925 33.9463 39.8925C35.4191 39.8925 36.773 39.3528 37.8159 38.4563L38.0629 38.7124V39.4351L42.6369 44L44 42.6369L39.4351 38.0629ZM33.9463 38.0629C31.6684 38.0629 29.8296 36.2241 29.8296 33.9463C29.8296 31.6684 31.6684 29.8296 33.9463 29.8296C36.2241 29.8296 38.0629 31.6684 38.0629 33.9463C38.0629 36.2241 36.2241 38.0629 33.9463 38.0629Z"></path></svg>'; }
 function avatar(name,size){ return '<span class="rh-avatar" style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*0.36)+'px">'+h(initials(name))+'</span>'; }
+/* worklist avatar: the candidate's own photo when one is on file, else initials */
+function candAvatar(c,size){
+  var img = c && c.photos && c.photos.length ? c.photos[0].img : null;
+  if(img) return '<span class="rh-avatar" style="width:'+size+'px;height:'+size+'px;overflow:hidden;background:#EFEFEF"><img src="'+img+'" alt="" style="width:100%;height:100%;object-fit:cover"></span>';
+  return avatar(c?c.name:'?', size);
+}
 
 function navSvg(kind){
   var p = {
@@ -513,8 +519,8 @@ function reportRelAge(r){
 function similarityBar(r){
   var st=photoState(r), pct=Math.max(0,Math.min(100, r.score||0)), bar=photoBar(r);
   var col = st==='match' ? '#1a8a3a' : (st==='nomatch' ? '#EB4040' : '#B7791F');
-  var label = r.src==='document' ? 'Documents match at 65%' : 'Photos match at 85%';
-  return '<div style="display:flex;align-items:baseline;justify-content:space-between;margin:18px 0 6px"><span style="font-size:13px;color:#747474">Model similarity</span><span style="font-size:15px;font-weight:600;color:'+col+'">'+r.score+'%</span></div>'+
+  var label = 'Match line · '+bar+'%';
+  return '<div style="display:flex;align-items:baseline;justify-content:space-between;margin:18px 0 6px"><span style="font-size:13px;color:#747474">Face-match score</span><span style="font-size:15px;font-weight:600;color:'+col+'">'+r.score+'%</span></div>'+
     '<div style="position:relative;height:8px;border-radius:999px;background:#EFEFEF">'+
       '<div style="position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:'+col+';width:'+pct+'%"></div>'+
       '<div style="position:absolute;top:-4px;bottom:-4px;left:'+bar+'%;width:2px;background:#2A2A2A;opacity:.55"></div></div>'+
@@ -523,7 +529,7 @@ function similarityBar(r){
 /* likely-cause callout + the three action cards (Same person / Not a match / Ignore) + audit line */
 function reasonCodes(i, r){
   var st = photoState(r);
-  var causeLabel = st==='nomatch' ? 'Likely cause for not match:' : 'Likely cause for review:';
+  var causeLabel = st==='nomatch' ? 'Why this may not match:' : 'Why this needs a look:';
   var out = '<div style="display:flex;gap:9px;margin-top:16px;padding:11px 13px;background:#FBF1DE;border:0.5px solid #EAD9AE;border-radius:8px;font-size:13px;color:#8a6414;line-height:1.5">'+
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>'+
     '<span><span style="font-weight:600">'+causeLabel+'</span> '+h(causeText(r))+'</span></div>';
@@ -531,7 +537,7 @@ function reasonCodes(i, r){
   if(r.review){
     var o = codeOutcome(r.review);
     var dot = o==='neg' ? '#D93025' : (o==='excluded' ? '#5F5E5A' : '#1a8a3a');
-    var lead = r.review==='same' ? 'Same person' : (r.review==='notmatch' ? 'Not a match' : 'Ignored');
+    var lead = r.review==='same' ? 'Same person' : (r.review==='notmatch' ? 'Marked not a match' : 'Photo ignored');
     var tail = r.review==='same' ? ', confirmed by review'
              : (r.reasonLabel ? (r.review==='notmatch' ? (', '+r.reasonLabel) : (' · '+r.reasonLabel)) : '');
     out += '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px;border-top:1px solid #E0E0E0;padding-top:12px">'+
@@ -541,17 +547,23 @@ function reasonCodes(i, r){
     '</div>';
     return out;
   }
-  out += '<div style="font-size:12px;font-weight:600;color:#747474;letter-spacing:.03em;margin-top:16px">WHAT DID YOU FIND?</div>';
+  out += '<div style="font-size:12px;font-weight:700;color:#747474;letter-spacing:.05em;text-transform:uppercase;margin-top:16px">Is this the same person?</div>';
   var acts = st==='nomatch'
     ? [['same','Same person','Faces match despite the score'],['ignore','Ignore this photo','Reference can\'t be used']]
     : [['same','Same person','Faces match despite the score'],['notmatch','Not a match','Different person'],['ignore','Ignore this photo','Reference can\'t be used']];
+  var ICONS = {
+    same:   {col:'#1a8a3a', bg:'#E7F4EC', svg:'<path d="M5 12l5 5L20 7"/>'},
+    notmatch:{col:'#D93025', bg:'#FDECEC', svg:'<path d="M7 7l10 10M17 7L7 17"/>'},
+    ignore: {col:'#5F5E5A', bg:'#EFEFEF', svg:'<circle cx="12" cy="12" r="8.5"/><path d="M8 12h8"/>'}
+  };
   out += '<div style="display:grid;grid-template-columns:repeat('+acts.length+',minmax(0,1fr));gap:10px;margin-top:8px">';
   acts.forEach(function(a){
-    var code=a[0];
+    var code=a[0], ic=ICONS[code];
     var onclick = code==='same' ? ('resolveRow('+i+',\'same\')') : ('openReasonModal('+i+',\''+code+'\')');
-    out += '<button type="button" onclick="'+onclick+'" style="text-align:left;border:1px solid #C6C6C6;background:#fff;border-radius:10px;padding:12px;cursor:pointer;font-family:inherit">'+
-      '<div style="font-size:14px;font-weight:600;color:#2A2A2A">'+h(a[1])+'</div>'+
-      '<div style="font-size:12px;color:#747474;margin-top:3px">'+h(a[2])+'</div></button>';
+    out += '<button type="button" onclick="'+onclick+'" style="display:flex;align-items:center;gap:11px;text-align:left;border:1px solid #C6C6C6;background:#fff;border-radius:12px;padding:11px 12px;cursor:pointer;font-family:inherit">'+
+      '<span style="width:28px;height:28px;border-radius:50%;background:'+ic.bg+';display:grid;place-items:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="'+ic.col+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+ic.svg+'</svg></span>'+
+      '<span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600;color:#2A2A2A">'+h(a[1])+'</span>'+
+      '<span style="display:block;font-size:12px;color:#747474;margin-top:2px">'+h(a[2])+'</span></span></button>';
   });
   out += '</div>';
   return out;
@@ -614,6 +626,96 @@ function jumpStrip(rows){
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>'+
     '<span style="font-size:13px;color:#8a6414;font-weight:600">'+h(parts.join(' · '))+'</span>'+
   '</button>';
+}
+
+/* ================= REPORT FEED (v2 card layout) ================= */
+function setReportView(v){ setState({reportView:v}); }
+function _seg(v,label,n,on){
+  return '<button type="button" onclick="setReportView(\''+v+'\')" aria-selected="'+(on?'true':'false')+'" style="border:0;background:'+(on?'#0076FB':'transparent')+';color:'+(on?'#fff':'#5A6473')+';font-family:inherit;font-size:13px;font-weight:600;padding:7px 15px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:7px">'+h(label)+'<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:'+(on?'rgba(255,255,255,.22)':'#EFF1F5')+';color:'+(on?'#fff':'#5A6473')+'">'+n+'</span></button>';
+}
+function comparePanes(r, seed){
+  var rel=reportRelAge(r);
+  var capStyle='position:absolute;left:0;right:0;bottom:0;padding:20px 11px 9px;background:linear-gradient(to top,rgba(0,0,0,.68),rgba(0,0,0,0));color:#fff';
+  var paneStyle='position:relative;width:100%;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD';
+  var refPane='<div style="'+paneStyle+'">'+photoTile(r,seed,'contain')+
+    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+h(r.label)+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(r.date)+(rel?(' · '+h(rel)):'')+'</div>'+(r.by?'<div style="font-size:11.5px;color:rgba(255,255,255,.85);margin-top:3px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>Interviewed by '+h(r.by)+'</div>':'')+'</div></div>';
+  var todayPane='<div style="'+paneStyle+'">'+uploadedImg('contain')+
+    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">Photo taken today</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">15 Aug 2026, 09:41</div></div></div>';
+  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+refPane+todayPane+'</div>';
+}
+function reportThumbs(r, seed){
+  var t='width:42px;height:50px;border-radius:8px;overflow:hidden;border:1px solid #DDD;background:#EFEFEF;position:relative;flex-shrink:0';
+  return '<span style="display:inline-flex;flex-shrink:0"><span style="'+t+'">'+photoTile(r,seed,'cover')+'</span><span style="'+t+';margin-left:-12px">'+uploadedImg('cover')+'</span></span>';
+}
+var V2CARD='background:#fff;border:1px solid #E5E9F0;border-radius:16px;box-shadow:0 1px 2px rgba(20,30,50,.06),0 8px 22px rgba(20,30,50,.08);margin-bottom:14px;overflow:hidden';
+function reportCard(i, r, c){
+  var st=photoState(r), flagged=(st==='review'||st==='nomatch'), isCant=(st==='cant');
+  var open=effectiveOpen(i,r), seed=(c?c.id:'')+r.label, chip=rowBadge(r), clickable=!isCant;
+  var subline = isCant ? (h(r.date)+' · '+h(r.err||'No face detected in this document'))
+              : (flagged ? h(r.date) : (h(r.date)+' · '+r.score+'% · matches'));
+  var caret = isCant ? '<span style="width:30px;flex-shrink:0"></span>'
+    : '<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" style="width:30px;height:30px;border:0;background:none;cursor:pointer;display:grid;place-items:center;border-radius:7px;flex-shrink:0">'+chevron(open?'180deg':'0deg')+'</button>';
+  var head='<div style="display:flex;align-items:center;gap:13px;padding:14px 16px'+(clickable?';cursor:pointer':'')+'"'+(clickable?(' onclick="toggleRow('+i+')"'):'')+'>'+
+    (open?'':reportThumbs(r,seed))+
+    '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.35">'+h(r.label)+'</div><div style="font-size:12px;color:#8A94A4;margin-top:1px">'+subline+'</div></div>'+
+    '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+chip+caret+'</div>'+
+  '</div>';
+  var body='';
+  if(open && !isCant){ body='<div style="padding:0 16px 16px">'+comparePanes(r,seed)+similarityBar(r)+(flagged?reasonCodes(i,r):'')+'</div>'; }
+  return '<article style="'+V2CARD+(flagged?';border-color:#D9DFE8':'')+'">'+head+body+'</article>';
+}
+function reportFeed(s, c){
+  var rows=s.rows, view=s.reportView||'all', html='';
+  var flagged=[]; rows.forEach(function(r,i){ var st=photoState(r); if(st==='review'||st==='nomatch') flagged.push(i); });
+  html += '<div class="rh-card" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 18px">'+
+    '<div style="width:48px;height:60px;border-radius:8px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;flex-shrink:0;position:relative">'+uploadedImg('cover')+'</div>'+
+    '<div style="flex:1 1 180px;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.4">Photo taken today</div>'+
+      '<div style="font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · 12 Aug 2026, 09:41 IST</div>'+
+      ((s.attest||(s.entry&&s.entry.attest)) ? '<div style="font-size:12px;color:#1a6b34;margin-top:4px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Attested as a joining-day photo of the person who reported to join</div>':'')+
+    '</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
+      (!s.viewingHistory ? '<button class="rh-btn secondary sm" onclick="askReshoot()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Use a different photo</button>' : '')+
+      (SHOW_REPORT_ACTIONS ? ('<button class="rh-iconbtn" title="Download PDF" onclick="downloadPdf()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M29 44H42.1765V42.1176H29V44ZM42.1765 33.6471H38.4118V28H32.7647V33.6471H29L35.5882 40.2353L42.1765 33.6471Z"></path></svg></button><button class="rh-iconbtn" title="Share report" onclick="openShare()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M40.6667 39.3092C40.0756 39.3092 39.5467 39.5502 39.1422 39.9277L33.5967 36.5944C33.6356 36.4096 33.6667 36.2249 33.6667 36.0321C33.6667 35.8394 33.6356 35.6546 33.5967 35.4699L39.08 32.1687C39.5 32.5703 40.0522 32.8193 40.6667 32.8193C41.9578 32.8193 43 31.743 43 30.4096C43 29.0763 41.9578 28 40.6667 28C39.3756 28 38.3333 29.0763 38.3333 30.4096C38.3333 30.6024 38.3644 30.7871 38.4033 30.9719L32.92 34.2731C32.5 33.8715 31.9478 33.6225 31.3333 33.6225C30.0422 33.6225 29 34.6988 29 36.0321C29 37.3655 30.0422 38.4418 31.3333 38.4418C31.9478 38.4418 32.5 38.1928 32.92 37.7912L38.4578 41.1325C38.4189 41.3012 38.3956 41.4779 38.3956 41.6546C38.3956 42.9478 39.4144 44 40.6667 44C41.9189 44 42.9378 42.9478 42.9378 41.6546C42.9378 40.3614 41.9189 39.3092 40.6667 39.3092Z"></path></svg></button>') : '')+
+    '</div>'+
+  '</div>';
+  if(s.shared.length){
+    html += '<div class="rh-card" style="padding:12px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:13px;color:#747474">Shared with</span>';
+    s.shared.forEach(function(u){ html += '<span style="display:inline-flex;align-items:center;gap:6px;background:#F7F8FA;border:1px solid #DDD;border-radius:16px;padding:3px 6px 3px 10px;font-size:12.5px">'+h(u.name)+'<button type="button" onclick="revoke(\''+u.id+'\')" aria-label="Revoke access" style="border:0;background:none;padding:2px;line-height:0;color:#747474;border-radius:50%;cursor:pointer"><svg viewBox="25 25 22 22" width="13" height="13" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></span>'; });
+    html += '</div>';
+  }
+  html += '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 2px 14px">'+
+    '<div style="display:inline-flex;background:#fff;border:1px solid #E5E9F0;border-radius:999px;padding:3px;box-shadow:0 1px 2px rgba(20,30,50,.06)">'+
+      _seg('all','All rounds',rows.length,view==='all')+_seg('review','Needs review',flagged.length,view==='review')+
+    '</div></div>';
+  var groups=[{title:'Application &amp; interview photos', sub:'', test:function(r){return r.src!=='document';}},{title:'Identity documents', sub:'scored more leniently (older, lower-quality scans)', test:function(r){return r.src==='document';}}];
+  groups.forEach(function(g){
+    var idxs=[]; rows.forEach(function(r,i){ if(g.test(r)) idxs.push(i); });
+    if(view==='review') idxs=idxs.filter(function(i){ return flagged.indexOf(i)>=0; });
+    if(!idxs.length) return;
+    html += '<div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8A94A4;margin:20px 4px 10px">'+g.title+(g.sub?' <span style="text-transform:none;letter-spacing:0;font-weight:400">· '+g.sub+'</span>':'')+'</div>';
+    idxs.forEach(function(i){ html += reportCard(i, rows[i], c); });
+  });
+  html += '<div class="rh-card" style="padding:0;overflow:hidden;margin-top:8px">'+ verdictBanner(rows);
+  if(s.decision){
+    var dec=s.decision, sm=SUBMIT_STATUS[dec.status]||SUBMIT_STATUS.review;
+    html += '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid #E0E0E0;padding:14px 20px;background:#fff">'+
+      '<span style="width:30px;height:30px;border-radius:50%;background:#EFEFEF;display:grid;place-items:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#5F5E5A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span>'+
+      '<div style="flex:1;min-width:180px"><div style="font-size:14px;font-weight:600;color:#2A2A2A">Report submitted</div>'+
+        '<div style="font-size:12px;color:#747474;word-break:break-word">by '+h(dec.by)+' · '+h(dec.at)+(dec.unreviewed>0?(' · '+dec.unreviewed+' unreviewed'):'')+(dec.note?' · “'+h(dec.note)+'”':'')+'</div></div>'+
+      '<span style="display:inline-flex;align-items:center;gap:6px;background:'+sm.bg+';color:'+sm.c+';border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;white-space:nowrap"><span style="width:6px;height:6px;border-radius:50%;background:'+sm.c+';flex-shrink:0"></span>'+sm.t+'</span>'+
+      (s.viewingHistory?'':'<button type="button" onclick="reopenReport()" style="border:0;background:none;padding:4px 2px;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;flex-shrink:0">Reopen</button>')+
+    '</div>';
+  } else {
+    var dv=reportSummary(rows);
+    var helper=dv.unresolved>0 ? (dv.unresolved+' comparison'+(dv.unresolved>1?'s':'')+' still need'+(dv.unresolved>1?'':'s')+' your review — you can still submit.') : 'All comparisons reviewed.';
+    html += '<div style="border-top:1px solid #E0E0E0;background:#FBFBFA;padding:16px 20px">'+
+      '<div style="font-size:14px;font-weight:600">Submit report</div>'+
+      '<div style="font-size:12.5px;color:#747474;margin:5px 0 14px;line-height:1.5">The recorded status above is set by the system. Review each flagged comparison, then submit the report. '+h(helper)+'</div>'+
+      '<div style="display:flex;justify-content:flex-end"><button type="button" onclick="openSubmit()" style="border:0;color:#fff;background:#0076FB;border-radius:8px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Submit report</button></div>'+
+    '</div>';
+  }
+  html += '</div>';
+  return html;
 }
 
 /* ================= WORKLIST (single list, filters, attention, pagination) ================= */
@@ -765,10 +867,10 @@ function findCandidateCard(ok){
     '<div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid #A5A5A5;padding:6px 0">'+searchIcon2()+
       '<input id="rh-q" type="search" placeholder="Search by name, RHID or email" autocomplete="off" value="'+h(s.q)+'" oninput="onQuery(this.value)" style="flex:1;min-width:0;border:0;outline:0;background:none;font-family:inherit;font-size:14px;font-weight:500;color:#2A2A2A">'+
     '</div>'+
-    '<div style="font-size:12px;color:#747474;margin-top:8px;display:flex;align-items:center;gap:6px"><span style="width:5px;height:5px;border-radius:50%;background:#0076FB;flex-shrink:0"></span>Onboarding and hired rounds only · reach someone who isn\'t on today\'s list</div>';
+    '<div style="font-size:12px;color:#747474;margin-top:8px;display:flex;align-items:center;gap:6px"><span style="width:5px;height:5px;border-radius:50%;background:#0076FB;flex-shrink:0"></span>Search anyone who\'s been hired — even if they\'re not on today\'s list</div>';
   if(ok.length){
     html+='<div style="margin-top:12px;border:1px solid #DDD;border-radius:6px;overflow:hidden">';
-    ok.forEach(function(x){ html+='<button type="button" onclick="pick(\''+x.id+'\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;background:#fff;border:0;border-bottom:1px solid #E0E0E0;text-align:left;cursor:pointer;font-family:inherit">'+avatar(x.name,32)+'<span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">'+h(x.name)+'</span><span style="font-size:12.5px;color:#747474">'+h(x.rhid+' · '+x.req)+'</span></span></button>'; });
+    ok.forEach(function(x){ html+='<button type="button" onclick="pick(\''+x.id+'\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;background:#fff;border:0;border-bottom:1px solid #E0E0E0;text-align:left;cursor:pointer;font-family:inherit">'+candAvatar(x,32)+'<span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">'+h(x.name)+'</span><span style="font-size:12.5px;color:#747474">'+h(x.rhid+' · '+x.req)+'</span></span></button>'; });
     html+='</div>';
   } else if(s.q.trim().length>=2){ html+='<div class="note" style="margin-top:12px">No candidates match that search.</div>'; }
   html+='</div>';
@@ -809,7 +911,7 @@ function worklistView(){
           ? '<span style="color:#8a6414">Checked · decision not made</span>'
           : '<span style="color:'+(d>7?'#D93025':'#8a6414')+'">Expected '+fmtDate(c.joiningISO)+' · '+d+' day'+(d===1?'':'s')+' ago</span>';
         html+='<div role="button" tabindex="0" onclick="pick(\''+c.id+'\')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:0.5px solid #E0E0E0;cursor:pointer">'+
-          avatar(c.name,36)+
+          candAvatar(c,36)+
           '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+' <span style="font-weight:400;color:#747474;font-size:12px">· '+h(c.rhid+' · '+c.req)+'</span></div>'+
             '<div style="font-size:12px;margin-top:2px">'+sub+'</div></div>'+
           wlPill(st)+
@@ -858,7 +960,7 @@ function worklistView(){
         '</div>';
       } else {
         html+='<div role="button" tabindex="0" onclick="pick(\''+c.id+'\')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:0.5px solid #E0E0E0;cursor:pointer">'+
-          avatar(c.name,36)+
+          candAvatar(c,36)+
           '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+'</div><div style="font-size:12.5px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+sub+'</div></div>'+
           '<span style="width:112px;flex-shrink:0;display:inline-flex;justify-content:flex-end">'+wlPill(st)+'</span>'+
           kebab+
@@ -980,8 +1082,10 @@ function render(){
     html += '</div>';
   }
 
-  /* 3b + 4 + 5. PHOTOS-ON-FILE TABLE — one surface across idle / running / done */
-  if(c && c.photos.length){
+  /* 3b + 4 + 5. PHOTOS-ON-FILE — v2 card feed once done; idle/running keep the single-surface list */
+  if(c && c.photos.length && s.done){
+    html += reportFeed(s, c);
+  } else if(c && c.photos.length){
     var _done = s.done, _running = s.running, _idle = !_done && !_running;
     var tableRows = (_running || _done) ? s.rows : c.photos;
     html += '<div class="rh-card" style="padding:0"><div style="border-radius:8px;overflow:hidden">';
@@ -1020,7 +1124,7 @@ function render(){
     // rows grouped by source: application/interview photos, then identity documents
     var groups = [
       {title:'Application &amp; interview photos', sub:'', test:function(r){return r.src!=='document';}},
-      {title:'Identity documents', sub:'held to a lower bar (older, low-resolution photos)', test:function(r){return r.src==='document';}}
+      {title:'Identity documents', sub:'scored more leniently (older, lower-quality scans)', test:function(r){return r.src==='document';}}
     ];
     groups.forEach(function(g){
       var idxs = [];
@@ -1039,7 +1143,7 @@ function render(){
         var clickable = !!onclick;
         var badgeCell = st ? '<span style="flex-shrink:0">'+rowBadge(r)+'</span>'
           : (_idle
-              ? '<span style="flex-shrink:0;color:#B4B2A9;font-size:16px">—</span>'
+              ? '<span style="flex-shrink:0;font-size:12px;font-weight:600;color:#6E7684;background:#EFF1F5;padding:4px 11px;border-radius:999px;white-space:nowrap">Not matched yet</span>'
               : '<span style="width:96px;height:22px;border-radius:999px;flex-shrink:0;background:linear-gradient(90deg,#EFEFEF 25%,#F9FAFB 50%,#EFEFEF 75%);background-size:220% 100%;animation:rh-shim 1.3s linear infinite"></span>');
         html += '<div id="rpt-row-'+i+'" style="border-bottom:1px solid #E0E0E0;opacity:'+opacity+'">'+
           '<button type="button" class="rpt-row"'+(onclick?(' onclick="'+onclick+'"'):'')+' style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 20px;background:none;border:0;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default')+'">'+
