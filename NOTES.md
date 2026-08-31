@@ -343,20 +343,25 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
   dropdown), hidden whenever a single status OR the Needs-attention chip is selected** (rows would
   otherwise show twice). Age line amber, **red past ~7 days**.
 - **Dismissal is demoted** (a **vertical kebab `⋮`** on the row, not a full-weight button — the
-  row's primary action is opening the check, with a chevron). The kebab opens a small **dropdown
-  menu** listing the reasons (**Not joining / Joining date changed**); picking one dismisses the row
-  and **records who + when** (an outside-click closes the menu). The bulk
-  **Dismiss all** was **removed** (2026-08-27) — dismissal is per-row only, so every removal stays
-  an individual, attributed decision rather than a one-tap way to empty the safety block.
+  row's primary action is opening the check, with a chevron). The kebab menu has two items, each
+  opening a **popup**: **Not joining** → a comment dialog (optional note) → dismisses the row;
+  **Joining date changed** → the same date-picker dialog as the list kebab (new date + optional
+  comment), which updates the joining date (moving them out of attention when the new date isn't
+  overdue). An outside-click closes the menu. The bulk **Dismiss all** was **removed** (2026-08-27)
+  — dismissal is per-row and attributed, never a one-tap way to empty the safety block.
 - Main list flat; header + work summary phrased as remaining work ("6 to verify, 1 in review"),
   never "0 done". Rows show **just name + RHID · role** (the old submission/status sub-line was
   removed 2026-08-28 — the status pill on the right already carries it). **Future joiners** are
   inert (dimmed name, no status pill, no chevron, neutral "Joining Mon 18 Aug").
-- Rows carry a **kebab `⋮`** with **"Change joining date"** (opens a date-picker dialog; e.g. a
-  candidate calls to reschedule) — shown on **To verify / Not verified / Coming-up** rows, where a
-  date change is most likely. Distinct from the attention-block kebab (menu keys are `l`+id vs
-  `a`+id so the same candidate in both places doesn't open both menus). Changing the date updates
-  `joiningISO`/`joining` and re-sorts/re-buckets the row (in-session only).
+- Rows carry a **kebab `⋮`** with **"Change joining date"** (opens a date-picker dialog with a new
+  date + optional comment; e.g. a candidate calls to reschedule) — shown on **To verify / Not
+  verified / Coming-up** rows, where a date change is most likely. Distinct from the attention-block
+  kebab (menu keys are `l`+id vs `a`+id so the same candidate in both places doesn't open both
+  menus). Changing the date updates `joiningISO`/`joining` and re-sorts/re-buckets the row
+  (in-session only).
+- **Row alignment:** the status pill sits in a **fixed-width slot** (right-aligned) and the kebab
+  in a reserved fixed slot (empty when a row has no kebab), so every pill and every kebab lines up
+  in its own column regardless of pill width or kebab presence (fixed 2026-08-28).
 - **Pagination** (10 per page by default, 10/25/50 options, resets to page 1 on any filter/sort
   change) + **URL state** (filter/sort/page) so opening a check and hitting Back returns to the view.
 - Keep the **candidate search** ("Find a candidate", onboarding/hired rounds scope note) — demoted
