@@ -15,6 +15,37 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-08-31 · v2 card-style UI across all three screens — BUILT + DEPLOYED (`dee44d6`)
+
+- **Discussion:** Rohan wanted a fresh UI for the joining-day flow. We prototyped it first as
+  three standalone HTML artifacts (worklist → setup → report) and iterated on the design in light
+  mode until he signed off ("now it looks like v2"), then implemented it into the app. Naming
+  convention agreed: **v1** = the original UI, **v2** = this redesign; "revert to v1" restores the
+  pre-change source.
+- **Research / prototyping:** built `build_worklist.js` / `build_setup.js` / `build_rnd.js`
+  generators (reusing the app's embedded photos) → three private claude.ai artifacts. Design
+  locked there: Instagram-style per-round **card feed**; matched rounds calm & collapsible, flagged
+  rounds full; **thumbnails only when collapsed**; **verdict kept in the header chip** once
+  recorded; **side-by-side icon action buttons**; type-grouped sections (Application & interview /
+  Identity documents · scored more leniently) with **headers kept in the Needs-review view**;
+  documents shown in full so the ID face is visible; **candidate-photo avatars** on the worklist;
+  **All rounds / Needs review** toggle.
+- **Copy pass:** "Face-match score" (was Model similarity); "Match line · 85/65%" (was
+  Photos/Documents match at N%); "Why this needs a look / Why this may not match" (was Likely
+  cause…); action prompt "Is this the same person?"; setup chip "Not matched yet"; docs group
+  "scored more leniently (older, lower-quality scans)"; worklist hint reworded.
+- **Decision & change (built + deployed):** implemented in `verify-identity.html` via a
+  `reportFeed`/`reportCard` render path + `state.reportView` toggle + `candAvatar`; shared tokens
+  aligned to the mocks (cool `#EEF1F5` ground, 16px cards with soft lifted shadow, slim 54px nav,
+  3px rainbow). **Light mode only — dark mode + nav sun/moon toggle deferred** (the app uses
+  hardcoded inline colours, so a full token rewrite is the follow-up; the artifacts keep the dark
+  theme). All logic functions unchanged; the ~52-assertion render harness stayed green. Built via
+  `build_repo.js` (key stripped → 0 in shipped page; Gemini calls → `/api/compare` + `/api/quality`),
+  pushed to `main`, live on Vercel. Revert baseline:
+  `D:\Codebase\identity-verify-rnd\snapshot-2026-08-31\` (`v1-original-ui/` + `v2-card-ui/`).
+
+---
+
 ## 2026-08-27 · Source-photo quality pre-flight (live Gemini) + provenance attestation — BUILT
 
 - **Discussion:** on the upload step, run a quality check on the joining-day photo; if good, the
