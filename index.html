@@ -1060,7 +1060,7 @@ function render(){
           var capStyle='position:absolute;left:0;right:0;bottom:0;padding:20px 11px 9px;background:linear-gradient(to top,rgba(0,0,0,.68),rgba(0,0,0,0));color:#fff';
           var paneStyle='position:relative;width:100%;aspect-ratio:4/5;border-radius:8px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD';
           var refPane='<div style="'+paneStyle+'">'+photoTile(r,(c?c.id:'')+r.label,'contain')+
-            '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+h(r.label)+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(r.date)+(rel?(' · '+h(rel)):'')+'</div></div></div>';
+            '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+h(r.label)+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(r.date)+(rel?(' · '+h(rel)):'')+'</div>'+(r.by?'<div style="font-size:11.5px;color:rgba(255,255,255,.85);margin-top:3px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>Interviewed by '+h(r.by)+'</div>':'')+'</div></div>';
           var todayPane='<div style="'+paneStyle+'">'+uploadedImg('contain')+
             '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">Photo taken today</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">15 Aug 2026, 09:41</div></div></div>';
           html += '<div style="padding:0 20px 18px;background:#F7F8FA">'+
@@ -1068,7 +1068,6 @@ function render(){
               '<div>'+refPane+'</div>'+
               '<div>'+todayPane+'</div>'+
             '</div>'+
-            (r.by ? '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px"><span style="font-size:12.5px;color:#747474;display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#747474" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>Interviewed by '+h(r.by)+'</span></div>' : '')+
             similarityBar(r)+
             (needsCode ? reasonCodes(i, r) : '')+
           '</div>';
