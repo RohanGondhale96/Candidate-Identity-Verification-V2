@@ -41,6 +41,11 @@ carry the dark theme). What changed:
   state-aware — "Checking your photo…" while the quality check runs, "Running verification…"
   during the run, "Ready to compare" when idle — so it never contradicts the status line below.
   `prefers-reduced-motion` disables the sweeping motion.
+- **Scroll-on-complete:** when the verification run finishes, the page eases (a
+  `requestAnimationFrame` tween, `smoothScrollToEl`) up to the top of the report (`#rpt-top`,
+  the "Photo taken today" card) after a ~240ms beat, so it doesn't snap you mid-report onto a
+  flagged round — you glide to the top and read down. (Native `behavior:'smooth'` is unreliable in
+  some webviews, hence the manual tween.)
 - The `~52`-assertion harness (`verify_report.js`) still passes — all logic functions are
   unchanged; only render/markup/copy moved.
 - **Revert baseline:** `D:\Codebase\identity-verify-rnd\snapshot-2026-08-31\v1-original-ui\`

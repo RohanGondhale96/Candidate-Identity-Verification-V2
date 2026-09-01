@@ -226,6 +226,17 @@ function setState(patch, cb){
   if(cb) cb();
 }
 function toast(msg){ setState({toast:msg}); clearTimeout(_tt); _tt=setTimeout(function(){ setState({toast:''}); },2400); }
+/* eased smooth-scroll to an element top (native behavior:'smooth' is unreliable in some webviews) */
+function smoothScrollToEl(id, offset, duration){
+  var el=document.getElementById(id); if(!el) return;
+  var startY=window.pageYOffset||document.documentElement.scrollTop||0;
+  var targetY=Math.max(0, el.getBoundingClientRect().top + startY - (offset||16));
+  var dist=targetY-startY; if(Math.abs(dist)<2) return;
+  var dur=duration||650, t0=null;
+  function ease(t){ return t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2; }
+  function step(ts){ if(t0===null) t0=ts; var p=Math.min(1,(ts-t0)/dur); window.scrollTo(0, Math.round(startY+dist*ease(p))); if(p<1) requestAnimationFrame(step); }
+  requestAnimationFrame(step);
+}
 
 /* head-silhouette placeholder standing in for a real face photo */
 function photoPlaceholder(seed){
@@ -360,6 +371,9 @@ function settleRow(i, token, res, err){
     var at = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     var entry = {cand:prev.cand, photo:prev.photo, rows:rows, shared:prev.shared, at:at, decision:null, attest:prev.attest, quality:prev.quality};
     return {rows:rows, running:false, done:true, history:prev.history.concat([entry]), entry:entry, decision:null, decisionErr:''};
+  }, function(){
+    // run just finished — glide up to the top of the results instead of snapping mid-report
+    if(state.done){ setTimeout(function(){ smoothScrollToEl('rpt-top', 16, 700); }, 240); }
   });
 }
 function doShare(){
@@ -685,7 +699,7 @@ function reportCard(i, r, c){
 function reportFeed(s, c){
   var rows=s.rows, view=s.reportView||'all', html='';
   var flagged=[]; rows.forEach(function(r,i){ var st=photoState(r); if(st==='review'||st==='nomatch') flagged.push(i); });
-  html += '<div class="rh-card" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 18px">'+
+  html += '<div id="rpt-top" class="rh-card" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 18px;scroll-margin-top:16px">'+
     '<div style="width:48px;height:60px;border-radius:8px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;flex-shrink:0;position:relative">'+uploadedImg('cover')+'</div>'+
     '<div style="flex:1 1 180px;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.4">Photo taken today</div>'+
       '<div style="font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · 12 Aug 2026, 09:41 IST</div>'+

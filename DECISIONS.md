@@ -15,6 +15,20 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-08-31 · Smooth scroll to report top on run-complete — BUILT + DEPLOYED
+
+- **Discussion:** after Run verification the scan animation plays, then the report renders and the
+  page "directly jumps" onto a Needs-review / Not-a-match round (the tall upload card above the
+  report disappears, so the content snaps upward mid-report). Rohan wanted a scroll so the user
+  follows what's happening instead of being teleported.
+- **Decision & change:** on completion (`settleRow`, once all rows settle) a ~240ms beat then an
+  eased `requestAnimationFrame` tween (`smoothScrollToEl`) glides to `#rpt-top` (the "Photo taken
+  today" card at the top of the report). Used a manual rAF tween rather than native
+  `behavior:'smooth'` because some webviews (incl. the in-app preview pane) no-op the native smooth
+  option. Harness green; rebuilt + pushed.
+
+---
+
 ## 2026-08-31 · Worklist avatars removed + AI-scan animation — BUILT + DEPLOYED
 
 - **Worklist photos removed:** Rohan felt the candidate photos were too heavy for the All-
