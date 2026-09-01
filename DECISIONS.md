@@ -15,6 +15,21 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-08-31 · Verdict + breakdown moved into the floating Submit bar — BUILT + DEPLOYED
+
+- **Discussion:** the Submit button floats (always reachable) but the "Not verified" banner sat at
+  the very bottom of the rounds — a recruiter could submit without registering the verdict. Rohan
+  called out the UX gap and chose to consolidate everything into the floating bar (accepting a
+  busier bar) so the action and its rationale are co-located.
+- **Decision & change:** the floating bar now leads with the **system-verdict pill** (Verified /
+  Needs review / Not verified, from `SUBMIT_STATUS[tier]`) followed by the **full count breakdown**
+  (`reportSummary().sub` + "· you can still submit" when unresolved), then the Submit button. The
+  standalone `verdictBanner` card was removed from `reportFeed` (its content now lives in the bar;
+  the submitted-state confirmation card still shows the outcome pill). Harness green; rebuilt +
+  pushed.
+
+---
+
 ## 2026-08-31 · Smooth scroll to report top on run-complete — BUILT + DEPLOYED
 
 - **Discussion:** after Run verification the scan animation plays, then the report renders and the

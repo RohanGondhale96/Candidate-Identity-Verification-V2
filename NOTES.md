@@ -25,6 +25,10 @@ carry the dark theme). What changed:
   Verdict actions sit side by side with semantic icons. The **Submit report** control is a
   **sticky floating bar** (translucent + blur) pinned to the bottom while you scroll the rounds;
   once a report is submitted it becomes a normal "Report submitted" confirmation card instead.
+  The bar **carries the system verdict with the action** — a verdict pill (Verified / Needs review
+  / Not verified) plus the full count breakdown sit right beside the button, so the recruiter
+  always sees *what* they're submitting. The old standalone verdict banner card at the bottom of
+  the rounds was removed — its content lives in the floating bar now.
 - **Copy:** "Face-match score" (was "Model similarity"); "Match line · 85/65%" (was "Photos/
   Documents match at N%"); "Why this needs a look:" / "Why this may not match:" (was "Likely
   cause…"); the action prompt is "Is this the same person?"; recorded verdicts read "Same

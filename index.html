@@ -727,7 +727,6 @@ function reportFeed(s, c){
     html += '<div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8A94A4;margin:20px 4px 10px">'+g.title+(g.sub?' <span style="text-transform:none;letter-spacing:0;font-weight:400">· '+g.sub+'</span>':'')+'</div>';
     idxs.forEach(function(i){ html += reportCard(i, rows[i], c); });
   });
-  html += '<div class="rh-card" style="padding:0;overflow:hidden;margin-top:8px">'+ verdictBanner(rows) +'</div>';
   if(s.decision){
     var dec=s.decision, sm=SUBMIT_STATUS[dec.status]||SUBMIT_STATUS.review;
     html += '<div class="rh-card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;margin-top:12px">'+
@@ -738,10 +737,13 @@ function reportFeed(s, c){
       (s.viewingHistory?'':'<button type="button" onclick="reopenReport()" style="border:0;background:none;padding:4px 2px;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;flex-shrink:0">Reopen</button>')+
     '</div>';
   } else {
-    var dv=reportSummary(rows);
+    var dv=reportSummary(rows), sm=SUBMIT_STATUS[dv.tier]||SUBMIT_STATUS.review;
     var helper=dv.unresolved>0 ? (dv.unresolved+' comparison'+(dv.unresolved>1?'s':'')+' still need'+(dv.unresolved>1?'':'s')+' your review — you can still submit.') : 'All comparisons reviewed.';
     html += '<div style="position:sticky;bottom:16px;z-index:20;margin-top:16px;padding:13px 16px 13px 18px;background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid #E5E9F0;border-radius:14px;box-shadow:0 8px 24px rgba(20,30,50,.14);display:flex;align-items:center;gap:14px">'+
-      '<div style="flex:1;min-width:0;font-size:12.5px;color:#5A6473;line-height:1.4">'+h(helper)+'</div>'+
+      '<div style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+        '<span style="display:inline-flex;align-items:center;gap:6px;background:'+sm.bg+';color:'+sm.c+';border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:700;white-space:nowrap;flex-shrink:0"><span style="width:6px;height:6px;border-radius:50%;background:'+sm.c+'"></span>'+sm.t+'</span>'+
+        '<span style="font-size:12px;color:#5A6473;line-height:1.35">'+h(dv.sub)+(dv.unresolved>0?' · you can still submit':'')+'</span>'+
+      '</div>'+
       '<button type="button" onclick="openSubmit()" style="border:0;color:#fff;background:#0076FB;border-radius:8px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;flex-shrink:0"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Submit report</button>'+
     '</div>';
   }
