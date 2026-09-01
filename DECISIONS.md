@@ -15,6 +15,24 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-08-31 · Worklist avatars removed + AI-scan animation — BUILT + DEPLOYED
+
+- **Worklist photos removed:** Rohan felt the candidate photos were too heavy for the All-
+  candidates list. Reverted worklist rows (attention + list + search picker) to initials — kept it
+  consistent across the whole worklist since the same people appear in both the attention block and
+  the list. `candAvatar()` stays defined but unused, in case we bring photos back.
+- **Upload / Run animation reworked (AI-scan motif):** Rohan wanted a "cooler, new-age AI" feel and
+  a **scanning effect on the image**, plus the **same animation on Run verification**. Also flagged
+  a contradiction: the heading said "Ready to compare" while the line below said "Checking photo
+  quality…". Built: a **face-scan overlay** (`scanOverlay()` — corner reticle brackets, faint grid,
+  vignette tint, sweeping cyan laser line) on the joining-day photo, and a **radar-sweep loader**
+  (`.rh-radar` — conic sweep + pulsing core) replacing the goo blob — both shown during the quality
+  pre-flight *and* the verification run; row thumbnails get a matching cyan scan-sweep. Upload
+  heading is now state-aware ("Checking your photo…" / "Running verification…" / "Ready to
+  compare"). Honours `prefers-reduced-motion`. Harness green; rebuilt + pushed.
+
+---
+
 ## 2026-08-31 · Submit report → sticky floating bar — BUILT + DEPLOYED
 
 - **Discussion:** on the live report Rohan noticed the **Submit report** control was a plain card

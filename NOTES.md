@@ -31,8 +31,16 @@ carry the dark theme). What changed:
   person, confirmed by review" / "Marked not a match" / "Photo ignored …".
 - **Setup:** the pre-run preview chip reads **"Not matched yet"**; the documents group is
   labelled "scored more leniently (older, lower-quality scans)".
-- **Worklist:** rows use the candidate's own **photo as the avatar** (`candAvatar`), falling
-  back to initials; coming-up rows keep the calendar glyph. Search hint reworded.
+- **Worklist:** rows use **initials avatars**; coming-up rows keep the calendar glyph. (Candidate
+  photos were tried as the avatar but removed — too heavy for a scan list, and the same person in
+  the attention block vs the list looked inconsistent.) Search hint reworded.
+- **Upload / verification animation — AI-scan motif:** the joining-day photo gets a face-scan
+  overlay (corner reticle, faint grid, vignette, sweeping laser line) and the loader is a
+  radar-sweep (cyan conic sweep + pulsing core), shown during **both** the quality pre-flight and
+  Run verification (row thumbnails get a matching cyan scan-sweep). The upload heading is
+  state-aware — "Checking your photo…" while the quality check runs, "Running verification…"
+  during the run, "Ready to compare" when idle — so it never contradicts the status line below.
+  `prefers-reduced-motion` disables the sweeping motion.
 - The `~52`-assertion harness (`verify_report.js`) still passes — all logic functions are
   unchanged; only render/markup/copy moved.
 - **Revert baseline:** `D:\Codebase\identity-verify-rnd\snapshot-2026-08-31\v1-original-ui\`
