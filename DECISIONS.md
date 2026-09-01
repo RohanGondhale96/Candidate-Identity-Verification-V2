@@ -15,6 +15,20 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-08-31 · Mobile audit + fixes — BUILT + DEPLOYED
+
+- **Discussion:** Rohan asked to check the v2 flow at phone width and make sure spacing/layout hold.
+- **Findings & fixes:** on ≤560px — the flagged-round **action buttons** (Same person / Not a match /
+  Ignore) stayed 3-across and cramped → now stack one-per-row (`.rpt-acts`); the **floating Submit
+  bar** squished the breakdown beside the button → now stacks (pill + breakdown on top, full-width
+  Submit below, `.rpt-subbar`); the **two compare photos** stayed side-by-side (~150px each) → now
+  **stack full-width at 1/1 crop** for face scrutiny (`.rpt-panes` / `.rpt-pane`, matching the v2
+  mock). Also: **empty Email/Phone** on seed candidates now render "—" (were blank); **"1 photos on
+  file"** → "1 photo". Left as-is: role text truncates with "…" in tight worklist rows (standard).
+  Harness green; rebuilt + pushed.
+
+---
+
 ## 2026-08-31 · Verdict + breakdown moved into the floating Submit bar — BUILT + DEPLOYED
 
 - **Discussion:** the Submit button floats (always reachable) but the "Not verified" banner sat at

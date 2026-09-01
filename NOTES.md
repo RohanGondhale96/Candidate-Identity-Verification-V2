@@ -56,6 +56,14 @@ carry the dark theme). What changed:
   holds the pre-v2 source ("v1"). Standalone R&D mocks + this whole design system live in
   `…\v2-card-ui\` with a README.
 
+## Mobile (≤560px)
+
+The v2 report adapts on narrow screens: the flagged-round **action buttons** stack one-per-row
+(`.rpt-acts`); the **floating Submit bar** stacks (verdict pill + breakdown on top, full-width
+Submit below, `.rpt-subbar`); the **two compare photos** stack full-width at a 1/1 crop for face
+scrutiny (`.rpt-panes` / `.rpt-pane`). Candidate cards render "—" for missing Email/Phone. Worklist
+role text truncates with "…" in tight rows (accepted).
+
 ## Hidden behind feature flags (in `index.html`)
 
 These are built and working but intentionally hidden for now. To bring one back, flip its
