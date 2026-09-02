@@ -591,8 +591,8 @@ function reasonCodes(i, r){
   }
   out += '<div style="font-size:12px;font-weight:700;color:#747474;letter-spacing:.05em;text-transform:uppercase;margin-top:16px">Is this the same person?</div>';
   var acts = st==='nomatch'
-    ? [['same','Same person','Faces match despite the score'],['ignore','Ignore this photo','Reference can\'t be used']]
-    : [['same','Same person','Faces match despite the score'],['notmatch','Not a match','Different person'],['ignore','Ignore this photo','Reference can\'t be used']];
+    ? [['same','Match','Same person'],['ignore','Ignore this photo','Reference can\'t be used']]
+    : [['same','Match','Same person'],['notmatch','Not a match','Different person'],['ignore','Ignore this photo','Reference can\'t be used']];
   var ICONS = {
     same:   {col:'#1a8a3a', bg:'#E7F4EC', svg:'<path d="M5 12l5 5L20 7"/>'},
     notmatch:{col:'#D93025', bg:'#FDECEC', svg:'<path d="M7 7l10 10M17 7L7 17"/>'},

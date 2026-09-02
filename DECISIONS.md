@@ -15,6 +15,14 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-02 · Verdict-action labels made parallel — BUILT + DEPLOYED
+
+- **Change (manager):** the "same person" action button was titled **"Same person"** / "Faces match
+  despite the score" — inconsistent with **"Not a match"** / "Different person". Renamed it to
+  **"Match"** / "Same person" so the first two actions read in parallel (verdict on top, person
+  interpretation below). "Ignore this photo" / "Reference can't be used" unchanged; the recorded
+  line + row chip still say "Same person" (the human's confirmation). Harness green.
+
 ## 2026-09-02 · Remove the % score bar + the verdict badge in the submit bar — BUILT + DEPLOYED
 
 - **Discussion:** manager wants the **percentage removed** from the report (the "Face-match score"
