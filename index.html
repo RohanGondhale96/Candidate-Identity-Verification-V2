@@ -701,8 +701,7 @@ var V2CARD='background:#fff;border:1px solid #E5E9F0;border-radius:16px;box-shad
 function reportCard(i, r, c){
   var st=photoState(r), flagged=(st==='review'||st==='nomatch'), isCant=(st==='cant');
   var open=effectiveOpen(i,r), seed=(c?c.id:'')+r.label, chip=rowBadge(r), clickable=!isCant;
-  var subline = isCant ? (h(r.date)+' · '+h(r.err||'No face detected in this document'))
-              : (flagged ? h(r.date) : (h(r.date)+' · '+r.score+'% · matches'));
+  var subline = isCant ? (h(r.date)+' · '+h(r.err||'No face detected in this document')) : h(r.date);
   var caret = isCant ? '<span style="width:30px;flex-shrink:0"></span>'
     : '<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" style="width:30px;height:30px;border:0;background:none;cursor:pointer;display:grid;place-items:center;border-radius:7px;flex-shrink:0">'+chevron(open?'180deg':'0deg')+'</button>';
   var head='<div style="display:flex;align-items:center;gap:13px;padding:14px 16px'+(clickable?';cursor:pointer':'')+'"'+(clickable?(' onclick="toggleRow('+i+')"'):'')+'>'+
@@ -711,7 +710,7 @@ function reportCard(i, r, c){
     '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+chip+caret+'</div>'+
   '</div>';
   var body='';
-  if(open && !isCant){ body='<div style="padding:0 16px 16px">'+comparePanes(r,seed)+similarityBar(r)+(flagged?reasonCodes(i,r):'')+'</div>'; }
+  if(open && !isCant){ body='<div style="padding:0 16px 16px">'+comparePanes(r,seed)+(flagged?reasonCodes(i,r):'')+'</div>'; }
   return '<article id="rpt-round-'+i+'" style="'+V2CARD+';scroll-margin-top:12px'+(flagged?';border-color:#D9DFE8':'')+'">'+head+body+'</article>';
 }
 function reportFeed(s, c){
@@ -766,8 +765,7 @@ function reportFeed(s, c){
       : '<button type="button" onclick="openSubmit()" style="border:0;color:#fff;background:#0076FB;border-radius:8px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;white-space:nowrap"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Submit report</button>';
     html += '<div class="rpt-subbar" style="margin-top:16px;padding:14px 18px;background:#fff;border:1px solid #E5E9F0;border-radius:16px;box-shadow:0 1px 2px rgba(20,30,50,.06),0 8px 22px rgba(20,30,50,.08);display:flex;align-items:center;gap:14px">'+
       '<div class="rpt-subbar-info" style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
-        '<span style="display:inline-flex;align-items:center;gap:6px;background:'+bpBg+';color:'+bpC+';border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:700;white-space:nowrap;flex-shrink:0"><span style="width:6px;height:6px;border-radius:50%;background:'+bpC+'"></span>'+bpT+'</span>'+
-        '<span style="font-size:12px;color:#5A6473;line-height:1.35">'+bInfo+'</span>'+
+        '<span style="font-size:12.5px;color:#5A6473;line-height:1.35">'+bInfo+'</span>'+
       '</div>'+
       '<div class="rpt-subbar-actions" style="display:flex;align-items:center;gap:10px;flex-shrink:0">'+reviewCta+'</div>'+
     '</div>';

@@ -15,6 +15,18 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-02 · Remove the % score bar + the verdict badge in the submit bar — BUILT + DEPLOYED
+
+- **Discussion:** manager wants the **percentage removed** from the report (the "Face-match score"
+  bar / Match-line on the expanded cards, and the "N% · matches" on the compact rows) and the
+  **verdict badge removed from the bottom submit bar**.
+- **Change:** dropped `similarityBar(r)` from `reportCard` (flagged cards now go photos → "Why this
+  needs a look" cause → action buttons; no score/percentage/match-line); compact-card sub-line is
+  now just the date (per-round status pill still conveys Match/Needs review/etc). Removed the
+  verdict pill from `.rpt-subbar` — it now shows only the info line ("N still need your review" /
+  the resolved breakdown) + the buttons. Extends the earlier "pills, not percentages" call. The
+  post-submit confirmation card still shows the final status pill. Harness green.
+
 ## 2026-09-02 · Submit bar un-floated (docked) — BUILT + DEPLOYED
 
 - **Discussion:** the sticky/floating submit bar was called out as **distracting** (it follows the
