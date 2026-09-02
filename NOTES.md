@@ -22,8 +22,9 @@ carry the dark theme). What changed:
   `setReportView`), then one card per round grouped by type. Matched / Couldn't-compare rounds
   are calm collapsible strips; Needs-review / Not-a-match are full cards. Thumbnails show only
   when a card is collapsed; a collapsed flagged card keeps its verdict in the header chip.
-  Verdict actions sit side by side with semantic icons. The **Submit report** control is a
-  **sticky floating bar** (translucent + blur) pinned to the bottom while you scroll the rounds;
+  Verdict actions sit side by side with semantic icons. The **Submit report** control is a bar
+  **docked at the end of the report** (a normal card after the last round — it was a sticky
+  floating bar, un-floated 2026-09-02 as distracting);
   once a report is submitted it becomes a normal "Report submitted" confirmation card instead.
   The bar **carries the system verdict with the action** — a verdict pill (Verified / Needs review
   / Not verified) plus the full count breakdown sit right beside the button, so the recruiter

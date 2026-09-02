@@ -15,6 +15,16 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-02 · Submit bar un-floated (docked) — BUILT + DEPLOYED
+
+- **Discussion:** the sticky/floating submit bar was called out as **distracting** (it follows the
+  scroll and overlaps the round content, incl. the action buttons at the bottom of the viewport).
+- **Change:** dropped `position:sticky` + the blur/translucent treatment on `.rpt-subbar`; it's now
+  a normal solid card docked at the **end of the report** (after the last round). All its content
+  and the guide-review behaviour (Review flagged / Submit anyway → Submit report, "Not reviewed"
+  pill) are unchanged — only the positioning. Supersedes the earlier "sticky floating bar" decision.
+  Harness green.
+
 ## 2026-09-02 · Worklist redesign — tabs + photos + simplified (manager feedback) — BUILT + DEPLOYED
 
 - **Discussion:** Rohan's manager reviewed the deployed v2 worklist and asked to **simplify** it —
