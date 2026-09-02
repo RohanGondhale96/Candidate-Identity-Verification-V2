@@ -954,7 +954,7 @@ function worklistView(){
   var statusSel='<select onchange="wlSetFilter(this.value)" style="'+fctrl+'">'+statusOpts.map(function(o){ return '<option value="'+o[0]+'"'+(s.filter===o[0]?' selected':'')+'>'+h(o[1])+' ('+scnt(o[0])+')</option>'; }).join('')+'</select>';
   var dopt=function(v,l){ return '<option value="'+v+'"'+(s.dateRange===v?' selected':'')+'>'+l+'</option>'; };
   var sopt=function(v,l){ return '<option value="'+v+'"'+(s.wlSort===v?' selected':'')+'>'+l+'</option>'; };
-  html+='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px">'+statusSel+
+  html+='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px">'+(tab==='active'?statusSel:'')+
     '<select onchange="wlSetDate(this.value)" style="'+fctrl+'">'+dopt('all','All dates')+dopt('today','Today')+dopt('past7','Past 7 days')+dopt('past30','Past 30 days')+dopt('next7','Next 7 days')+'</select>'+
     '<select onchange="wlSetSort(this.value)" style="'+fctrl+'">'+sopt('overdue','Sort: Oldest first')+sopt('newest','Sort: Newest')+sopt('name','Sort: Name A–Z')+'</select>'+
   '</div>';
@@ -983,7 +983,7 @@ function worklistView(){
         html+='<div role="button" tabindex="0" onclick="pick(\''+c.id+'\')" style="display:flex;align-items:center;gap:13px;padding:13px 16px;'+div+'cursor:pointer">'+
           candAvatar(c,42)+
           '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+'</div><div class="wl-sub" style="font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#8A94A4">'+sub+'</div></div>'+
-          '<span style="flex-shrink:0;display:inline-flex;justify-content:flex-end">'+wlPill(st)+'</span>'+kebab+
+          '<span style="flex-shrink:0;display:inline-flex;justify-content:flex-end">'+(tab==='completed'?_pill('Reviewed','#5A6473','#EFF1F5'):wlPill(st))+'</span>'+kebab+
         '</div>';
       }
     });

@@ -15,6 +15,15 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-02 · Completed worklist tab shows "Reviewed" (not the verdict) — BUILT + DEPLOYED
+
+- **Change (manager):** on the **Completed** worklist tab, don't surface Verified / Not verified —
+  every completed row now shows a neutral **"Reviewed"** pill (consistent with dropping the verdict
+  badge from the report). Since there's no verdict distinction to filter on, the **Status dropdown
+  is hidden on the Completed tab** (Dates + Sort remain); the To-verify tab is unchanged (To verify
+  / In review pills + full filters). The underlying status (verified/notverified) is still in the
+  data, just not shown as a badge. Harness green.
+
 ## 2026-09-02 · Verdict-action labels made parallel — BUILT + DEPLOYED
 
 - **Change (manager):** the "same person" action button was titled **"Same person"** / "Faces match
