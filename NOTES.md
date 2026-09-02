@@ -26,10 +26,11 @@ carry the dark theme). What changed:
   **docked at the end of the report** (a normal card after the last round — it was a sticky
   floating bar, un-floated 2026-09-02 as distracting);
   once a report is submitted it becomes a normal "Report submitted" confirmation card instead.
-  The bar **carries the system verdict with the action** — a verdict pill (Verified / Needs review
-  / Not verified) plus the full count breakdown sit right beside the button, so the recruiter
-  always sees *what* they're submitting. The old standalone verdict banner card at the bottom of
-  the rounds was removed — its content lives in the floating bar now.
+  The bar shows the **count breakdown** ("N still need your review" while pending, the resolved
+  tally once done) beside the button. The overall **verdict pill was removed from the bar**
+  (2026-09-02, manager) — per-round status pills still convey Match/Needs review/etc, and the
+  post-submit confirmation card shows the final status. The old standalone verdict banner card was
+  also removed earlier.
   **Guide-review (soft gate):** while any flagged round is unreviewed the bar's primary action is
   **"Review flagged (N)"** (`jumpToFlagged` — smooth-scrolls to the next round still needing a
   verdict) and **"Submit anyway"** is a quiet secondary; once all flagged rounds have a verdict the
@@ -101,8 +102,11 @@ Notes on those:
 ## Per-photo state — pills, not percentages
 
 - Each photo row shows **one badge**, not a number: **Match / Needs review / Not a match /
-  Couldn't compare**. The raw % is kept, but only in the **expanded row** (small, grey), for
-  support, tuning, and disputes. It is never the headline.
+  Couldn't compare**. As of 2026-09-02 the raw **% is not shown anywhere** in the report (the
+  "Face-match score" bar / match-line was removed from the expanded card, and the "N% · matches"
+  from the compact rows, on the manager's call) — the badge carries the state; the recruiter judges
+  from the two photos + the "Why this needs a look" cause. The score still exists in the data
+  (`r.score`) for tuning/disputes, just not surfaced.
 - **Source-aware thresholds** (in `photoBar()` / `reviewFloor()`):
   - Photos (application/interview): Match **≥85**, Needs review **50–84**, Not a match **<50**.
   - Identity documents: Match **≥65**, Needs review **40–64**, Not a match **<40** (older,
