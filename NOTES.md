@@ -47,9 +47,14 @@ carry the dark theme). What changed:
   person, confirmed by review" / "Marked not a match" / "Photo ignored …".
 - **Setup:** the pre-run preview chip reads **"Not matched yet"**; the documents group is
   labelled "scored more leniently (older, lower-quality scans)".
-- **Worklist:** rows use **initials avatars**; coming-up rows keep the calendar glyph. (Candidate
-  photos were tried as the avatar but removed — too heavy for a scan list, and the same person in
-  the attention block vs the list looked inconsistent.) Search hint reworded.
+- **Worklist:** **two tabs** — **To verify** (active: to-verify + in-review, with "Coming up" at the
+  bottom) and **Completed** (verified / not verified / needs review), each with a count
+  (`state.wlTab`, `isCompleted`, `setWlTab`). Rows use the **candidate's photo** as the avatar
+  (`candAvatar`, initials fallback); coming-up rows keep the calendar glyph. Overdue candidates fold
+  into the To-verify tab (sorted to top, red/amber "expected · N days ago") — no separate attention
+  block. Filters (Status / Dates / Sort) are tidied and the **Status dropdown is scoped to the
+  current tab**. Kebab: "Change joining date" + "Not joining" (overdue/upcoming). Mobile row
+  sub-lines wrap (`.wl-sub`). Search hint reworded.
 - **Upload / verification animation — AI-scan motif:** the joining-day photo gets a face-scan
   overlay (corner reticle, faint grid, vignette, sweeping laser line) and the loader is a
   radar-sweep (cyan conic sweep + pulsing core), shown during **both** the quality pre-flight and

@@ -156,6 +156,7 @@
     .rpt-subbar-actions > button{flex:1;justify-content:center}
     .rpt-panes{grid-template-columns:1fr !important}
     .rpt-pane{aspect-ratio:1/1 !important}
+    .wl-sub{white-space:normal !important;overflow:visible !important}
   }
 </style>
 </head>
@@ -218,7 +219,7 @@ var state = {
   confirmReshoot:false, viewingHistory:false, decision:null, decisionErr:'', entry:null, tab:'joining', _refocus:null,
   attest:false, qualityChecking:false, quality:null, rmodal:null, submitModal:null, reportView:'all',
   /* worklist */
-  filter:'all', dateRange:'all', wlSort:'overdue', mineOnly:true, page:1, perPage:10,
+  filter:'all', dateRange:'all', wlSort:'overdue', mineOnly:true, page:1, perPage:10, wlTab:'active',
   dismissed:{}, wlMenu:null, wlConfirmAll:false, dateModal:null, notJoinModal:null
 };
 
@@ -784,6 +785,9 @@ function wlStatus(c){
   if(lc){ var d=lc.hh.decision; if(d && d.action==='submitted') return submittedStatus(d.status); return 'inreview'; }
   return (c.wl && c.wl.status) || 'toverify';
 }
+/* a check counts as "completed" once a report has been submitted (verified / not verified / needs review) */
+function isCompleted(c){ var st=wlStatus(c); return st==='verified'||st==='notverified'||st==='needsreview'; }
+function setWlTab(t){ setState({wlTab:t, filter:'all', page:1, wlMenu:null}); wlSyncUrl(true); }
 function dayDiff(c){ return Math.round((WL_TODAY_MS - Date.parse(c.joiningISO+'T00:00:00Z'))/86400000); } // +past, -future, 0 today
 function isFuture(c){ return dayDiff(c) < 0; }
 function isOverdue(c){ if(isDismissed(c)) return false; var st=wlStatus(c); return dayDiff(c)>0 && (st==='toverify'||st==='inreview'); }
@@ -811,10 +815,9 @@ function wlSortList(l){ var s=state.wlSort;
   });
 }
 function wlList(){
-  var b=wlBase();
-  if(state.filter==='attention') return b.filter(isOverdue).sort(function(a,c){ return dayDiff(c)-dayDiff(a); });
+  var b=wlBase().filter(function(c){ return state.wlTab==='completed' ? isCompleted(c) : !isCompleted(c); });
   var l=b.filter(inDateRange);
-  if(state.filter!=='all') l=l.filter(function(c){ return wlStatus(c)===state.filter; });
+  if(state.filter && state.filter!=='all') l=l.filter(function(c){ return wlStatus(c)===state.filter; });
   return wlSortList(l);
 }
 function fmtDate(iso){
@@ -841,14 +844,16 @@ function wlReason(c){
 }
 /* kebab on a main-list row — offers "Change joining date". Shown on to-verify / not-verified /
    coming-up rows (where a date change is most likely). Menu key is 'l'+id (distinct from attention). */
-function showListKebab(c){ return isFuture(c) || wlStatus(c)==='toverify' || wlStatus(c)==='notverified'; }
+function showListKebab(c){ return isFuture(c) || isOverdue(c) || wlStatus(c)==='toverify' || wlStatus(c)==='notverified'; }
 function listKebab(c){
-  var key='l'+c.id, open=state.wlMenu===key;
+  var key='l'+c.id, open=state.wlMenu===key, notJoin=isFuture(c)||isOverdue(c);
+  var item=function(label,onclick){ return '<button type="button" onclick="event.stopPropagation();'+onclick+'" style="display:block;width:100%;text-align:left;border:0;background:none;padding:9px 12px;font-size:13px;font-family:inherit;cursor:pointer;color:#2A2A2A" onmouseover="this.style.background=\'#F7F8FA\'" onmouseout="this.style.background=\'none\'">'+h(label)+'</button>'; };
   return '<span style="position:relative;flex-shrink:0;width:30px;display:inline-flex;justify-content:center">'+
     '<button type="button" onclick="event.stopPropagation();wlToggleMenu(\''+key+'\')" aria-label="More actions" aria-haspopup="true" style="border:0;background:'+(open?'#EFEFEF':'none')+';color:#9a9a9a;font-size:20px;line-height:1;padding:2px 6px;border-radius:6px;cursor:pointer">&#8942;</button>'+
     (open ?
-      '<div onclick="event.stopPropagation()" style="position:absolute;right:0;top:calc(100% + 4px);z-index:41;background:#fff;border:1px solid #E0E0E0;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.14);min-width:180px;overflow:hidden;text-align:left;padding:4px 0">'+
-        '<button type="button" onclick="event.stopPropagation();openDateModal(\''+c.id+'\')" style="display:block;width:100%;text-align:left;border:0;background:none;padding:9px 12px;font-size:13px;font-family:inherit;cursor:pointer;color:#2A2A2A" onmouseover="this.style.background=\'#F7F8FA\'" onmouseout="this.style.background=\'none\'">Change joining date</button>'+
+      '<div onclick="event.stopPropagation()" style="position:absolute;right:0;top:calc(100% + 4px);z-index:41;background:#fff;border:1px solid #E0E0E0;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.14);min-width:184px;overflow:hidden;text-align:left;padding:4px 0">'+
+        item('Change joining date','openDateModal(\''+c.id+'\')')+
+        (notJoin ? item('Not joining','openNotJoin(\''+c.id+'\')') : '')+
       '</div>'+
       '<div onclick="event.stopPropagation();wlToggleMenu(\''+key+'\')" style="position:fixed;inset:0;z-index:40"></div>'
     : '')+
@@ -934,112 +939,70 @@ function findCandidateCard(ok){
 }
 
 function worklistView(){
-  var s=state;
-  /* controls row — status is a dropdown too (tidier); counts kept inside each option */
-  var statuses=[['all','All'],['attention','Needs attention'],['toverify','To verify'],['inreview','In review'],['verified','Verified'],['needsreview','Needs review'],['notverified','Not verified']];
-  var sctrl='height:32px;border:1px solid #DDD;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 8px;color:#2A2A2A';
-  var statusSel='<select onchange="wlSetFilter(this.value)" style="'+sctrl+';font-weight:'+(s.filter==='attention'?'600':'400')+'">'+
-    statuses.map(function(st){ return '<option value="'+st[0]+'"'+(s.filter===st[0]?' selected':'')+'>'+(st[0]==='attention'?'⚠ ':'')+h(st[1])+' ('+wlCount(st[0])+')</option>'; }).join('')+'</select>';
+  var s=state, base=wlBase();
+  var activeN=base.filter(function(c){ return !isCompleted(c); }).length;
+  var completedN=base.filter(isCompleted).length;
+  var tab=s.wlTab==='completed'?'completed':'active';
+
+  /* two tabs: To verify (active) | Completed */
+  function tabBtn(id,label,n){ var on=tab===id; return '<button type="button" onclick="setWlTab(\''+id+'\')" aria-selected="'+on+'" style="border:0;background:'+(on?'#0076FB':'transparent')+';color:'+(on?'#fff':'#5A6473')+';font-family:inherit;font-size:14px;font-weight:600;padding:8px 18px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:8px">'+h(label)+'<span style="font-size:12px;font-weight:700;padding:1px 8px;border-radius:999px;background:'+(on?'rgba(255,255,255,.22)':'#EFF1F5')+';color:'+(on?'#fff':'#5A6473')+'">'+n+'</span></button>'; }
+  var html='<div style="display:inline-flex;background:#fff;border:1px solid #E5E9F0;border-radius:999px;padding:3px;box-shadow:0 1px 2px rgba(20,30,50,.06);margin-bottom:16px">'+tabBtn('active','To verify',activeN)+tabBtn('completed','Completed',completedN)+'</div>';
+
+  /* tidy filters — status scoped to the current tab */
+  var tabList=base.filter(function(c){ return tab==='completed'?isCompleted(c):!isCompleted(c); }).filter(inDateRange);
+  function scnt(st){ return st==='all'?tabList.length:tabList.filter(function(c){ return wlStatus(c)===st; }).length; }
+  var statusOpts=tab==='completed'?[['all','All'],['verified','Verified'],['notverified','Not verified']]:[['all','All'],['toverify','To verify'],['inreview','In review']];
+  var fctrl='height:34px;border:1px solid #DCE2EB;border-radius:9px;background:#fff;font-family:inherit;font-size:13px;padding:0 10px;color:#2A2A2A;cursor:pointer';
+  var statusSel='<select onchange="wlSetFilter(this.value)" style="'+fctrl+'">'+statusOpts.map(function(o){ return '<option value="'+o[0]+'"'+(s.filter===o[0]?' selected':'')+'>'+h(o[1])+' ('+scnt(o[0])+')</option>'; }).join('')+'</select>';
   var dopt=function(v,l){ return '<option value="'+v+'"'+(s.dateRange===v?' selected':'')+'>'+l+'</option>'; };
   var sopt=function(v,l){ return '<option value="'+v+'"'+(s.wlSort===v?' selected':'')+'>'+l+'</option>'; };
-  var html='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px">'+
-    statusSel+
-    '<select onchange="wlSetDate(this.value)" style="'+sctrl+'">'+
-      dopt('today','Joining date: Today')+dopt('past7','Past 7 days')+dopt('past30','Past 30 days')+dopt('next7','Next 7 days')+dopt('all','All dates')+'</select>'+
-    '<select onchange="wlSetSort(this.value)" style="height:32px;border:1px solid #DDD;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 8px;color:#2A2A2A">'+
-      sopt('overdue','Sort: Oldest overdue first')+sopt('newest','Joining date, newest')+sopt('name','Name A–Z')+'</select>'+
+  html+='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px">'+statusSel+
+    '<select onchange="wlSetDate(this.value)" style="'+fctrl+'">'+dopt('all','All dates')+dopt('today','Today')+dopt('past7','Past 7 days')+dopt('past30','Past 30 days')+dopt('next7','Next 7 days')+'</select>'+
+    '<select onchange="wlSetSort(this.value)" style="'+fctrl+'">'+sopt('overdue','Sort: Oldest first')+sopt('newest','Sort: Newest')+sopt('name','Sort: Name A–Z')+'</select>'+
   '</div>';
 
-  /* attention block — only on the All view (rows already shown when a status/attention chip is picked) */
-  if(s.filter==='all'){
-    var over=wlBase().filter(isOverdue).sort(function(a,c){ return dayDiff(c)-dayDiff(a); });
-    if(over.length){
-      var outside=(s.dateRange!=='all') ? over.filter(function(c){ return !inDateRange(c); }).length : 0;
-      html+='<div class="rh-card" style="padding:0;margin-bottom:16px">'+
-        '<div style="display:flex;align-items:flex-start;gap:10px;padding:12px 16px;background:#fff;border-radius:8px 8px 0 0">'+
-          '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>'+
-          '<div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:600;color:#2A2A2A">Needs your attention ('+over.length+')</div>'+
-            '<div style="font-size:12px;color:#747474;margin-top:1px">Joining date has passed and the check isn\'t finished.'+(outside?(' Includes '+outside+' outside your selected dates.'):'')+'</div></div>'+
-        '</div>';
-      over.forEach(function(c){
-        var st=wlStatus(c), d=dayDiff(c);
-        var sub = st==='awaiting'
-          ? '<span style="color:#8a6414">Checked · decision not made</span>'
-          : '<span style="color:'+(d>7?'#D93025':'#8a6414')+'">Expected '+fmtDate(c.joiningISO)+' · '+d+' day'+(d===1?'':'s')+' ago</span>';
-        html+='<div role="button" tabindex="0" onclick="pick(\''+c.id+'\')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:0.5px solid #E0E0E0;cursor:pointer">'+
-          avatar(c.name,36)+
-          '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+' <span style="font-weight:400;color:#747474;font-size:12px">· '+h(c.rhid+' · '+c.req)+'</span></div>'+
-            '<div style="font-size:12px;margin-top:2px">'+sub+'</div></div>'+
-          wlPill(st)+
-          '<span style="position:relative;flex-shrink:0">'+
-            '<button type="button" onclick="event.stopPropagation();wlToggleMenu(\'a'+c.id+'\')" aria-label="More actions" aria-haspopup="true" style="border:0;background:'+(s.wlMenu===('a'+c.id)?'#EFEFEF':'none')+';color:#9a9a9a;font-size:20px;line-height:1;padding:2px 6px;border-radius:6px;cursor:pointer">&#8942;</button>'+
-            (s.wlMenu===('a'+c.id) ?
-              '<div onclick="event.stopPropagation()" style="position:absolute;right:0;top:calc(100% + 4px);z-index:41;background:#fff;border:1px solid #E0E0E0;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.14);min-width:184px;overflow:hidden;text-align:left;padding:4px 0">'+
-                '<button type="button" onclick="event.stopPropagation();openNotJoin(\''+c.id+'\')" style="display:block;width:100%;text-align:left;border:0;background:none;padding:9px 12px;font-size:13px;font-family:inherit;cursor:pointer;color:#2A2A2A" onmouseover="this.style.background=\'#F7F8FA\'" onmouseout="this.style.background=\'none\'">Not joining</button>'+
-                '<button type="button" onclick="event.stopPropagation();openDateModal(\''+c.id+'\')" style="display:block;width:100%;text-align:left;border:0;background:none;padding:9px 12px;font-size:13px;font-family:inherit;cursor:pointer;color:#2A2A2A" onmouseover="this.style.background=\'#F7F8FA\'" onmouseout="this.style.background=\'none\'">Joining date changed</button>'+
-              '</div>'+
-              '<div onclick="event.stopPropagation();wlToggleMenu(\'a'+c.id+'\')" style="position:fixed;inset:0;z-index:40"></div>'
-            : '')+
-          '</span>'+
-        '</div>';
-      });
-      html+='</div>';
-    }
-  }
-
-  /* main list */
+  /* list */
   var full=wlList(), per=s.perPage, pages=Math.max(1,Math.ceil(full.length/per)), page=Math.min(s.page,pages);
   var slice=full.slice((page-1)*per, page*per);
-  var toverifyN=full.filter(function(c){ return wlStatus(c)==='toverify'; }).length;
-  var inreviewN=full.filter(function(c){ return wlStatus(c)==='inreview'; }).length;
-  var rangeLabel={today:'Joining today',past7:'Past 7 days',past30:'Past 30 days',next7:'Next 7 days',all:'All candidates'}[s.dateRange];
-  var summaryBits=[full.length+' candidate'+(full.length===1?'':'s')];
-  if(toverifyN) summaryBits.push(toverifyN+' to verify'); if(inreviewN) summaryBits.push(inreviewN+' in review');
-  html+='<div class="rh-card" style="padding:0">'+
-    '<div style="padding:14px 16px"><div style="font-size:16px;font-weight:600;color:#2A2A2A">'+h(rangeLabel)+'</div>'+
-      '<div style="font-size:12.5px;color:#747474;margin-top:2px">'+h(summaryBits.join(' · '))+'</div></div>';
+  html+='<div class="rh-card" style="padding:0">';
   if(!slice.length){
-    html+='<div style="padding:18px 16px;font-size:13.5px;color:#747474;border-top:0.5px solid #E0E0E0">Nothing here for this filter.</div>';
+    html+='<div style="padding:26px 16px;font-size:13.5px;color:#747474;text-align:center">Nothing here.</div>';
   } else {
-    var shownFuture=false;
+    var shownFuture=false, firstRow=true;
     slice.forEach(function(c){
-      if(isFuture(c) && !shownFuture){ shownFuture=true; html+='<div style="padding:9px 16px;background:#F7F8FA;border-top:0.5px solid #E0E0E0;font-size:12px;font-weight:600;color:#747474">Coming up</div>'; }
-      var fut=isFuture(c), st=wlStatus(c);
-      var sub=h(c.rhid+' · '+c.req);
-      var kebab = showListKebab(c) ? listKebab(c) : '<span style="width:30px;flex-shrink:0"></span>';
+      if(tab==='active' && isFuture(c) && !shownFuture){ shownFuture=true; firstRow=true; html+='<div style="padding:11px 16px 7px;background:#F6F8FB;border-top:1px solid #EEF1F5;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8A94A4">Coming up</div>'; }
+      var fut=isFuture(c), st=wlStatus(c), overdue=isOverdue(c), d=dayDiff(c);
+      var div=firstRow?'':'border-top:1px solid #EEF1F5;'; firstRow=false;
+      var kebab=showListKebab(c)?listKebab(c):'<span style="width:30px;flex-shrink:0"></span>';
       if(fut){
-        html+='<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:0.5px solid #E0E0E0">'+
-          '<span class="rh-avatar" style="width:36px;height:36px;background:transparent;border:0.5px dashed #C6C6C6;color:#9a9a9a"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>'+
-          '<div style="flex:1;min-width:0;opacity:0.62"><div style="font-size:14px;font-weight:500">'+h(c.name)+'</div><div style="font-size:12.5px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+sub+'</div></div>'+
-          '<span style="width:112px;flex-shrink:0;display:inline-flex;justify-content:flex-end;font-size:12px;color:#9a9a9a">Joining '+fmtDate(c.joiningISO)+'</span>'+
-          kebab+
+        html+='<div style="display:flex;align-items:center;gap:13px;padding:13px 16px;'+div+'">'+
+          '<span class="rh-avatar" style="width:42px;height:42px;background:transparent;border:1px dashed #C6C6C6;color:#9a9a9a"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>'+
+          '<div style="flex:1;min-width:0;opacity:0.72"><div style="font-size:15px;font-weight:600">'+h(c.name)+'</div><div class="wl-sub" style="font-size:12.5px;color:#8A94A4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.rhid+' · '+c.req)+'</div></div>'+
+          '<span style="flex-shrink:0;font-size:12.5px;color:#8A94A4;white-space:nowrap">Joining '+fmtDate(c.joiningISO)+'</span>'+kebab+
         '</div>';
       } else {
-        html+='<div role="button" tabindex="0" onclick="pick(\''+c.id+'\')" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:0.5px solid #E0E0E0;cursor:pointer">'+
-          avatar(c.name,36)+
-          '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+'</div><div style="font-size:12.5px;color:#747474;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+sub+'</div></div>'+
-          '<span style="width:112px;flex-shrink:0;display:inline-flex;justify-content:flex-end">'+wlPill(st)+'</span>'+
-          kebab+
+        var sub=overdue?('<span style="color:'+(d>7?'#D93025':'#8a6414')+';font-weight:500">Expected '+fmtDate(c.joiningISO)+' · '+d+' day'+(d===1?'':'s')+' ago</span>'):h(c.rhid+' · '+c.req);
+        html+='<div role="button" tabindex="0" onclick="pick(\''+c.id+'\')" style="display:flex;align-items:center;gap:13px;padding:13px 16px;'+div+'cursor:pointer">'+
+          candAvatar(c,42)+
+          '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+'</div><div class="wl-sub" style="font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#8A94A4">'+sub+'</div></div>'+
+          '<span style="flex-shrink:0;display:inline-flex;justify-content:flex-end">'+wlPill(st)+'</span>'+kebab+
         '</div>';
       }
     });
-    /* pagination footer */
     var lo=(page-1)*per+1, hi=Math.min(page*per, full.length);
-    html+='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-top:0.5px solid #E0E0E0">'+
-      '<span style="font-size:12px;color:#747474">Showing '+lo+'–'+hi+' of '+full.length+'</span>'+
+    html+='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid #EEF1F5">'+
+      '<span style="font-size:12px;color:#8A94A4">Showing '+lo+'–'+hi+' of '+full.length+'</span>'+
       '<div style="margin-left:auto;display:flex;align-items:center;gap:6px">';
-    var pbtn=function(label,to,on,dis){ return '<button type="button" '+(dis?'disabled':'onclick="wlSetPage('+to+')"')+' style="height:28px;min-width:28px;border:1px solid '+(on?'#2A2A2A':'#DDD')+';border-radius:8px;background:#fff;font-family:inherit;font-size:13px;color:'+(dis?'#C6C6C6':'#2A2A2A')+';cursor:'+(dis?'default':'pointer')+';padding:0 8px">'+label+'</button>'; };
+    var pbtn=function(label,to,on,dis){ return '<button type="button" '+(dis?'disabled':'onclick="wlSetPage('+to+')"')+' style="height:28px;min-width:28px;border:1px solid '+(on?'#0076FB':'#DCE2EB')+';border-radius:8px;background:#fff;font-family:inherit;font-size:13px;color:'+(dis?'#C6C6C6':(on?'#0076FB':'#2A2A2A'))+';font-weight:'+(on?'700':'400')+';cursor:'+(dis?'default':'pointer')+';padding:0 8px">'+label+'</button>'; };
     html+=pbtn('‹ Prev', page-1, false, page<=1);
     for(var pi=1; pi<=pages; pi++){ html+=pbtn(String(pi), pi, pi===page, false); }
     html+=pbtn('Next ›', page+1, false, page>=pages);
-    html+='<select onchange="wlSetPer(this.value)" style="height:28px;border:1px solid #DDD;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 6px;color:#2A2A2A">'+
-      [10,25,50].map(function(n){ return '<option value="'+n+'"'+(per===n?' selected':'')+'>'+n+' / page</option>'; }).join('')+'</select>';
+    html+='<select onchange="wlSetPer(this.value)" style="height:28px;border:1px solid #DCE2EB;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 6px;color:#2A2A2A">'+[10,25,50].map(function(n){ return '<option value="'+n+'"'+(per===n?' selected':'')+'>'+n+' / page</option>'; }).join('')+'</select>';
     html+='</div></div>';
   }
   html+='</div>';
   return html;
 }
-
 function render(){
   var s = state, c = s.cand;
   var hits = searchHits(), ok = hits.ok;

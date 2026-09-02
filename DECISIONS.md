@@ -15,6 +15,24 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-02 · Worklist redesign — tabs + photos + simplified (manager feedback) — BUILT + DEPLOYED
+
+- **Discussion:** Rohan's manager reviewed the deployed v2 worklist and asked to **simplify** it —
+  bring back a **tabs** split (completed candidates in their own tab, the rest in one), add
+  **candidate photo thumbnails**, and **tidy the filters**. (The photos reverse Rohan's earlier
+  removal — this time the manager wants them; Rohan confirmed.)
+- **Decision & change:** `worklistView` rewritten to a **two-tab** layout (`state.wlTab`,
+  `setWlTab`, `isCompleted`): **To verify** (active — to-verify + in-review, with **Coming up** at
+  the bottom) and **Completed** (verified / not verified / needs review), each with a count. The
+  separate **"Needs your attention" block was removed** — overdue candidates now fold into the
+  To-verify tab, sorted to the top with their red/amber "expected · N days ago" (folded per Rohan's
+  call, removes the duplicate rows). **Candidate photos back** as row avatars (`candAvatar`). Filters
+  kept but **tidied** and the Status dropdown is now **scoped to the current tab** (To verify: All /
+  To verify / In review · Completed: All / Verified / Not verified); dropped the redundant summary
+  sub-line. Kebab gained **"Not joining"** on overdue/upcoming rows. Mobile: row sub-line **wraps**
+  (`.wl-sub`) so the overdue urgency isn't truncated. `wlList` is now tab-aware; the render harness
+  was updated (tab-count + tab-scoped-filter assertions) and stays green.
+
 ## 2026-09-02 · Submit bar: "Not reviewed" status + simplified — BUILT + DEPLOYED
 
 - **Discussion:** while flagged rounds are still open the bar showed the final verdict pill ("Not
