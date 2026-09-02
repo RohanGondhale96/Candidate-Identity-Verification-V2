@@ -29,6 +29,15 @@ carry the dark theme). What changed:
   / Not verified) plus the full count breakdown sit right beside the button, so the recruiter
   always sees *what* they're submitting. The old standalone verdict banner card at the bottom of
   the rounds was removed — its content lives in the floating bar now.
+  **Guide-review (soft gate):** while any flagged round is unreviewed the bar's primary action is
+  **"Review flagged (N)"** (`jumpToFlagged` — smooth-scrolls to the next round still needing a
+  verdict) and **"Submit anyway"** is a quiet secondary; once all flagged rounds have a verdict the
+  bar flips to a single confident **"Submit report"**. Submission is NOT hard-blocked — "Submit
+  anyway" still works, and the submit dialog then requires the "I've reviewed all the comparisons"
+  checkbox + a note for unreviewed rounds (soft-mandatory, recruiter judgment + audit trail).
+- **No repeated caption:** the reference photo's overlay no longer repeats the round label/date
+  (those live in the card header); it shows only what the header doesn't — "Interviewed by {name}"
+  (or "Identity document" / "On-file photo") + how old the photo is ("74 days earlier").
 - **Copy:** "Face-match score" (was "Model similarity"); "Match line · 85/65%" (was "Photos/
   Documents match at N%"); "Why this needs a look:" / "Why this may not match:" (was "Likely
   cause…"); the action prompt is "Is this the same person?"; recorded verdicts read "Same

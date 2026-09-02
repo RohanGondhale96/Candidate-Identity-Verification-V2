@@ -15,6 +15,25 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-02 · De-dupe photo caption + guide-review submit bar — BUILT + DEPLOYED
+
+- **Repeated info:** the flagged-round card showed the round label + date in the header **and**
+  again overlaid on the reference photo. Fixed: the photo caption now carries only what the header
+  doesn't — "Interviewed by {name}" (or "Identity document" / "On-file photo") + the relative age
+  ("74 days earlier"). No repeated label/date.
+- **"Floating Submit feels like the form ends there":** a persistent Submit CTA read as "you're
+  done, just submit", inviting submission before reviewing the flagged rounds. Rohan picked
+  **"guide review, then submit"** (over a hard block or un-floating it). Built: while any flagged
+  round is unreviewed the bar's primary is **"Review flagged (N)"** (`jumpToFlagged` → smooth-scroll
+  to the next unresolved round, cards now carry `id="rpt-round-i"`) with **"Submit anyway"** as a
+  quiet secondary; once all are resolved the bar flips to a single primary **"Submit report"** and
+  the verdict pill updates. **Kept soft, not hard-blocked** (Rohan's call): "Submit anyway" still
+  works and the submit dialog then requires the review-confirmation checkbox + a note for unreviewed
+  rounds — recruiter judgment + audit trail, matching the earlier soft-mandatory decision. Stacks
+  on mobile (`.rpt-subbar-actions`). Harness green; rebuilt + pushed.
+
+---
+
 ## 2026-08-31 · Mobile audit + fixes — BUILT + DEPLOYED
 
 - **Discussion:** Rohan asked to check the v2 flow at phone width and make sure spacing/layout hold.
