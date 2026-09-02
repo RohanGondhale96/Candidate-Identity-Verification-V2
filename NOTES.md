@@ -32,7 +32,10 @@ carry the dark theme). What changed:
   **Guide-review (soft gate):** while any flagged round is unreviewed the bar's primary action is
   **"Review flagged (N)"** (`jumpToFlagged` — smooth-scrolls to the next round still needing a
   verdict) and **"Submit anyway"** is a quiet secondary; once all flagged rounds have a verdict the
-  bar flips to a single confident **"Submit report"**. Submission is NOT hard-blocked — "Submit
+  bar flips to a single confident **"Submit report"**. While anything is pending the verdict pill
+  reads **"Not reviewed"** (amber) with a short "N still need your review" line — the real verdict
+  (Verified / Needs review / Not verified) and the full breakdown only appear once every flagged
+  round has a verdict. Submission is NOT hard-blocked — "Submit
   anyway" still works, and the submit dialog then requires the "I've reviewed all the comparisons"
   checkbox + a note for unreviewed rounds (soft-mandatory, recruiter judgment + audit trail).
 - **No repeated caption:** the reference photo's overlay no longer repeats the round label/date

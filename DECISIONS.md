@@ -15,6 +15,17 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-02 · Submit bar: "Not reviewed" status + simplified — BUILT + DEPLOYED
+
+- **Discussion:** while flagged rounds are still open the bar showed the final verdict pill ("Not
+  verified") and the full 4-part breakdown — Rohan noted (a) it should read **"Not reviewed"** (it's
+  pending, not a final verdict) and (b) it's too busy.
+- **Change:** while `unresolved>0` the pill now reads **"Not reviewed"** (amber) and the info line is
+  a short "N comparisons still need your review" (not the full breakdown). Once every flagged round
+  has a verdict, the pill shows the real final verdict (Verified / Needs review / Not verified) and
+  the full summary breakdown returns, with a single "Submit report". Purely a submit-bar display
+  change; `reportSummary` and the submit flow are unchanged. Harness green; rebuilt + pushed.
+
 ## 2026-09-02 · De-dupe photo caption + guide-review submit bar — BUILT + DEPLOYED
 
 - **Repeated info:** the flagged-round card showed the round label + date in the header **and**
