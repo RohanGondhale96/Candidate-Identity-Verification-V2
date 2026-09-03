@@ -284,8 +284,10 @@ Nothing here persists to a server — it lives in the browser session and resets
   Notable wording: the search intro ("Compare the person who showed up today…"), the empty /
   no-round notes say what to do ("Ask your RippleHire admin to add one"), the decision hint
   ("Suggested: Confirm / Can't confirm", "Your call"), and the report footer.
-- The **consent line** was left precise on purpose ("I have the candidate's consent to take
-  and submit this photo for identity verification") — consent copy favours clarity over brevity.
+- The **consent + attestation lines** are kept precise on purpose — consent copy favours clarity
+  over brevity. Current wording (reworded 2026-09-03): "Consent has been obtained from the candidate
+  to use this photo for identity verification." and "This photo was taken on the joining date, of the
+  person who reported to join."
 - **Editing copy — watch the quotes.** Most strings are built as single-quoted JavaScript, so
   any apostrophe inside copy must be escaped: write `candidate\'s`, not `candidate's`. An
   unescaped apostrophe breaks the whole script (blank page). After changing copy, sanity-check
