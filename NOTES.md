@@ -83,6 +83,24 @@ Submit below, `.rpt-subbar`); the **two compare photos** stack full-width at a 1
 scrutiny (`.rpt-panes` / `.rpt-pane`). Candidate cards render "—" for missing Email/Phone. Worklist
 role text truncates with "…" in tight rows (accepted).
 
+## Accessibility (WCAG 2.1 AA — partial, 2026-09-03)
+
+A focused a11y pass has been done; **not fully AA yet** — known gaps listed at the end.
+- **Keyboard:** clickable `role="button"` divs (candidate rows) are activated by Enter/Space via a
+  global `keydown` listener in `init()`. Native buttons/selects/inputs work as usual.
+- **Focus:** global `:focus-visible` outline (2px `#0076FB`) on all interactive elements.
+- **Contrast (text):** muted greys are AA-passing — `#667085` (was `#8A94A4`, now 4.97:1) and
+  `#6E6E6E` (was `#9a9a9a`, 5.10:1). Status uses dot **+** label (not colour alone).
+- **Motion:** `prefers-reduced-motion` disables all CSS animation/transition and makes the
+  completion-scroll jump instead of animate.
+- **ARIA:** the segmented controls (worklist tabs, report All/Needs-review) use the toggle-button
+  pattern — `aria-pressed` + a `role="group"` label. Icon-only buttons have `aria-label`;
+  `<html lang="en">` is set.
+- **KNOWN GAPS (not yet addressed):** brand blue `#0076FB` white-on-blue button + blue-as-text are
+  ~4.21:1 (kept per brand decision); non-text/border contrast (1.4.11) — some `#C6C6C6`/`#A5A5A5`
+  borders < 3:1; no full ARIA tab pattern (arrow-key nav); most section titles are styled `<div>`s
+  rather than real headings.
+
 ## Hidden behind feature flags (in `index.html`)
 
 These are built and working but intentionally hidden for now. To bring one back, flip its

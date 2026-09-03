@@ -15,6 +15,26 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-03 · Accessibility pass toward WCAG 2.1 AA — BUILT + DEPLOYED
+
+- **Discussion:** Rohan asked whether the build is AA-compliant. Audit said no. Ran a focused pass;
+  **brand blue `#0076FB` kept as-is for now** (its white-on-blue button = 4.21:1 and blue-as-text =
+  4.21:1 stay just under 4.5 — a brand/DS decision, deferred).
+- **Fixed:** (1) **keyboard** (2.1.1) — a global `keydown` listener makes every `role="button"` div
+  (candidate rows, pick lists) activatable with Enter/Space (they had onclick but no key handler).
+  (2) **text contrast** (1.4.3) — the two failing greys darkened: muted `#8A94A4`→`#667085`
+  (4.97:1) and `#9a9a9a`→`#6E6E6E` (5.10:1), both pass on white and the light card/field grounds;
+  same hues, minimal visual change. (3) **reduced motion** (2.3.3) — blanket
+  `prefers-reduced-motion` rule kills all CSS animations/transitions, and the rAF completion-scroll
+  jumps instead of animating. (4) **focus visible** (2.4.7) — global `:focus-visible` outline on all
+  interactive elements incl. the custom `role=button` rows. (5) **ARIA** (4.1.2) — the segmented
+  controls were `aria-selected` on plain buttons (invalid); switched to the toggle-button pattern
+  (`aria-pressed`) + `role="group"` + aria-label.
+- **Still open (noted, not done):** brand-blue contrast (kept per Rohan); non-text/border contrast
+  (1.4.11) — some borders `#C6C6C6`/`#A5A5A5` are < 3:1 (deferred to avoid changing the just-approved
+  visual weight without DS sign-off); full ARIA tab pattern w/ arrow-key nav (toggle-button pattern
+  used instead, which is valid); styled-div "headings" could become real `<h#>`. Harness green.
+
 ## 2026-09-02 · Completed worklist tab shows "Reviewed" (not the verdict) — BUILT + DEPLOYED
 
 - **Change (manager):** on the **Completed** worklist tab, don't surface Verified / Not verified —
