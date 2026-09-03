@@ -60,10 +60,21 @@ carry the dark theme). What changed:
 - **Upload / verification animation — AI-scan motif:** the joining-day photo gets a face-scan
   overlay (corner reticle, faint grid, vignette, sweeping laser line) and the loader is a
   radar-sweep (cyan conic sweep + pulsing core), shown during **both** the quality pre-flight and
-  Run verification (row thumbnails get a matching cyan scan-sweep). The upload heading is
-  state-aware — "Checking your photo…" while the quality check runs, "Running verification…"
-  during the run, "Ready to compare" when idle — so it never contradicts the status line below.
-  `prefers-reduced-motion` disables the sweeping motion.
+  Run verification (row thumbnails get a matching cyan scan-sweep). The card heading is a stable
+  **"Upload joining day photo"**; the transient status ("Checking your photo…" / "Running
+  verification…", each with the radar) lives in the **right column beside the photo**, not in the
+  heading — so no heading ever contradicts the status line. `prefers-reduced-motion` disables the
+  sweeping motion.
+- **Upload/setup card layout (redesigned 2026-09-03, manager):** header row is heading + hint on the
+  left with **"Use a different photo"** docked **top-right, in line with the heading** (shown only
+  once a photo is loaded and not mid-run). Once a photo is chosen the body is a **two-column row** —
+  the 150×186 photo on the left, the **two consent/attestation checkboxes on the right** — with a
+  full-width **Run verification** below. Removed: the "Ready to compare" sub-heading, the "Every
+  photo on file is compared separately. Scores are never averaged." line, and the green "Photo looks
+  good to compare." confirmation (a good photo now just shows the checkboxes directly). The
+  **poor-quality amber warning is kept**, sitting above the checkboxes in the right column. On mobile
+  the row wraps (checkboxes drop below the photo). During the quality pre-flight or a run the right
+  column shows the radar status instead of the checkboxes and the Run button is hidden.
 - **Scroll-on-complete:** when the verification run finishes, the page eases (a
   `requestAnimationFrame` tween, `smoothScrollToEl`) up to the top of the report (`#rpt-top`,
   the "Photo taken today" card) after a ~240ms beat, so it doesn't snap you mid-report onto a

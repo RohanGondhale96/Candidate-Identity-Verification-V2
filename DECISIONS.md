@@ -15,6 +15,27 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-03 · Upload/setup card redesign — BUILT + DEPLOYED
+
+- **Discussion (manager, via Rohan):** the upload/setup card felt cluttered and slightly
+  contradictory. Asks: (1) move **"Use a different photo"** to the **top-right corner, in line with
+  the "Upload joining day photo" heading**; (2) **remove** the "Ready to compare" sub-heading and the
+  "Every photo on file is compared separately. Scores are never averaged." line; (3) **don't** show a
+  green "Photo looks good to compare." confirmation — if the photo is good, show the checkboxes
+  directly; (4) move the **consent checkboxes to the right of the photo** (into the space the
+  "Ready to compare" block used to occupy); (5) **keep the poor-quality warning**.
+- **Process:** built a wireframe first (`show_widget`), Rohan approved ("Yes build it, keep the
+  poor-quality warning").
+- **Decision / Change:** header is now a flex row — heading + hint left, "Use a different photo"
+  docked top-right (only when a photo is loaded and not mid-run). Uploaded state is a two-column
+  flex row: 150×186 photo left, the two consent/attestation checkboxes right, full-width Run
+  verification below. Removed the two text blocks and the green confirmation. The poor-quality amber
+  warning is retained, above the checkboxes. Mobile wraps the row (checkboxes below the photo).
+  The heading is no longer state-aware ("Ready to compare"/"Running verification…" removed from it);
+  the transient radar status ("Checking your photo…" / "Running verification…") now lives in the
+  right column and the Run button hides during the pre-flight/run. Verified all three states
+  (good / poor-quality / checking) + mobile stacking in-browser. Harness green.
+
 ## 2026-09-03 · Worklist overdue row: consistent RHID · Job · overdue-tag — BUILT + DEPLOYED
 
 - **Change (manager):** overdue To-verify rows showed "Expected Mon 3 Aug · N days ago" (dropping
