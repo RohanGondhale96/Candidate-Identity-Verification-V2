@@ -15,6 +15,26 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-03 · "Ignore" verdict → "Can't confirm / Set aside" — BUILT + DEPLOYED
+
+- **Discussion (manager, via Rohan):** the flagged-photo verdict button read **"Ignore this photo /
+  Reference can't be used"** — too narrow. It needs to also serve the common case where the recruiter
+  **can't call it match or no-match, doesn't want to discard the evidence, and wants to keep it out
+  of the score** — not because the reference is unusable, but because they simply can't confirm.
+- **Decision point (asked Rohan):** should this "can't confirm" outcome **(A)** set the photo aside
+  from the score (today's `excluded` behavior, recruiter can still submit) or **(B)** hold the whole
+  verdict open at "Needs review / Can't confirm" until resolved (a distinct outcome needing its own
+  4th button)? **Rohan chose (A) — set aside from the score.** So we keep the existing `excluded`
+  semantics and just broaden one button; no new logic path, still 3 actions.
+- **Change:** button relabelled **"Can't confirm" / "Set aside — leave out of the score"** (both
+  action-card variants). Downstream copy followed: badge **"Ignored" → "Set aside"**; banner extra
+  **"N ignored" → "N set aside"**; recorded-row lead **"Photo ignored" → "Set aside — couldn't
+  confirm"**; reason-popup title **"Why ignore this photo?" → "Why set this photo aside?"**; and the
+  reason list now leads with **"Can't tell — too close to call"** (the can't-confirm reason) ahead of
+  the unusable-reference reasons. The underlying `codeOutcome`/`reportSummary` math is unchanged —
+  `ignore` still maps to `excluded` and drops out of the denominator. Harness assertions updated
+  (`set aside` strings). Verified button + recorded state + summary math + reason popup in-browser.
+
 ## 2026-09-03 · Upload/setup card redesign — BUILT + DEPLOYED
 
 - **Discussion (manager, via Rohan):** the upload/setup card felt cluttered and slightly

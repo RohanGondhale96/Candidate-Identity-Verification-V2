@@ -46,7 +46,7 @@ carry the dark theme). What changed:
 - **Copy:** "Face-match score" (was "Model similarity"); "Match line · 85/65%" (was "Photos/
   Documents match at N%"); "Why this needs a look:" / "Why this may not match:" (was "Likely
   cause…"); the action prompt is "Is this the same person?"; recorded verdicts read "Same
-  person, confirmed by review" / "Marked not a match" / "Photo ignored …".
+  person, confirmed by review" / "Marked not a match" / "Set aside — couldn't confirm …".
 - **Setup:** the pre-run preview chip reads **"Not matched yet"**; the documents group is
   labelled "scored more leniently (older, lower-quality scans)".
 - **Worklist:** **two tabs** — **To verify** (active: to-verify + in-review, with "Coming up" at the
@@ -181,7 +181,7 @@ never flips to a clean "Match" off human vouching.
 - **Flagged rows are open by default.** Unresolved **Needs review** / **Not a match** rows expand
   automatically (the accordion allows multiple open at once, `effectiveOpen()` / `openRows`), so the
   work needing the recruiter's judgment is front and centre. **Match** and **Couldn't-compare** rows
-  stay collapsed. Recording a verdict (Same person / Not a match / Ignore) **leaves the row open**
+  stay collapsed. Recording a verdict (Match / Not a match / Can't confirm) **leaves the row open**
   (showing the recorded action + audit) — no abrupt auto-collapse; the recruiter collapses it by
   clicking the row. (Changed 2026-08-28 — auto-collapse-on-resolve felt jarring.)
 
@@ -198,21 +198,29 @@ Each expanded row (`reasonCodes()` + the expanded panel in `render()`) shows:
   field), falling back to the short `aiReason()`; the live version comes from the model.
 - **"Interviewed by &lt;name&gt;"** as context (an "Ask … to confirm" button was prototyped here
   and removed).
-- **Three action cards** under "WHAT DID YOU FIND?": **Same person** / **Not a match** / **Ignore
-  this photo** (a no-match row drops the redundant "Not a match" card). No "reason required" label.
-- **Same person** applies immediately (toggle). **Not a match** and **Ignore** open a **reason
-  popup** (`openReasonModal` → `confirmReason`): pick a reason (Not-a-match: *Clearly a different
-  person / Facial features don't match / Other*; Ignore: the six `IGNORE_REASONS` **plus Other**) +
-  a note, Confirm needs a reason, Cancel leaves the row unresolved. **Picking "Other" makes the
-  note mandatory** — Confirm is blocked with an inline error until it's filled (otherwise the note
-  is optional).
-- **"Ignore this photo" = exclude that whole comparison from the verdict.** Ignoring the Round 2
-  photo drops Round 2 out of the calculation; the identity confirmation is computed over the
-  remaining rounds only. The row stays visible with an **"Ignored"** badge + reason (audit), the
-  banner notes "N ignored", and the denominator drops (5 of 7 → 5 of 6). If every row is ignored →
+- **Three action cards** under "IS THIS THE SAME PERSON?": **Match** (Same person) / **Not a match**
+  (Different person) / **Can't confirm** (Set aside — leave out of the score). A no-match row drops
+  the redundant "Not a match" card. No "reason required" label.
+- **Can't confirm** is deliberately dual-purpose (settled 2026-09-03, manager): it covers **both**
+  "the recruiter genuinely can't call it match or no-match and wants to keep it out of the score"
+  **and** "the reference photo itself is unusable". Either way the photo is **set aside** — the same
+  `excluded` outcome as the old Ignore. It is NOT a "hold the verdict open" state (that option was
+  considered and rejected — see DECISIONS): the recruiter can still submit, and the report is
+  computed over the remaining photos.
+- **Match** applies immediately (toggle). **Not a match** and **Can't confirm** open a **reason
+  popup** (`openReasonModal` → `confirmReason`, titled *"Why set this photo aside?"* for Can't
+  confirm): pick a reason (Not-a-match: *Clearly a different person / Facial features don't match /
+  Other*; Can't confirm: the `IGNORE_REASONS` list — now led by ***Can't tell — too close to call***,
+  then the unusable-reference reasons — **plus Other**) + a note. Confirm needs a reason, Cancel
+  leaves the row unresolved. **Picking "Other" makes the note mandatory** — Confirm is blocked with
+  an inline error until it's filled (otherwise the note is optional).
+- **"Can't confirm" = set that whole comparison aside from the verdict.** Setting the Round 2 photo
+  aside drops Round 2 out of the calculation; the identity confirmation is computed over the
+  remaining rounds only. The row stays visible with a **"Set aside"** badge + reason (audit), the
+  banner notes "N set aside", and the denominator drops (5 of 7 → 5 of 6). If every row is set aside →
   "Couldn't run the check".
 - Actions are **non-binding on the verdict**; they change the row to a single combined badge
-  (*Reviewed · same person* green / *Reviewed · different person* red / *Ignored* grey).
+  (*Reviewed · same person* green / *Reviewed · different person* red / *Set aside* grey).
 - Once reviewed, the three action cards collapse into a **clean one-line record** (changed
   2026-08-28) — a coloured dot + *"Same person, confirmed by review · time"* (or *"Not a match,
   &lt;reason&gt; · time"* / *"Ignored · &lt;reason&gt; · time"*, note beneath) + a **Change** link
