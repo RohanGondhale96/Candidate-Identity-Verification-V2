@@ -985,7 +985,7 @@ function worklistView(){
           '<span style="flex-shrink:0;font-size:12.5px;color:#667085;white-space:nowrap">Joining '+fmtDate(c.joiningISO)+'</span>'+kebab+
         '</div>';
       } else {
-        var sub=overdue?('<span style="color:'+(d>7?'#D93025':'#8a6414')+';font-weight:500">Expected '+fmtDate(c.joiningISO)+' · '+d+' day'+(d===1?'':'s')+' ago</span>'):h(c.rhid+' · '+c.req);
+        var sub=h(c.rhid+' · '+c.req)+(overdue?(' · <span style="color:'+(d>7?'#D93025':'#8a6414')+';font-weight:600">'+d+' day'+(d===1?'':'s')+' ago, '+fmtDate(c.joiningISO).replace(/^\S+ /,'')+'</span>'):'');
         html+='<div role="button" tabindex="0" onclick="pick(\''+c.id+'\')" style="display:flex;align-items:center;gap:13px;padding:13px 16px;'+div+'cursor:pointer">'+
           candAvatar(c,42)+
           '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+'</div><div class="wl-sub" style="font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#667085">'+sub+'</div></div>'+

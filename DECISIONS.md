@@ -15,6 +15,14 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-03 · Worklist overdue row: consistent RHID · Job · overdue-tag — BUILT + DEPLOYED
+
+- **Change (manager):** overdue To-verify rows showed "Expected Mon 3 Aug · N days ago" (dropping
+  the RHID · Job that non-overdue rows show) — inconsistent. Now **every** active row shows
+  **RHID · Job**, and overdue ones append a colour-coded tag: **"N days ago, 3 Aug"** (short date,
+  no weekday/"Expected"). Colour by lateness (unchanged thresholds): red `#D93025` when > 7 days
+  overdue, amber `#8a6414` otherwise. Wraps on mobile via `.wl-sub`. Harness green.
+
 ## 2026-09-03 · Accessibility pass toward WCAG 2.1 AA — BUILT + DEPLOYED
 
 - **Discussion:** Rohan asked whether the build is AA-compliant. Audit said no. Ran a focused pass;
