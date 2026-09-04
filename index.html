@@ -740,7 +740,8 @@ function reportCard(i, r, c){
   '</div>';
   var body='';
   if(isCant){ body='<div style="padding:0 16px 16px">'+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
-  else if(open){ body='<div style="padding:0 16px 16px">'+comparePanes(r,seed)+(flagged?reasonCodes(i,r):reasonNote('match','Why this is a match:', matchReason(r)))+'</div>'; }
+  else if(flagged){ if(open){ body='<div style="padding:0 16px 16px">'+comparePanes(r,seed)+reasonCodes(i,r)+'</div>'; } }
+  else { body='<div style="padding:0 16px 16px">'+(open?comparePanes(r,seed):'')+reasonNote('match','Why this is a match:', matchReason(r))+'</div>'; }
   return '<article id="rpt-round-'+i+'" style="'+V2CARD+';scroll-margin-top:12px'+(flagged?';border-color:#D9DFE8':'')+'">'+head+body+'</article>';
 }
 function reportFeed(s, c){

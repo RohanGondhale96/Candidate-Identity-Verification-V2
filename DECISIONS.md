@@ -27,12 +27,13 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
   an **always-visible neutral "Why we couldn't compare:"** note (the row isn't expandable — there's
   nothing to compare — so the reason is shown directly), and its date sub-line was cleaned up (the
   reason moved out of it). Live wording will come from the model, same as the flagged-row `causeText`.
-- **Why match-reason is on-expand but cant-reason is always-on:** matches are the common/expected
-  case and there can be many — showing every reason inline would bloat the feed, so it follows the
-  existing expand-for-detail pattern (the badge already says "Match" at a glance). Couldn't-compare is
-  rare and has no other detail, so its reason is shown outright.
+- **Follow-up same day — match-reason made always-on too:** it first shipped on-expand-only (rationale
+  was: matches are common and many, so keep the feed short and follow the expand-for-detail pattern).
+  Rohan/manager asked for the match reason to **show without expanding**, like the cant note. Done —
+  the "Why this is a match" note now renders even on a collapsed match row; the two photos still show
+  only on expand. So both match and couldn't-compare reasons are now always visible.
 - Verified both notes' text + computed colours in-browser (match `#E7F4EC`/`#1a6b34`, cant
-  `#F1F2F4`/`#5A6473`). Harness green.
+  `#F1F2F4`/`#5A6473`), collapsed and expanded. Harness green.
 
 ## 2026-09-03 · "Ignore" verdict → "Can't confirm / Set aside" — BUILT + DEPLOYED
 
