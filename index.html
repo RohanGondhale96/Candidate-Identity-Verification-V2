@@ -1123,7 +1123,7 @@ function render(){
         var errBlock = failed
           ? '<div style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:#FDECEC;border:1px solid #F1B0B0;border-radius:8px;font-size:13px;color:#B42318;line-height:1.5">'+
               '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#D93025" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>'+
-              '<span style="flex:1">This photo isn’t clear enough to run the check. '+h(s.quality.message||qualityFallback(s.quality.reason))+' Please upload a different photo.</span></div>'
+              '<span style="flex:1">The photo isn’t clear enough to run the checks. Please upload a new photo.</span></div>'
           : '';
         var checks = '<div style="display:flex;flex-direction:column">'+
           '<label class="rh-cb"><input type="checkbox" '+(s.consent?'checked':'')+' onchange="toggleConsent()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>I have obtained consent from the candidate to use this photo for identity verification.</span></label>'+

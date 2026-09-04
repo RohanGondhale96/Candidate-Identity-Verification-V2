@@ -84,8 +84,9 @@ carry the dark theme). What changed:
   processing yet) → the recruiter ticks both consent boxes → **Submit** (`submitPhoto()`, disabled
   until both are ticked) runs the **quality check first** → if it **passes**, the face comparison
   **runs automatically** (no second click); if it **fails**, the card shows a **red blocking error**
-  ("This photo isn't clear enough to run the check. <reason> Please upload a different photo.") and
-  Submit stays disabled until the recruiter picks a different photo via **Change photo**. This makes
+  ("The photo isn't clear enough to run the checks. Please upload a new photo." — kept generic, no
+  per-reason detail, 2026-09-05) and Submit stays disabled until the recruiter picks a different photo
+  via **Change photo**. This makes
   quality a **hard gate** (it used to be a soft warning you could run past) and ensures **no image
   processing happens before consent is given**. A quality-service *error* (couldn't check) is treated
   as a pass so it can't trap the recruiter. While the quality check or the comparison is running, the
