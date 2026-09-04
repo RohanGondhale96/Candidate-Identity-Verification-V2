@@ -224,11 +224,12 @@ var state = {
   confirmReshoot:false, viewingHistory:false, decision:null, decisionErr:'', entry:null, tab:'joining', _refocus:null,
   attest:false, qualityChecking:false, quality:null, rmodal:null, submitModal:null, reportView:'all',
   /* worklist */
-  filter:'all', dateRange:'all', wlSort:'overdue', mineOnly:true, page:1, perPage:10, wlTab:'active',
+  filter:'all', dateRange:'all', wlSort:'overdue', mineOnly:true, page:1, perPage:10, wlShown:20, wlTab:'active',
   dismissed:{}, wlMenu:null, wlConfirmAll:false, dateModal:null, notJoinModal:null
 };
 
 var _tt=null, _steptimers=[];
+var WL_PAGE=20, _wlObs=null;   // infinite-scroll batch size + observer handle
 
 /* ---------- helpers ---------- */
 function h(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
@@ -815,7 +816,7 @@ function wlStatus(c){
 }
 /* a check counts as "completed" once a report has been submitted (verified / not verified / needs review) */
 function isCompleted(c){ var st=wlStatus(c); return st==='verified'||st==='notverified'||st==='needsreview'; }
-function setWlTab(t){ setState({wlTab:t, filter:'all', page:1, wlMenu:null}); wlSyncUrl(true); }
+function setWlTab(t){ setState({wlTab:t, filter:'all', page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
 function dayDiff(c){ return Math.round((WL_TODAY_MS - Date.parse(c.joiningISO+'T00:00:00Z'))/86400000); } // +past, -future, 0 today
 function isFuture(c){ return dayDiff(c) < 0; }
 function isOverdue(c){ if(isDismissed(c)) return false; var st=wlStatus(c); return dayDiff(c)>0 && (st==='toverify'||st==='inreview'); }
@@ -889,12 +890,19 @@ function listKebab(c){
 }
 
 /* worklist actions (each resets to page 1 where relevant and syncs the URL) */
-function wlSetFilter(f){ setState({filter:f, page:1, wlMenu:null, wlConfirmAll:false}); wlSyncUrl(true); }
-function wlSetDate(d){ setState({dateRange:d, page:1}); wlSyncUrl(true); }
-function wlSetSort(s){ setState({wlSort:s, page:1}); wlSyncUrl(true); }
+function wlSetFilter(f){ setState({filter:f, page:1, wlShown:WL_PAGE, wlMenu:null, wlConfirmAll:false}); wlSyncUrl(true); }
+function wlSetDate(d){ setState({dateRange:d, page:1, wlShown:WL_PAGE}); wlSyncUrl(true); }
+function wlSetSort(s){ setState({wlSort:s, page:1, wlShown:WL_PAGE}); wlSyncUrl(true); }
+/* infinite scroll: append the next batch when the sentinel scrolls into view */
+function wlLoadMore(){ var full=wlList(); if((state.wlShown||WL_PAGE) >= full.length) return; setState({wlShown:(state.wlShown||WL_PAGE)+WL_PAGE}); }
+function wlObserveMore(){
+  if(_wlObs){ _wlObs.disconnect(); _wlObs=null; }
+  var sentinel=document.getElementById('wl-more'); if(!sentinel) return;
+  if(!('IntersectionObserver' in window)){ if((state.wlShown||WL_PAGE) < wlList().length) setState({wlShown:1e9}); return; }
+  _wlObs=new IntersectionObserver(function(entries){ if(entries[0] && entries[0].isIntersecting) wlLoadMore(); }, {root:null, rootMargin:'240px'});
+  _wlObs.observe(sentinel);
+}
 function wlToggleMine(){ setState({mineOnly:!state.mineOnly, page:1}); wlSyncUrl(true); }
-function wlSetPage(p){ setState({page:p}); wlSyncUrl(true); window.scrollTo({top:0,behavior:'smooth'}); }
-function wlSetPer(n){ setState({perPage:Number(n), page:1}); wlSyncUrl(true); }
 function wlToggleMenu(id){ setState({wlMenu: state.wlMenu===id?null:id}); }
 function wlDismiss(id, reason, comment){ var m=Object.assign({}, state.dismissed); m[id]={reason:reason, comment:comment||'', by:'A. Sharma', at:'now'}; setState({dismissed:m, wlMenu:null, notJoinModal:null}); }
 /* "Not joining" — capture an optional comment, then dismiss from attention */
@@ -990,8 +998,8 @@ function worklistView(){
   '</div>';
 
   /* list */
-  var full=wlList(), per=s.perPage, pages=Math.max(1,Math.ceil(full.length/per)), page=Math.min(s.page,pages);
-  var slice=full.slice((page-1)*per, page*per);
+  var full=wlList(), shown=Math.min(s.wlShown||WL_PAGE, full.length);
+  var slice=full.slice(0, shown);
   html+='<div class="rh-card" style="padding:0">';
   if(!slice.length){
     html+='<div style="padding:26px 16px;font-size:13.5px;color:#747474;text-align:center">Nothing here.</div>';
@@ -1012,16 +1020,9 @@ function worklistView(){
         '<span style="flex-shrink:0;display:inline-flex;justify-content:flex-end">'+(tab==='completed'?_pill('Reviewed','#5A6473','#EFF1F5'):wlPill(st))+'</span>'+kebab+
       '</div>';
     });
-    var lo=(page-1)*per+1, hi=Math.min(page*per, full.length);
-    html+='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;border-top:1px solid #EEF1F5">'+
-      '<span style="font-size:12px;color:#667085">Showing '+lo+'–'+hi+' of '+full.length+'</span>'+
-      '<div style="margin-left:auto;display:flex;align-items:center;gap:6px">';
-    var pbtn=function(label,to,on,dis){ return '<button type="button" '+(dis?'disabled':'onclick="wlSetPage('+to+')"')+' style="height:28px;min-width:28px;border:1px solid '+(on?'#0076FB':'#DCE2EB')+';border-radius:8px;background:#fff;font-family:inherit;font-size:13px;color:'+(dis?'#C6C6C6':(on?'#0076FB':'#2A2A2A'))+';font-weight:'+(on?'700':'400')+';cursor:'+(dis?'default':'pointer')+';padding:0 8px">'+label+'</button>'; };
-    html+=pbtn('‹ Prev', page-1, false, page<=1);
-    for(var pi=1; pi<=pages; pi++){ html+=pbtn(String(pi), pi, pi===page, false); }
-    html+=pbtn('Next ›', page+1, false, page>=pages);
-    html+='<select onchange="wlSetPer(this.value)" style="height:28px;border:1px solid #DCE2EB;border-radius:8px;background:#fff;font-family:inherit;font-size:13px;padding:0 6px;color:#2A2A2A">'+[10,25,50].map(function(n){ return '<option value="'+n+'"'+(per===n?' selected':'')+'>'+n+' / page</option>'; }).join('')+'</select>';
-    html+='</div></div>';
+    if(shown < full.length){
+      html+='<div id="wl-more" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:14px 16px;border-top:1px solid #EEF1F5;font-size:12.5px;color:#667085"><span class="rh-radar" aria-hidden="true"></span>Loading more…</div>';
+    }
   }
   html+='</div>';
   return html;
@@ -1403,6 +1404,9 @@ function render(){
 
   // restore focus to whichever search box was being typed in
   if(s._refocus){ var el=document.getElementById(s._refocus); if(el){ el.focus(); var v=el.value; el.value=''; el.value=v; } s._refocus=null; }
+
+  // (re)attach the infinite-scroll observer to the fresh DOM
+  wlObserveMore();
 }
 
 /* ---------- handlers (global) ---------- */
@@ -1581,6 +1585,13 @@ function buildSeeds(){
     if(!t || !t.getAttribute || t.getAttribute('role')!=='button') return;
     if(e.key==='Enter' || e.key===' ' || e.key==='Spacebar'){ e.preventDefault(); t.click(); }
   });
+  // infinite scroll fallback: load the next batch when the sentinel nears the viewport bottom
+  // (belt-and-suspenders with the IntersectionObserver, for webviews where IO may not fire)
+  window.addEventListener('scroll', function(){
+    var el=document.getElementById('wl-more'); if(!el) return;
+    var vh=window.innerHeight||document.documentElement.clientHeight||0;
+    if(el.getBoundingClientRect().top < vh + 240) wlLoadMore();
+  }, {passive:true});
   wlApplyUrl();
 })();
 </script>

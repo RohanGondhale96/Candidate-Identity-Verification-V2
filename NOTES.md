@@ -529,8 +529,13 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
   in its own column regardless of pill width or kebab presence. **The row chevron was removed**
   (2026-08-28) and the status + kebab now sit at the right edge — the whole row is still clickable
   to open the check.
-- **Pagination** (10 per page by default, 10/25/50 options, resets to page 1 on any filter/sort
-  change) + **URL state** (filter/sort/page) so opening a check and hitting Back returns to the view.
+- **Infinite scroll, not pagination (changed 2026-09-05, manager).** The Prev/Next/page-number bar and
+  the "N / page" selector are gone. The list shows an initial batch (`WL_PAGE = 20`, `state.wlShown`) and
+  appends the next batch as the recruiter scrolls near the bottom — via an `IntersectionObserver` on a
+  `#wl-more` sentinel (re-attached each render in `wlObserveMore()`), with a `window` scroll listener as
+  a fallback for webviews where IO doesn't fire. `wlShown` resets to `WL_PAGE` whenever the tab, status,
+  date or sort changes. With the small demo set everything fits the first batch, so no sentinel shows.
+  **URL state** (filter/sort) still round-trips so opening a check and hitting Back returns to the view.
 - Keep the **candidate search** ("Find a candidate", onboarding/hired rounds scope note) — demoted
   but important: it's how you reach someone who isn't where the system says they are, which is the
   whole point of the redesign.

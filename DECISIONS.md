@@ -15,6 +15,20 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-05 · Worklist: pagination → infinite scroll — BUILT + DEPLOYED
+
+- **Discussion (Rohan):** drop the pagination on the main worklist; load rows lazily as you scroll.
+- **Change:** removed the Prev/Next/page-number bar and the "N / page" selector (and the now-dead
+  `wlSetPage`/`wlSetPer`). The list renders `full.slice(0, state.wlShown)` with `WL_PAGE = 20`; a
+  `#wl-more` sentinel triggers `wlLoadMore()` (append another `WL_PAGE`) via an `IntersectionObserver`
+  re-attached each render (`wlObserveMore()`, called at the end of `render()`), plus a `window` scroll
+  listener as a fallback. `wlShown` resets to `WL_PAGE` on any tab/status/date/sort change.
+- **Verified:** pagination controls gone; `wlLoadMore` appends and clears the sentinel; observer is
+  created and observing. The auto-fire couldn't be exercised in the preview pane because it reports
+  `innerHeight: 0` (nothing can "intersect" a zero-height viewport) — an environment limitation, not a
+  code issue; the scroll-listener fallback covers such webviews and real browsers fire the IO normally.
+  With the ~10-candidate demo set, the first batch holds everything so no sentinel appears. Harness green.
+
 ## 2026-09-05 · Consent-first upload flow + quality as a hard gate — BUILT + DEPLOYED
 
 - **Discussion (manager, via Rohan):** the old flow ran the photo quality check the instant a photo was
