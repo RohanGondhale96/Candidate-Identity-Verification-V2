@@ -81,6 +81,15 @@ carry the dark theme). What changed:
   **poor-quality amber warning is kept**, sitting above the checkboxes in the right column. On mobile
   the row wraps (checkboxes drop below the photo). During the quality pre-flight or a run the right
   column shows the radar status instead of the checkboxes and the Run button is hidden.
+- **Future joiners can be opened, but the joining-day upload is blocked (added 2026-09-04, manager).**
+  Clicking an upcoming candidate opens their profile like anyone else — header (email / phone / joining
+  date) and the on-file **application / interview / document photos** are all visible. But because the
+  joining day hasn't happened, the **upload/Run card is replaced by a calm blue notice** ("Joining day
+  hasn't arrived yet — <name> joins on <date>. You can take the joining-day photo and run the identity
+  check once they've reported to join. Until then, their … photos are below for reference.") — gated on
+  `isFuture(c)`, so there is no way to upload or run a comparison for a not-yet-joined candidate. The
+  on-file list header also drops "Comparing against" for future joiners (just "N photos on file"),
+  since no comparison is happening.
 - **Scroll-on-complete:** when the verification run finishes, the page eases (a
   `requestAnimationFrame` tween, `smoothScrollToEl`) up to the top of the report (`#rpt-top`,
   the "Photo taken today" card) after a ~240ms beat, so it doesn't snap you mid-report onto a

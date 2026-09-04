@@ -34,6 +34,14 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
   "treat them the same as the rest" — even though it lets a recruiter open a not-yet-joined candidate.
   Easy to gate back to non-clickable if that's not wanted. Verified in-browser (tag colour, thumbnails,
   sub-line, clickable, bottom placement, no header). Harness green.
+- **Follow-up (same day) — what the click opens for a future joiner:** Rohan resolved the clickability
+  question in favour of opening the profile *with a guard rail*. A future candidate's detail view shows
+  the header (email / phone / joining date) and the on-file application/interview/document photos, but
+  the **joining-day upload + Run is replaced by a blue "Joining day hasn't arrived yet" notice** (gated
+  on `isFuture(c)`) — so no upload or comparison is possible before they join. The idle on-file list
+  header drops "Comparing against" (→ "N photos on file") for future joiners. Verified in-browser for a
+  future candidate (notice shown, no upload card, no Run button, on-file photos still listed) and a
+  non-future candidate (upload card intact). Harness green.
 
 ## 2026-09-04 · Copy pass — plainer, less "AI-written" reason prose — BUILT + DEPLOYED
 
