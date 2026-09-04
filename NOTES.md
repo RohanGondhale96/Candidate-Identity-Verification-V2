@@ -90,6 +90,12 @@ carry the dark theme). What changed:
   `isFuture(c)`, so there is no way to upload or run a comparison for a not-yet-joined candidate. The
   on-file list header also drops "Comparing against" for future joiners (just "N photos on file"),
   since no comparison is happening.
+- **No-photos profiles stay clickable, with a clear empty state (2026-09-04, Rohan).** A candidate with
+  **zero photos on file** (common for a future joiner whose application/interview photos aren't in yet)
+  is still openable — we deliberately did **not** make those rows non-clickable. Opening the profile
+  shows the header details plus a plain **"No photos on file for this profile"** note, worded by state:
+  for a future joiner it also names the joining date and says a check can run once photos are on file
+  and they've joined; otherwise it explains there's nothing to compare a joining-day photo against yet.
 - **Scroll-on-complete:** when the verification run finishes, the page eases (a
   `requestAnimationFrame` tween, `smoothScrollToEl`) up to the top of the report (`#rpt-top`,
   the "Photo taken today" card) after a ~240ms beat, so it doesn't snap you mid-report onto a

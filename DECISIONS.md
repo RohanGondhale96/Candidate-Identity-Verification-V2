@@ -42,6 +42,13 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
   header drops "Comparing against" (→ "N photos on file") for future joiners. Verified in-browser for a
   future candidate (notice shown, no upload card, no Run button, on-file photos still listed) and a
   non-future candidate (upload card intact). Harness green.
+- **Clarified with Rohan — no-photos rows stay clickable:** the earlier offer to gate future rows back
+  to non-clickable was rejected. Rohan's point: it would feel broken not to be able to open an upcoming
+  candidate, and we should instead **show a clear "no photos available" message** on the profile.
+  Reworded the empty state so it plainly reads "No photos on file for this profile" and is state-aware
+  — for a future joiner it names the joining date and explains a check can run once photos are on file
+  and they've joined. Verified for Meera (future, 0 photos): row clickable, profile opens, clear note
+  shown. Harness green.
 
 ## 2026-09-04 · Copy pass — plainer, less "AI-written" reason prose — BUILT + DEPLOYED
 

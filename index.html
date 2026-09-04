@@ -1072,7 +1072,10 @@ function render(){
         }).join('')+
       '</div>';
     if(!c.photos.length){
-      html += '<div class="note" style="margin-top:18px">No photos on file for this candidate. You need at least one application or interview photo to run a check.</div>';
+      var noPh = isFuture(c)
+        ? 'No photos on file for this profile yet. '+h(c.name)+' joins on '+h(c.joining||fmtDate(c.joiningISO))+' — once their application or interview photos are on file and they’ve reported to join, you can take the joining-day photo and run the check.'
+        : 'No photos on file for this profile. There’s nothing to compare a joining-day photo against, so there’s no check to run — you’ll need at least one application, interview or document photo first.';
+      html += '<div class="note" style="margin-top:18px">'+noPh+'</div>';
     }
     html += '</div>';
   }
