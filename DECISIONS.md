@@ -15,6 +15,26 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-04 · Merge "Coming up" into the To-verify list — BUILT + DEPLOYED
+
+- **Discussion (manager, via Rohan):** the separate "COMING UP" section in the To-verify tab (calendar
+  glyph, dimmed rows, "Joining Sun 16 Aug" on the right, not clickable) broke the consistency of the
+  list. Treat upcoming candidates the same as everyone else: photo thumbnail, an "upcoming" cue next
+  to the name, and keep them on the **To verify** status (don't invent a new status — they stay in the
+  To verify tab).
+- **Decisions (asked Rohan before building):** (1) joining date → **moved into the grey sub-line**
+  ("RHID · Job · Joining 16 Aug"), with the normal **To verify** pill on the right; (2) ordering →
+  **at the bottom** (overdue top, then today's/past, then upcoming last under the default sort).
+- **Change:** dropped the "Coming up" header and the dimmed non-clickable future-row branch; upcoming
+  rows now use the **same clickable row template** as every other candidate — `candAvatar` thumbnail
+  (photo, initials fallback), name with a small blue **"Upcoming"** tag (`#EAF2FE`/`#185FA5`), joining
+  date in the sub-line, `wlPill('toverify')`. Sorting already put `isFuture` last under the default
+  "Oldest first"; on explicit Newest/Name sorts they intermix but the tag keeps them identifiable.
+- **Judgment call flagged to Rohan:** made upcoming rows **clickable** (they were not before), to honor
+  "treat them the same as the rest" — even though it lets a recruiter open a not-yet-joined candidate.
+  Easy to gate back to non-clickable if that's not wanted. Verified in-browser (tag colour, thumbnails,
+  sub-line, clickable, bottom placement, no header). Harness green.
+
 ## 2026-09-04 · Copy pass — plainer, less "AI-written" reason prose — BUILT + DEPLOYED
 
 - **Discussion (Rohan):** run the product copy through a humanize pass so it doesn't read as

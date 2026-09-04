@@ -49,14 +49,20 @@ carry the dark theme). What changed:
   person, confirmed by review" / "Marked not a match" / "Set aside — couldn't confirm …".
 - **Setup:** the pre-run preview chip reads **"Not matched yet"**; the documents group is
   labelled "scored more leniently (older, lower-quality scans)".
-- **Worklist:** **two tabs** — **To verify** (active: to-verify + in-review, with "Coming up" at the
-  bottom) and **Completed** (verified / not verified / needs review), each with a count
-  (`state.wlTab`, `isCompleted`, `setWlTab`). Rows use the **candidate's photo** as the avatar
-  (`candAvatar`, initials fallback); coming-up rows keep the calendar glyph. Overdue candidates fold
-  into the To-verify tab (sorted to top, red/amber "expected · N days ago") — no separate attention
-  block. Filters (Status / Dates / Sort) are tidied and the **Status dropdown is scoped to the
-  current tab**. Kebab: "Change joining date" + "Not joining" (overdue/upcoming). Mobile row
-  sub-lines wrap (`.wl-sub`). Search hint reworded.
+- **Worklist:** **two tabs** — **To verify** (active: to-verify + in-review + upcoming) and
+  **Completed** (verified / not verified / needs review), each with a count (`state.wlTab`,
+  `isCompleted`, `setWlTab`). **Every** row uses the **same template** (changed 2026-09-04, manager):
+  candidate photo avatar (`candAvatar`, initials fallback), name, sub-line, status pill, kebab — and
+  every row is clickable. **Upcoming (future-joiner) rows are no longer a separate "Coming up"
+  section** — they sit inline in the To-verify list with the same photo thumbnail, a small blue
+  **"Upcoming"** tag next to the name, their joining date in the sub-line ("RHID · Job · Joining
+  16 Aug"), and the normal **To verify** status pill. They sort to the **bottom** under the default
+  "Oldest first" sort (`isFuture` → future-last); on an explicit Newest/Name sort they intermix, but
+  the "Upcoming" tag travels with the row so they stay identifiable. Overdue candidates fold to the
+  **top** of the To-verify tab (red/amber "N days ago, 3 Aug") — no separate attention block. Filters
+  (Status / Dates / Sort) are tidied and the **Status dropdown is scoped to the current tab**. Kebab:
+  "Change joining date" + "Not joining" (overdue/upcoming). Mobile row sub-lines wrap (`.wl-sub`).
+  Search hint reworded.
 - **Upload / verification animation — AI-scan motif:** the joining-day photo gets a face-scan
   overlay (corner reticle, faint grid, vignette, sweeping laser line) and the loader is a
   radar-sweep (cyan conic sweep + pulsing core), shown during **both** the quality pre-flight and
