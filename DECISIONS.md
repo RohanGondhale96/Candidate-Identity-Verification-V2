@@ -27,13 +27,13 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
   an **always-visible neutral "Why we couldn't compare:"** note (the row isn't expandable — there's
   nothing to compare — so the reason is shown directly), and its date sub-line was cleaned up (the
   reason moved out of it). Live wording will come from the model, same as the flagged-row `causeText`.
-- **Follow-up same day — match-reason made always-on too:** it first shipped on-expand-only (rationale
-  was: matches are common and many, so keep the feed short and follow the expand-for-detail pattern).
-  Rohan/manager asked for the match reason to **show without expanding**, like the cant note. Done —
-  the "Why this is a match" note now renders even on a collapsed match row; the two photos still show
-  only on expand. So both match and couldn't-compare reasons are now always visible.
+- **Same-day back-and-forth on where the match reason sits (settled = inside/on-expand):** it shipped
+  on-expand-only → then "show without expanding" → then Rohan settled on **keeping it inside the
+  expanded card, as it was originally**. Final state: the **match** reason shows only when the row is
+  expanded (matches are common/many, so the collapsed feed stays short and the "Match" badge speaks at
+  a glance); the **couldn't-compare** reason stays **always-visible** (rare, no other detail).
 - Verified both notes' text + computed colours in-browser (match `#E7F4EC`/`#1a6b34`, cant
-  `#F1F2F4`/`#5A6473`), collapsed and expanded. Harness green.
+  `#F1F2F4`/`#5A6473`). Harness green.
 
 ## 2026-09-03 · "Ignore" verdict → "Can't confirm / Set aside" — BUILT + DEPLOYED
 

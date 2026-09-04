@@ -180,23 +180,21 @@ never flips to a clean "Match" off human vouching.
 
 - **Flagged rows are open by default.** Unresolved **Needs review** / **Not a match** rows expand
   automatically (the accordion allows multiple open at once, `effectiveOpen()` / `openRows`), so the
-  work needing the recruiter's judgment is front and centre. **Match** rows stay collapsed (the
-  two photos show on expand) but their **"Why this is a match" note is always visible** (see below).
-  Recording a verdict (Match / Not a match / Can't confirm)
+  work needing the recruiter's judgment is front and centre. **Match** rows stay collapsed but
+  **expand to show why** (see below). Recording a verdict (Match / Not a match / Can't confirm)
   **leaves the row open** (showing the recorded action + audit) — no abrupt auto-collapse; the
   recruiter collapses it by clicking the row. (Changed 2026-08-28 — auto-collapse-on-resolve felt
   jarring.)
 - **Every state carries a reason, not just the flagged ones (added 2026-09-04, manager).** A
-  **Match** row shows an **always-visible green "Why this is a match:"** note (`reasonNote('match',…)`
+  **Match** row, when expanded, ends with a **green "Why this is a match:"** note (`reasonNote('match',…)`
   + `matchReason()`) explaining the match — e.g. "Facial geometry lines up closely — eyes, nose, mouth
-  and jawline all align." (The note shows even when the row is collapsed; expanding additionally shows
-  the two photos. Made always-visible 2026-09-04 — it first shipped on-expand-only earlier the same
-  day, then the manager asked for it to always show.) A **Couldn't-compare** row likewise shows an
-  **always-visible neutral "Why we couldn't compare:"** note (`reasonNote('cant',…)` + `cantReason()`)
-  — e.g. "No face detected in this document — the scan is likely too dark, blurry or cropped…" —
-  instead of burying the reason as grey text on the date line. Both are **seeded for the demo**
-  (`matchReason` by score band; `cantReason` from `r.err`); the **live versions come from the model**,
-  same pattern as the flagged-row `causeText()`.
+  and jawline all align." (Kept inside/on-expand — briefly made always-visible on 2026-09-04, then
+  reverted the same day: Rohan preferred it to stay inside the expanded card as it was.) A
+  **Couldn't-compare** row shows an **always-visible neutral "Why we couldn't compare:"** note
+  (`reasonNote('cant',…)` + `cantReason()`) — e.g. "No face detected in this document — the scan is
+  likely too dark, blurry or cropped…" — instead of burying the reason as grey text on the date line.
+  Both are **seeded for the demo** (`matchReason` by score band; `cantReason` from `r.err`); the
+  **live versions come from the model**, same pattern as the flagged-row `causeText()`.
 
 Each expanded row (`reasonCodes()` + the expanded panel in `render()`) shows:
 
