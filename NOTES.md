@@ -187,12 +187,13 @@ never flips to a clean "Match" off human vouching.
   jarring.)
 - **Every state carries a reason, not just the flagged ones (added 2026-09-04, manager).** A
   **Match** row, when expanded, ends with a **green "Why this is a match:"** note (`reasonNote('match',…)`
-  + `matchReason()`) explaining the match — e.g. "Facial geometry lines up closely — eyes, nose, mouth
-  and jawline all align." (Kept inside/on-expand — briefly made always-visible on 2026-09-04, then
+  + `matchReason()`) explaining the match — e.g. "the eyes, nose and jaw all line up with today's photo,
+  with nothing that looks off." (Kept inside/on-expand — briefly made always-visible on 2026-09-04, then
   reverted the same day: Rohan preferred it to stay inside the expanded card as it was.) A
   **Couldn't-compare** row shows an **always-visible neutral "Why we couldn't compare:"** note
-  (`reasonNote('cant',…)` + `cantReason()`) — e.g. "No face detected in this document — the scan is
-  likely too dark, blurry or cropped…" — instead of burying the reason as grey text on the date line.
+  (`reasonNote('cant',…)` + `cantReason()`) — e.g. "No face detected in this document. The scan is
+  probably too dark, blurry or cropped to pick out a face…" — instead of burying the reason as grey text
+  on the date line.
   Both are **seeded for the demo** (`matchReason` by score band; `cantReason` from `r.err`); the
   **live versions come from the model**, same pattern as the flagged-row `causeText()`.
 

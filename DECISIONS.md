@@ -15,6 +15,22 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-04 · Copy pass — plainer, less "AI-written" reason prose — BUILT + DEPLOYED
+
+- **Discussion (Rohan):** run the product copy through a humanize pass so it doesn't read as
+  AI-generated.
+- **Finding:** most of the product copy was already plain and human (no "delve/leverage/robust/
+  seamless" vocabulary, no importance puffery, no chatbot artifacts). The real tells were in the
+  **reason/explanation prose** — clinical phrasing ("facial geometry", "facial landmarks", "clear the
+  match threshold for this source"), a four-item feature list, and formulaic em dashes.
+- **Change:** rewrote `matchReason()` and `cantReason()` into plain, committed sentences that match
+  the voice of the existing flagged-row causes (lowercase continuations after the "Why…" label; e.g.
+  "the eyes, nose and jaw all line up with today's photo, with nothing that looks off"). Also plainer
+  three seeded flagged-row `cause` strings: dropped "which lowers confidence in the match" and the
+  vague "across several features" for direct wording ("clearly different from today's photo"; "they
+  look like different people"). No AI-vocabulary or puffery elsewhere needed changing — deliberately
+  did **not** churn copy that was already fine. Harness green.
+
 ## 2026-09-04 · Show a reason on Match and Couldn't-compare rows — BUILT + DEPLOYED
 
 - **Discussion (manager, via Rohan):** the report only explained the *flagged* rows ("Why this needs

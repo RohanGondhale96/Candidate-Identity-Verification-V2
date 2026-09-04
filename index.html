@@ -187,7 +187,7 @@ var CANDIDATES = [
       {label:'Round 4 — HR discussion', src:'interview', date:'27 Jun 2026, 16:40', by:'A. Sharma', score:89, tone:'soft'},
       {label:'Aadhaar card', src:'document', date:'Identity document', by:null, score:71},
       {label:'PAN card', src:'document', date:'Identity document', by:null, cant:true},
-      {label:'Driving licence', src:'document', date:'Identity document', by:null, score:22, cause:'the face on this document differs from today\'s photo across several features.'}
+      {label:'Driving licence', src:'document', date:'Identity document', by:null, score:22, cause:'the face on this document is clearly different from today\'s photo.'}
     ]},
   { id:'c2', name:'Arjun Reddy', rhid:'RH47980', email:'arjun.reddy@outlook.com', phone:'+91 99872 08802',
     req:'Product Designer', reqid:'REQ-2244', stage:'Hired', eligible:true, joining:'15 Aug 2026', joiningISO:'2026-08-15', owner:'me',
@@ -558,14 +558,14 @@ function causeText(r){ return (r && r.cause) || aiReason(r); }
 function matchReason(r){
   if(r && r.matchCause) return r.matchCause;
   var score=(r&&r.score)||0;
-  if(score>=93) return 'Facial geometry lines up closely — eyes, nose, mouth and jawline all align with today’s photo.';
-  if(score>=88) return 'Key facial features line up well; small differences come down to lighting, pose or the camera.';
-  return 'Enough facial landmarks match today’s photo to clear the match threshold for this source.';
+  if(score>=93) return 'the eyes, nose and jaw all line up with today’s photo, with nothing that looks off.';
+  if(score>=88) return 'the main features line up with today’s photo; the small differences are down to lighting or angle.';
+  return 'enough of the face matches today’s photo to count as the same person.';
 }
 /* plain-language reason a reference couldn’t be compared */
 function cantReason(r){
-  var base=(r&&r.err) || 'No face could be detected in this reference.';
-  if(/no face/i.test(base)) return base + ' — the scan is likely too dark, blurry or cropped for a face to be located, so there’s nothing to line up against today’s photo.';
+  var base=(r&&r.err) || 'We couldn’t find a face in this reference.';
+  if(/no face/i.test(base)) return base + '. The scan is probably too dark, blurry or cropped to pick out a face, so there’s nothing to line up against today’s photo.';
   return base;
 }
 /* small tinted callout for the match / couldn’t-compare explanations (mirrors the amber "needs a look" note) */
@@ -1516,10 +1516,10 @@ function buildSeeds(){
   var seeds=[
     {name:'Vikram Nair',  req:'Data Engineer',     st:'toverify',    iso:'2026-08-15', reason:'', score:91},
     {name:'Priya Sharma', req:'QA Analyst',        st:'toverify',    iso:'2026-08-12', reason:'', score:88},
-    {name:'Imran Shaikh', req:'UX Designer',       st:'inreview',    iso:'2026-08-13', reason:'Checked · not submitted', score:63, cause:'the reference is soft and unevenly lit, which lowers confidence in the match.'},
+    {name:'Imran Shaikh', req:'UX Designer',       st:'inreview',    iso:'2026-08-13', reason:'Checked · not submitted', score:63, cause:'the reference photo is soft and unevenly lit, so it\'s harder to be sure this is the same person.'},
     {name:'Ananya Rao',   req:'Product Manager',   st:'verified',    iso:'2026-08-14', reason:'Submitted by A. Sharma · 11:14', score:94},
     {name:'Rohit Menon',  req:'SDET',              st:'verified',    iso:'2026-08-15', reason:'Submitted by A. Sharma · 09:32', score:92},
-    {name:'Sana Kapoor',  req:'Frontend Engineer', st:'notverified', iso:'2026-08-13', reason:'Submitted by A. Sharma · 10:20', score:22, cause:'the face here doesn\'t line up with today\'s photo across several features.'},
+    {name:'Sana Kapoor',  req:'Frontend Engineer', st:'notverified', iso:'2026-08-13', reason:'Submitted by A. Sharma · 10:20', score:22, cause:'the face here doesn\'t match today\'s photo; they look like different people.'},
     {name:'Dev Patel',    req:'Mobile Engineer',   st:'toverify',    iso:'2026-08-18', reason:'', score:90}
   ];
   seeds.forEach(function(x,i){
