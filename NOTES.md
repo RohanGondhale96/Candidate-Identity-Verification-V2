@@ -71,16 +71,26 @@ carry the dark theme). What changed:
   verification…", each with the radar) lives in the **right column beside the photo**, not in the
   heading — so no heading ever contradicts the status line. `prefers-reduced-motion` disables the
   sweeping motion.
-- **Upload/setup card layout (redesigned 2026-09-03, manager):** header row is heading + hint on the
-  left with **"Use a different photo"** docked **top-right, in line with the heading** (shown only
-  once a photo is loaded and not mid-run). Once a photo is chosen the body is a **two-column row** —
-  the 150×186 photo on the left, the **two consent/attestation checkboxes on the right** — with a
-  full-width **Run verification** below. Removed: the "Ready to compare" sub-heading, the "Every
-  photo on file is compared separately. Scores are never averaged." line, and the green "Photo looks
-  good to compare." confirmation (a good photo now just shows the checkboxes directly). The
-  **poor-quality amber warning is kept**, sitting above the checkboxes in the right column. On mobile
-  the row wraps (checkboxes drop below the photo). During the quality pre-flight or a run the right
-  column shows the radar status instead of the checkboxes and the Run button is hidden.
+- **Upload/setup card layout + flow (reworked 2026-09-05, manager):** once a photo is chosen the body
+  is a **two-column row** — the photo preview on the **left** (stretches to the row height), and on the
+  **right** the **file name** (top), the **two consent/attestation checkboxes** (vertically centred
+  against the photo), and **Change photo / Submit** side by side pinned to the **bottom** (aligned with
+  the photo's bottom edge), with the helper line "Submit is enabled once both boxes are ticked. It runs
+  the quality check, then the comparison." The old top-right "Use a different photo" button is gone
+  (its job is now the bottom **Change photo**), and the hint paragraph hides once a photo is chosen.
+- **Consent-first ordering + quality as a hard gate (changed 2026-09-05, manager).** The order was
+  flipped. **Before:** picking a photo *immediately* ran the quality check, then showed the consent
+  boxes, then "Run verification" ran the comparison. **Now:** picking a photo just shows it (no
+  processing yet) → the recruiter ticks both consent boxes → **Submit** (`submitPhoto()`, disabled
+  until both are ticked) runs the **quality check first** → if it **passes**, the face comparison
+  **runs automatically** (no second click); if it **fails**, the card shows a **red blocking error**
+  ("This photo isn't clear enough to run the check. <reason> Please upload a different photo.") and
+  Submit stays disabled until the recruiter picks a different photo via **Change photo**. This makes
+  quality a **hard gate** (it used to be a soft warning you could run past) and ensures **no image
+  processing happens before consent is given**. A quality-service *error* (couldn't check) is treated
+  as a pass so it can't trap the recruiter. While the quality check or the comparison is running, the
+  right column shows the radar status ("Checking photo…" / "Running verification…") and the buttons are
+  hidden. On mobile the row wraps (checkboxes/buttons drop below the photo).
 - **Future joiners can be opened, but the joining-day upload is blocked (added 2026-09-04, manager).**
   Clicking an upcoming candidate opens their profile like anyone else — header (email / phone / joining
   date) and the on-file **application / interview / document photos** are all visible. But because the
@@ -451,19 +461,21 @@ All five locked; seeded quality flags approved for the prototype.
   same key-safe proxy as compare) checks it and returns `{usable, reason, message}`. Quality /
   occlusion / face-presence are describable attributes Gemini genuinely does well — unlike the
   similarity *number*, which it fakes — so this one runs for real. The prompt judges **facial
-  occlusion only, never headwear type/religion**. The result is a **soft** banner: "Photo looks
-  good" / "…may be hard to compare — retake, or run anyway" / "Checking photo…" — it never blocks
-  Run verification (a call failure falls back to usable, so it can't trap the recruiter). Flip
-  `USE_LIVE_QUALITY` off to mock it (assumed-pass).
-- **The consent + attestation checkboxes and Run verification appear only once the quality check
-  has finished** (pass *or* fail) — while it's running, just the goo loader shows. On a fail they
-  still appear (soft: run anyway); hiding them on fail would be a hard block, which we don't do.
-- **Provenance attestation checkbox** (a second checkbox, distinct from the consent one) gates Run
-  verification: *"I confirm this photo was taken today, on the joining day, of the person who
-  reported to join — not a stored, downloaded, or supplied image."* Unlike the quality warning,
-  this is a **hard gate** (Run stays disabled until both consent and attestation are ticked) — it's
-  a deliberate statement of authenticity. Stored on the check record and shown in the report header
-  ("Attested as a joining-day photo…") for audit.
+  occlusion only, never headwear type/religion**. Quality now runs **on Submit, after consent** (not
+  on photo-select — changed 2026-09-05), and is a **hard gate**: a **fail blocks** with a red error and
+  the recruiter must pick a different photo; a **pass auto-runs** the comparison. A call failure falls
+  back to usable so it can't trap the recruiter. Flip `USE_LIVE_QUALITY` off to mock it (assumed-pass →
+  Submit goes straight to the comparison). See the "Consent-first ordering + quality as a hard gate"
+  note in section B for the full flow.
+- **Consent is taken before any processing.** The consent + attestation checkboxes sit on the
+  photo-chosen screen and **Submit is disabled until both are ticked**; only then does Submit run the
+  quality check, so no image processing happens before consent. While the check (or the comparison)
+  runs, the right column shows the radar status and the buttons are hidden.
+- **Provenance attestation checkbox** (a second checkbox, distinct from the consent one) gates Submit:
+  *"This photo was taken on the joining date, of the person who reported to join."* Together with the
+  consent checkbox this is a **hard gate** (Submit stays disabled until both are ticked) — a deliberate
+  statement of authenticity. Stored on the check record and shown in the report header ("Attested as a
+  joining-day photo…") for audit.
 
 ## D. Landing worklist rebuild (driver: stale joining-date → unverified joiner) — BUILT 2026-08-27
 

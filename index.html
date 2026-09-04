@@ -313,7 +313,7 @@ function handleFile(f){
     img.onload = function(){
       if(img.width<200 || img.height<200) return setState({upErr:'Photo is too small to compare reliably.'});
       // downscale so the request stays well under the serverless body limit (mobile cameras shoot several MB)
-      setState({photo:downscalePhoto(img, 1280, 0.85), consent:false, attest:false, quality:null, qualityChecking:false, upErr:''}, checkQuality);
+      setState({photo:downscalePhoto(img, 1280, 0.85), photoName:f.name, consent:false, attest:false, quality:null, qualityChecking:false, upErr:''});
     };
     img.onerror = function(){ setState({upErr:"That image couldn't be read. Try another photo."}); };
     img.src = r.result;
@@ -1096,10 +1096,8 @@ function render(){
   /* 3. UPLOAD (hidden once a report is shown; re-open via "Use a different photo") */
   if(c && c.photos.length && !s.done && !isFuture(c)){
     html += '<div class="rh-card">'+
-      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:'+(s.photo?'0':'16px')+'">'+
-        '<div><div style="font-size:16px;font-weight:600;line-height:1.5;margin-bottom:2px">Upload joining day photo</div>'+
-          '<p style="margin:0;font-size:14px;color:#747474;line-height:1.55">'+(s.hasCamera?'Frame the photo from the chest up, with the face clearly visible and looking at the camera.':'Choose a clear, front-facing photo with the face fully visible.')+'</p></div>'+
-        ((s.photo && !s.running) ? '<button type="button" onclick="retake()" style="border:1px solid #CAD3E0;background:#fff;color:#2A2A2A;font-family:inherit;font-size:13px;font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Use a different photo</button>' : '')+
+      '<div style="margin-bottom:16px"><div style="font-size:16px;font-weight:600;line-height:1.5">Upload joining day photo</div>'+
+        (s.photo?'':'<p style="margin:4px 0 0;font-size:14px;color:#747474;line-height:1.55">'+(s.hasCamera?'Frame the photo from the chest up, with the face clearly visible and looking at the camera.':'Choose a clear, front-facing photo with the face fully visible.')+'</p>')+
       '</div>';
     if(!s.photo){
       html += '<div ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" style="border:1.5px dashed '+(s.drag?'#0076FB':'#C6C6C6')+';border-radius:6px;padding:30px 20px;text-align:center;background:'+(s.drag?'#EBF5FF':'#F7F8FA')+'">'+
@@ -1110,25 +1108,39 @@ function render(){
           '<button class="rh-btn secondary sm" onclick="openPicker()">Upload file</button>'+
         '</div></div>';
     } else {
-      var rightCol='';
-      if(s.qualityChecking || s.running){
-        rightCol = '<div style="display:flex;align-items:center;gap:10px;color:#667085;font-size:14px"><span class="rh-radar" aria-hidden="true"></span>'+(s.running?'Running verification…':'Checking your photo…')+'</div>';
+      var busy = s.qualityChecking || s.running;
+      var failed = s.quality && s.quality.usable===false && !busy;
+      var canSubmit = s.photo && s.consent && s.attest && !failed;
+      var photoBox = '<div style="width:132px;flex-shrink:0;display:flex;min-height:190px">'+
+        '<div style="flex:1;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+uploadedImg('cover')+(busy?scanOverlay():'')+'</div></div>';
+      var fileName = s.photoName ? '<div style="font-size:14px;color:#2A2A2A;word-break:break-all">'+h(s.photoName)+'</div>' : '';
+      var right;
+      if(busy){
+        right = '<div style="flex:1;min-width:250px;display:flex;flex-direction:column;justify-content:center;gap:12px">'+fileName+
+          '<div style="display:flex;align-items:center;gap:10px;color:#667085;font-size:14px"><span class="rh-radar" aria-hidden="true"></span>'+(s.running?'Running verification…':'Checking photo…')+'</div>'+
+        '</div>';
       } else {
-        if(s.quality && !s.quality.usable){
-          rightCol += '<div style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:#FBF1DE;border:1px solid #EAD9AE;border-radius:8px;font-size:13px;color:#8a6414;margin-bottom:14px">'+
-            '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>'+
-            '<span style="flex:1">'+h(s.quality.message||qualityFallback(s.quality.reason))+' You can use a different photo, or run the check anyway.</span></div>';
-        }
-        rightCol += '<label class="rh-cb"><input type="checkbox" '+(s.consent?'checked':'')+' onchange="toggleConsent()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>I have obtained consent from the candidate to use this photo for identity verification.</span></label>'+
-          '<label class="rh-cb" style="margin-top:14px"><input type="checkbox" '+(s.attest?'checked':'')+' onchange="toggleAttest()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>This photo was taken on the joining date, of the person who reported to join.</span></label>';
+        var errBlock = failed
+          ? '<div style="display:flex;align-items:flex-start;gap:9px;padding:11px 13px;background:#FDECEC;border:1px solid #F1B0B0;border-radius:8px;font-size:13px;color:#B42318;line-height:1.5">'+
+              '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#D93025" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>'+
+              '<span style="flex:1">This photo isn’t clear enough to run the check. '+h(s.quality.message||qualityFallback(s.quality.reason))+' Please upload a different photo.</span></div>'
+          : '';
+        var checks = '<div style="display:flex;flex-direction:column">'+
+          '<label class="rh-cb"><input type="checkbox" '+(s.consent?'checked':'')+' onchange="toggleConsent()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>I have obtained consent from the candidate to use this photo for identity verification.</span></label>'+
+          '<label class="rh-cb" style="margin-top:14px"><input type="checkbox" '+(s.attest?'checked':'')+' onchange="toggleAttest()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>This photo was taken on the joining date, of the person who reported to join.</span></label>'+
+        '</div>';
+        var buttons = '<div style="display:flex;gap:12px">'+
+          '<button type="button" class="rh-btn secondary" style="flex:1" onclick="retake()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Change photo</button>'+
+          '<button type="button" class="rh-btn primary" style="flex:1" '+(canSubmit?'':'disabled')+' onclick="submitPhoto()">Submit</button>'+
+        '</div>';
+        right = '<div style="flex:1;min-width:250px;display:flex;flex-direction:column">'+
+          '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px">'+fileName+errBlock+checks+'</div>'+
+          '<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">'+buttons+
+            '<div style="font-size:12px;color:#747474;line-height:1.5">Submit is enabled once both boxes are ticked. It runs the quality check, then the comparison.</div>'+
+          '</div>'+
+        '</div>';
       }
-      html += '<div style="display:flex;gap:20px;align-items:stretch;flex-wrap:wrap;margin-top:16px">'+
-        '<div style="width:124px;height:154px;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;flex-shrink:0;position:relative">'+uploadedImg()+((s.qualityChecking||s.running)?scanOverlay():'')+'</div>'+
-        '<div style="flex:1;min-width:230px;display:flex;flex-direction:column;justify-content:center">'+rightCol+'</div>'+
-      '</div>';
-      if(!s.qualityChecking && !s.running){
-        html += '<button class="rh-btn primary full" style="margin-top:18px" '+(s.photo&&s.consent&&s.attest?'':'disabled')+' onclick="run()">Run verification</button>';
-      }
+      html += '<div style="display:flex;gap:18px;align-items:stretch;flex-wrap:wrap">'+photoBox+right+'</div>';
     }
     if(s.upErr){ html += '<div style="margin-top:12px;padding:11px 13px;border:1px solid #EB4040;border-radius:4px;background:#FDECEC;color:#EB4040;font-size:13px;line-height:1.45">'+h(s.upErr)+'</div>'; }
     html += '<input id="rh-file" type="file" accept="image/jpeg,image/png,image/heic,image/webp" onchange="onFileInput(event)" style="display:none">'+
@@ -1402,7 +1414,7 @@ function changeCandidate(){ setState({cand:null, searchOpen:true, done:false, ru
 function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click(); }
 function openPicker(){ var el=document.getElementById('rh-file'); if(el) el.click(); }
 function onFileInput(e){ handleFile(e.target.files[0]); }
-function retake(){ clearTimers(); _runToken++; _qtoken++; setState({photo:null, consent:false, attest:false, quality:null, qualityChecking:false, upErr:'', done:false, running:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null}); }
+function retake(){ clearTimers(); _runToken++; _qtoken++; setState({photo:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, upErr:'', done:false, running:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null}); }
 /* The recruiter doesn't personally confirm/deny identity — the system carries the status. They
    review the flagged comparisons, then SUBMIT the report, confirming they've reviewed everything.
    Submitting never auto-executes an adverse action; the hire/no-hire call is downstream. */
@@ -1480,16 +1492,22 @@ function scrimReshoot(e){ if(e.target===e.currentTarget) cancelReshoot(); }
 function toggleConsent(){ setState({consent:!state.consent}); }
 function toggleAttest(){ setState({attest:!state.attest}); }
 function qualityFallback(reason){ return ({blurry:'This photo looks blurry.', not_facing:"The person isn’t facing the camera.", face_obscured:'The face is partly covered.', multiple_faces:'More than one face is visible.', no_face:'No clear face was detected.'})[reason] || 'This photo may be hard to compare.'; }
-/* run the source-photo quality pre-flight (soft — never blocks Run verification) */
+/* Submit: consent is already given here (gated below), so run the quality check first.
+   Pass -> the comparison runs automatically. Fail -> block and ask for a different photo. */
 var _qtoken=0;
-function checkQuality(){
-  if(!state.photo) return;
-  if(!USE_LIVE_QUALITY){ setState({qualityChecking:false, quality:{usable:true, reason:'ok', message:'', mock:true}}); return; }
+function submitPhoto(){
+  var s=state;
+  if(!s.photo || !s.consent || !s.attest) return;
+  if(s.quality && s.quality.usable===false) return;   // a failed photo must be changed first
+  if(!USE_LIVE_QUALITY){ setState({quality:{usable:true, reason:'ok', message:'', mock:true}}, run); return; }
   var tok=++_qtoken;
-  setState({qualityChecking:true, quality:null});
-  geminiQuality(state.photo)
-    .then(function(res){ if(tok!==_qtoken) return; setState({qualityChecking:false, quality:res}); })
-    .catch(function(){ if(tok!==_qtoken) return; setState({qualityChecking:false, quality:{usable:true, reason:'error', message:"Couldn’t check photo quality — you can still run the check."}}); });
+  setState({qualityChecking:true, quality:null, upErr:''});
+  geminiQuality(s.photo)
+    .then(function(res){ if(tok!==_qtoken) return;
+      if(res && res.usable===false){ setState({qualityChecking:false, quality:res}); }   // fail -> show error, block
+      else { setState({qualityChecking:false, quality:res||{usable:true}}, run); }        // pass -> auto-run the comparison
+    })
+    .catch(function(){ if(tok!==_qtoken) return; setState({qualityChecking:false, quality:{usable:true, reason:'error', message:''}}, run); });  // couldn't check -> don't block
 }
 function dragOver(e){ e.preventDefault(); if(!state.drag) setState({drag:true}); }
 function dragLeave(e){ e.preventDefault(); setState({drag:false}); }

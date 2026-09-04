@@ -15,6 +15,28 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-05 · Consent-first upload flow + quality as a hard gate — BUILT + DEPLOYED
+
+- **Discussion (manager, via Rohan):** the old flow ran the photo quality check the instant a photo was
+  selected — i.e. it processed the image *before* the recruiter confirmed consent — and the quality
+  result was only a soft warning you could run past. Manager wanted consent taken **first**, then the
+  quality check, and quality to actually gate: pass → proceed automatically, fail → make them re-upload.
+- **Wireframed with Rohan before building** (several `show_widget` rounds). Layout settled: photo left
+  (stretched); right column = file name (top), the two consent checkboxes (centred against the photo),
+  and **Change photo / Submit** side by side pinned to the bottom + the helper line. The file name has
+  no icon; the old top-right "Use a different photo" button is removed (its job is the bottom Change
+  photo). Rohan confirmed all four behaviour points before the go.
+- **New flow:** pick photo (no processing) → tick both consent boxes → **Submit** (`submitPhoto()`,
+  disabled until both ticked) runs the **quality check** → **pass = comparison runs automatically**;
+  **fail = red blocking error** ("This photo isn't clear enough to run the check. <reason> Please upload
+  a different photo.") with Submit disabled until a different photo is chosen. Quality-service error =
+  treated as pass (don't trap the recruiter). `handleFile` no longer calls the quality check and now
+  stores the file name; `checkQuality()` was replaced by `submitPhoto()` (chains quality → `run()`).
+- **Net changes vs before:** quality moved from on-select to on-Submit; quality went soft → **hard
+  gate**; consent now strictly precedes any image processing; button labels "Use a different photo" /
+  "Run verification" → **Change photo** / **Submit**. Verified all states in-browser (chosen / Submit
+  enable-on-consent / checking / pass-auto-run / fail-blocked). Harness green.
+
 ## 2026-09-04 · Merge "Coming up" into the To-verify list — BUILT + DEPLOYED
 
 - **Discussion (manager, via Rohan):** the separate "COMING UP" section in the To-verify tab (calendar
