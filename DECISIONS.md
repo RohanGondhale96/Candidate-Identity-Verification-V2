@@ -15,6 +15,25 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-04 · Show a reason on Match and Couldn't-compare rows — BUILT + DEPLOYED
+
+- **Discussion (manager, via Rohan):** the report only explained the *flagged* rows ("Why this needs
+  a look"). Two gaps: a **Match** row gave no reason *why* it matched, and a **Couldn't-compare** row
+  buried its reason as tiny grey text appended to the date. Both should tell the recruiter why.
+- **Decision / Change:** added a shared tinted-callout helper `reasonNote(tone,label,text)` and two
+  reason sources — `matchReason(r)` (positive, seeded by score band for the demo) and `cantReason(r)`
+  (from `r.err`, expanded into plain language). In `reportCard`: a **Match** row expanded now ends
+  with a **green "Why this is a match:"** note under the two photos; a **Couldn't-compare** row shows
+  an **always-visible neutral "Why we couldn't compare:"** note (the row isn't expandable — there's
+  nothing to compare — so the reason is shown directly), and its date sub-line was cleaned up (the
+  reason moved out of it). Live wording will come from the model, same as the flagged-row `causeText`.
+- **Why match-reason is on-expand but cant-reason is always-on:** matches are the common/expected
+  case and there can be many — showing every reason inline would bloat the feed, so it follows the
+  existing expand-for-detail pattern (the badge already says "Match" at a glance). Couldn't-compare is
+  rare and has no other detail, so its reason is shown outright.
+- Verified both notes' text + computed colours in-browser (match `#E7F4EC`/`#1a6b34`, cant
+  `#F1F2F4`/`#5A6473`). Harness green.
+
 ## 2026-09-03 · "Ignore" verdict → "Can't confirm / Set aside" — BUILT + DEPLOYED
 
 - **Discussion (manager, via Rohan):** the flagged-photo verdict button read **"Ignore this photo /

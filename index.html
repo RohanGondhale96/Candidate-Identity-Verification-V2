@@ -554,6 +554,29 @@ function nowTime(){ return new Date().toLocaleTimeString([], {hour:'2-digit',min
 var NOTMATCH_REASONS = ['Clearly a different person','Facial features don\'t match','Other'];
 /* full-sentence "likely cause" — seeded per flagged photo for the demo; live version comes from the model */
 function causeText(r){ return (r && r.cause) || aiReason(r); }
+/* positive explanation for a model match (seeded per-photo via r.matchCause; the live version comes from the model) */
+function matchReason(r){
+  if(r && r.matchCause) return r.matchCause;
+  var score=(r&&r.score)||0;
+  if(score>=93) return 'Facial geometry lines up closely — eyes, nose, mouth and jawline all align with today’s photo.';
+  if(score>=88) return 'Key facial features line up well; small differences come down to lighting, pose or the camera.';
+  return 'Enough facial landmarks match today’s photo to clear the match threshold for this source.';
+}
+/* plain-language reason a reference couldn’t be compared */
+function cantReason(r){
+  var base=(r&&r.err) || 'No face could be detected in this reference.';
+  if(/no face/i.test(base)) return base + ' — the scan is likely too dark, blurry or cropped for a face to be located, so there’s nothing to line up against today’s photo.';
+  return base;
+}
+/* small tinted callout for the match / couldn’t-compare explanations (mirrors the amber "needs a look" note) */
+function reasonNote(tone, label, text){
+  var C = tone==='match'
+    ? {bg:'#E7F4EC', bd:'#BFE0C9', fg:'#1a6b34', stroke:'#1a8a3a', svg:'<path d="M5 12.5l4.5 4.5L19 7.5"/>'}
+    : {bg:'#F1F2F4', bd:'#E0E3E8', fg:'#5A6473', stroke:'#667085', svg:'<circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.3v.1"/>'};
+  return '<div style="display:flex;gap:9px;margin-top:16px;padding:11px 13px;background:'+C.bg+';border:0.5px solid '+C.bd+';border-radius:8px;font-size:13px;color:'+C.fg+';line-height:1.5">'+
+    '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="'+C.stroke+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0">'+C.svg+'</svg>'+
+    '<span><span style="font-weight:600">'+label+'</span> '+h(text)+'</span></div>';
+}
 /* relative age of a reference photo vs today's joining photo (WL_TODAY_MS) */
 var _RMON={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
 function reportRelAge(r){
@@ -707,7 +730,7 @@ var V2CARD='background:#fff;border:1px solid #E5E9F0;border-radius:16px;box-shad
 function reportCard(i, r, c){
   var st=photoState(r), flagged=(st==='review'||st==='nomatch'), isCant=(st==='cant');
   var open=effectiveOpen(i,r), seed=(c?c.id:'')+r.label, chip=rowBadge(r), clickable=!isCant;
-  var subline = isCant ? (h(r.date)+' · '+h(r.err||'No face detected in this document')) : h(r.date);
+  var subline = h(r.date);
   var caret = isCant ? '<span style="width:30px;flex-shrink:0"></span>'
     : '<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" style="width:30px;height:30px;border:0;background:none;cursor:pointer;display:grid;place-items:center;border-radius:7px;flex-shrink:0">'+chevron(open?'180deg':'0deg')+'</button>';
   var head='<div style="display:flex;align-items:center;gap:13px;padding:14px 16px'+(clickable?';cursor:pointer':'')+'"'+(clickable?(' onclick="toggleRow('+i+')"'):'')+'>'+
@@ -716,7 +739,8 @@ function reportCard(i, r, c){
     '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+chip+caret+'</div>'+
   '</div>';
   var body='';
-  if(open && !isCant){ body='<div style="padding:0 16px 16px">'+comparePanes(r,seed)+(flagged?reasonCodes(i,r):'')+'</div>'; }
+  if(isCant){ body='<div style="padding:0 16px 16px">'+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
+  else if(open){ body='<div style="padding:0 16px 16px">'+comparePanes(r,seed)+(flagged?reasonCodes(i,r):reasonNote('match','Why this is a match:', matchReason(r)))+'</div>'; }
   return '<article id="rpt-round-'+i+'" style="'+V2CARD+';scroll-margin-top:12px'+(flagged?';border-color:#D9DFE8':'')+'">'+head+body+'</article>';
 }
 function reportFeed(s, c){
