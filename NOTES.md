@@ -22,8 +22,8 @@ carry the dark theme). What changed:
   `setReportView`, `_seg`) — styled as **RH underline tabs** (2026-09-07, manager: "make the tabs look
   like RH"): brand-blue text + a 2px `#0076FB` underline on the active tab sitting on a `#E0E0E0` divider,
   grey `#4B5563` inactive, count badge light-blue when active / grey when not. (RH DS has no formal Tab
-  component; underline tabs are a product convention. The worklist To-verify/Completed tabs were left as
-  their solid-blue pills for now — not yet reconciled.) Then one card per round grouped by type. Matched / Couldn't-compare rounds
+  component; underline tabs are a product convention. The worklist To-verify/Completed tabs were given the
+  same underline treatment on 2026-09-07.) Then one card per round grouped by type. Matched / Couldn't-compare rounds
   are calm collapsible strips; Needs-review / Not-a-match are full cards. Thumbnails show only
   when a card is collapsed; a collapsed flagged card keeps its verdict in the header chip.
   Verdict actions sit side by side with semantic icons. The **Submit report** control is a bar
@@ -62,7 +62,9 @@ carry the dark theme). What changed:
   labelled "scored more leniently (older, lower-quality scans)".
 - **Worklist:** **two tabs** — **To verify** (active: to-verify + in-review + upcoming) and
   **Completed** (verified / not verified / needs review), each with a count (`state.wlTab`,
-  `isCompleted`, `setWlTab`). **Every** row uses the **same template** (changed 2026-09-04, manager):
+  `isCompleted`, `setWlTab`, `tabBtn`). Styled as **RH underline tabs** (2026-09-07) to match the report
+  tabs — brand-blue text + 2px underline on the active tab over a `#E0E0E0` divider, grey inactive; was
+  a solid-blue pill group (revertable — Rohan may roll it back if it doesn't sit well on the page). **Every** row uses the **same template** (changed 2026-09-04, manager):
   candidate photo avatar (`candAvatar`, initials fallback), name, sub-line, status pill, kebab — and
   every row is clickable. **Upcoming (future-joiner) rows are no longer a separate "Coming up"
   section** — they sit inline in the To-verify list with the same photo thumbnail, a small blue
