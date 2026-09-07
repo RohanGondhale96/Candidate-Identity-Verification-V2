@@ -80,9 +80,25 @@ carry the dark theme). What changed:
   with the blue active segment; the amber "Delayed" treatment stays on the row pills). Rationale: on a tab
   that's already "everything to verify", a To-verify status filter barely narrows, and it overlapped
   with Overdue — so status filtering was dropped here in favour of triaging by *timing*. The
-  **Completed** tab keeps its **status dropdown** (All / Verified / Not verified) — "delayed" doesn't
-  apply there. `wlList` is tab-aware (active → when-filter, completed → status filter); `setWlTab`
-  resets both. A **Sort** dropdown stays on both tabs.
+  **Completed** tab keeps its **status dropdown**, now with three options (2026-09-07, manager) — see
+  the Completed-statuses note below. `wlList` is tab-aware (active → when-filter, completed → status
+  filter); `setWlTab` resets both. A **Sort** dropdown stays on both tabs.
+- **Completed-tab statuses — Reviewed / Inconclusive / Incomplete (2026-09-07, manager).** These describe
+  *how the review was concluded*, orthogonal to the match outcome (which lives inside the report). Set by
+  `completedStatus(c)` from the submitted report's rows (`reportSummary`), falling back to the seeded
+  `wl.completed` for demo rows:
+  - **Incomplete** (red pill, `#B42318`/`#FDECEC`) — ≥1 comparison left **unreviewed** and pushed through
+    via "Submit anyway" (`reportSummary.unresolved > 0`). Highest priority — a process/compliance flag.
+  - **Inconclusive** (amber, `#8a6414`/`#FBF1DE`) — ≥1 comparison the recruiter deliberately marked
+    **"Can't confirm"** / set aside (`ignored > 0`). A considered "can't tell."
+  - **Reviewed** (grey, `#5A6473`/`#EFF1F5`) — a definite call (match *or* not-a-match) on everything.
+  The three are the pills **and** the completed-tab filter options (`scnt` / `wlList` filter by
+  `completedStatus` on that tab; `wlStatus`/`isCompleted` are unchanged — they still drive the
+  active/completed split). **Why three, not two:** folding "Incomplete" into "Inconclusive" would be
+  inaccurate — a *skipped* comparison wasn't judged uncertain, it was never reviewed; and for an identity
+  check, "genuinely couldn't confirm" vs "recruiter didn't finish" is a real audit distinction. Considered
+  alternative (rejected): tighten the submit gate so a comparison can't be left unreviewed — but that
+  reverses the earlier "keep the gate soft" decision.
 - **Delayed status pill.** An overdue active row's pill reads **"To verify · Delayed"** or **"In review
   · Delayed"** in amber (`#8a6414`/`#FBF1DE`) — "delayed" is a *modifier* on the existing status, not a
   new status value; on-time rows keep the plain grey/amber pill. Same word ("Delayed") as the filter,

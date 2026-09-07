@@ -814,6 +814,24 @@ function wlStatus(c){
 }
 /* a check counts as "completed" once a report has been submitted (verified / not verified / needs review) */
 function isCompleted(c){ var st=wlStatus(c); return st==='verified'||st==='notverified'||st==='needsreview'; }
+/* Completed-tab display status (orthogonal to verified/not-verified — that's the outcome, this is how
+   the review was concluded): incomplete = ≥1 comparison left unreviewed (submit-anyway); inconclusive =
+   ≥1 marked "Can't confirm"; else reviewed (a definite call on everything). Derived from the submitted
+   report's rows, falling back to the seeded demo value. */
+function completedStatus(c){
+  var lc=latestCheck(c.id);
+  if(lc && lc.hh && lc.hh.rows){ var v=reportSummary(lc.hh.rows);
+    if(v.unresolved>0) return 'incomplete';
+    if(v.ignored>0)    return 'inconclusive';
+    return 'reviewed';
+  }
+  return (c.wl && c.wl.completed) || 'reviewed';
+}
+function completedPill(c){ var k=completedStatus(c);
+  if(k==='inconclusive') return _pill('Inconclusive','#8a6414','#FBF1DE');
+  if(k==='incomplete')   return _pill('Incomplete','#B42318','#FDECEC');
+  return _pill('Reviewed','#5A6473','#EFF1F5');
+}
 function setWlTab(t){ setState({wlTab:t, filter:'all', dateRange:'all', page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
 function dayDiff(c){ return Math.round((WL_TODAY_MS - Date.parse(c.joiningISO+'T00:00:00Z'))/86400000); } // +past, -future, 0 today
 function isFuture(c){ return dayDiff(c) < 0; }
@@ -844,7 +862,7 @@ function wlList(){
   var b=wlBase().filter(function(c){ return state.wlTab==='completed' ? isCompleted(c) : !isCompleted(c); });
   var l;
   if(state.wlTab==='completed'){
-    l = (state.filter && state.filter!=='all') ? b.filter(function(c){ return wlStatus(c)===state.filter; }) : b;
+    l = (state.filter && state.filter!=='all') ? b.filter(function(c){ return completedStatus(c)===state.filter; }) : b;
   } else {
     l = b.filter(inDateRange);   // active tab: All / Today / Delayed
   }
@@ -987,8 +1005,8 @@ function worklistView(){
 
   /* tidy filters — status scoped to the current tab */
   var tabList=base.filter(function(c){ return tab==='completed'?isCompleted(c):!isCompleted(c); }).filter(inDateRange);
-  function scnt(st){ return st==='all'?tabList.length:tabList.filter(function(c){ return wlStatus(c)===st; }).length; }
-  var statusOpts=tab==='completed'?[['all','All'],['verified','Verified'],['notverified','Not verified']]:[['all','All'],['toverify','To verify'],['inreview','In review']];
+  function scnt(st){ if(st==='all') return tabList.length; return tabList.filter(function(c){ return (tab==='completed'?completedStatus(c):wlStatus(c))===st; }).length; }
+  var statusOpts=tab==='completed'?[['all','All'],['reviewed','Reviewed'],['inconclusive','Inconclusive'],['incomplete','Incomplete']]:[['all','All'],['toverify','To verify'],['inreview','In review']];
   var fctrl='height:34px;border:1px solid #DCE2EB;border-radius:9px;background:#fff;font-family:inherit;font-size:13px;padding:0 10px;color:#2A2A2A;cursor:pointer';
   var statusSel='<select onchange="wlSetFilter(this.value)" style="'+fctrl+'">'+statusOpts.map(function(o){ return '<option value="'+o[0]+'"'+(s.filter===o[0]?' selected':'')+'>'+h(o[1])+' ('+scnt(o[0])+')</option>'; }).join('')+'</select>';
   var sopt=function(v,l){ return '<option value="'+v+'"'+(s.wlSort===v?' selected':'')+'>'+l+'</option>'; };
@@ -1022,7 +1040,7 @@ function worklistView(){
         candAvatar(c,42)+
         '<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:7px;min-width:0"><span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+'</span>'+upTag+'</div>'+
           '<div class="wl-sub" style="font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#667085">'+sub+'</div></div>'+
-        '<span style="flex-shrink:0;display:inline-flex;justify-content:flex-end">'+(tab==='completed'?_pill('Reviewed','#5A6473','#EFF1F5'):(overdue?_pill((st==='inreview'?'In review':'To verify')+' · Delayed','#8a6414','#FBF1DE'):wlPill(st)))+'</span>'+kebab+
+        '<span style="flex-shrink:0;display:inline-flex;justify-content:flex-end">'+(tab==='completed'?completedPill(c):(overdue?_pill((st==='inreview'?'In review':'To verify')+' · Delayed','#8a6414','#FBF1DE'):wlPill(st)))+'</span>'+kebab+
       '</div>';
     });
     if(shown < full.length){
@@ -1556,9 +1574,9 @@ function buildSeeds(){
     {name:'Vikram Nair',  req:'Data Engineer',     st:'toverify',    iso:'2026-08-15', reason:'', score:91},
     {name:'Priya Sharma', req:'QA Analyst',        st:'toverify',    iso:'2026-08-12', reason:'', score:88},
     {name:'Imran Shaikh', req:'UX Designer',       st:'inreview',    iso:'2026-08-13', reason:'Checked · not submitted', score:63, cause:'the reference photo is soft and unevenly lit, so it\'s harder to be sure this is the same person.'},
-    {name:'Ananya Rao',   req:'Product Manager',   st:'verified',    iso:'2026-08-14', reason:'Submitted by A. Sharma · 11:14', score:94},
-    {name:'Rohit Menon',  req:'SDET',              st:'verified',    iso:'2026-08-15', reason:'Submitted by A. Sharma · 09:32', score:92},
-    {name:'Sana Kapoor',  req:'Frontend Engineer', st:'notverified', iso:'2026-08-13', reason:'Submitted by A. Sharma · 10:20', score:22, cause:'the face here doesn\'t match today\'s photo; they look like different people.'},
+    {name:'Ananya Rao',   req:'Product Manager',   st:'verified',    completed:'reviewed',     iso:'2026-08-14', reason:'Submitted by A. Sharma · 11:14', score:94},
+    {name:'Rohit Menon',  req:'SDET',              st:'verified',    completed:'inconclusive', iso:'2026-08-15', reason:'Submitted by A. Sharma · 09:32 · 1 couldn’t be confirmed', score:92},
+    {name:'Sana Kapoor',  req:'Frontend Engineer', st:'notverified', completed:'incomplete',   iso:'2026-08-13', reason:'Submitted by A. Sharma · 10:20 · 1 left unreviewed', score:22},
     {name:'Dev Patel',    req:'Mobile Engineer',   st:'toverify',    iso:'2026-08-18', reason:'', score:90}
   ];
   seeds.forEach(function(x,i){
@@ -1566,7 +1584,7 @@ function buildSeeds(){
     var img=(window.RH_IMAGES && window.RH_IMAGES[key] && window.RH_IMAGES[key][0]) || null;
     CANDIDATES.push({ id:key, name:x.name, rhid:'RH'+(49001+i), req:x.req, reqid:'REQ-'+(2401+i), stage:'Onboarding', eligible:true, joiningISO:x.iso, joining:fmtLong(x.iso), owner:'me',
       photos:[{label:'Application photo', src:'application', date:'02 Apr 2026', by:null, score:x.score, img:img, cause:(x.cause||null)}],
-      wl:{status:x.st, by:'A. Sharma', at:hhmm(i+2), reason:x.reason} });
+      wl:{status:x.st, completed:x.completed||null, by:'A. Sharma', at:hhmm(i+2), reason:x.reason} });
   });
 }
 

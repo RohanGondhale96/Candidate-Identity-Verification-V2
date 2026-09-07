@@ -15,6 +15,32 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-07 · Completed-tab statuses: Reviewed / Inconclusive / Incomplete — BUILT + DEPLOYED
+
+- **Discussion (Rohan, extended):** the Completed tab flattened everything to a single "Reviewed" pill,
+  while its filter still said "Verified / Not verified" (stale mismatch). Rohan wanted the completed
+  status to reflect *how the review concluded*, and worked through the cases with me:
+  1. recruiter made a definite match/not-match call on everything → **Reviewed**;
+  2. recruiter used **"Can't confirm"** on ≥1 comparison → a second status;
+  3. recruiter hit **"Submit anyway"** leaving ≥1 comparison *unreviewed* → a third case he raised.
+- **Key argument (mine, agreed):** case 3 earns its own status because folding it into case 2 would be
+  *inaccurate* — "Inconclusive" means "looked and couldn't decide", but a skipped comparison was never
+  looked at. For an identity check that audit distinction (genuinely-couldn't-confirm vs recruiter-didn't-
+  finish) matters. Considered alternative — hardening the submit gate so case 3 can't happen — rejected
+  because it reverses the earlier "keep the gate soft, confirm + note" decision.
+- **Naming:** iterated on names; Rohan chose **Reviewed / Inconclusive / Incomplete** (rejected "Decision
+  pending"/"Not fully reviewed"; "Incomplete" is the crisp one-word case 3).
+- **Change:** `completedStatus(c)` derives the status from the submitted report (`reportSummary`:
+  `unresolved>0` → incomplete, else `ignored>0` → inconclusive, else reviewed), falling back to seeded
+  `wl.completed`. Drives the row pill (`completedPill`: red / amber / grey), the completed-tab filter
+  options, `scnt`, and the `wlList` completed filter. `wlStatus`/`isCompleted` untouched (still split
+  active vs completed). Seeded Ananya=reviewed, Rohit=inconclusive, Sana=incomplete for the demo. Harness
+  updated (completed filter now tests the three statuses) + green; verified in-browser (3 pills, filter
+  counts All 3 / Reviewed 1 / Inconclusive 1 / Incomplete 1).
+- **Deliberately left simple:** the match-vs-mismatch outcome is *not* a completed-list status (stays inside
+  the report) — consistent with the earlier "flatten to Reviewed" call. Flagged to Rohan that if spotting
+  mismatches at a glance ever matters, a Verified/Not-verified split could return.
+
 ## 2026-09-07 · Worklist filters → When button group + "Delayed" pill — BUILT + DEPLOYED
 
 - **Discussion (manager, via Rohan, wireframed first):** simplify the filters further — turn the
