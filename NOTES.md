@@ -89,8 +89,8 @@ carry the dark theme). What changed:
   is a **two-column row** — the photo preview on the **left** (stretches to the row height), and on the
   **right** the **file name** (top), the **two consent/attestation checkboxes** (vertically centred
   against the photo), and **Change photo / Submit** side by side pinned to the **bottom** (aligned with
-  the photo's bottom edge), with the helper line "Submit is enabled once both boxes are ticked. It runs
-  the quality check, then the comparison." The old top-right "Use a different photo" button is gone
+  the photo's bottom edge). (The explanatory helper line under the buttons was removed 2026-09-07 —
+  manager — leaving the buttons flush at the photo's bottom.) The old top-right "Use a different photo" button is gone
   (its job is now the bottom **Change photo**), and the hint paragraph hides once a photo is chosen.
 - **Consent-first ordering + quality as a hard gate (changed 2026-09-05, manager).** The order was
   flipped. **Before:** picking a photo *immediately* ran the quality check, then showed the consent
