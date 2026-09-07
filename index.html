@@ -266,7 +266,7 @@ function uploadedImg(fit){
   if(!state.photo) return '';
   fit = fit || 'cover';
   var extra = fit==='cover' ? ';object-position:center top' : '';
-  return '<img src="'+h(state.photo)+'" alt="Photo taken today" style="position:absolute;inset:0;width:100%;height:100%;object-fit:'+fit+';background:#EFEFEF'+extra+';display:block">';
+  return '<img src="'+h(state.photo)+'" alt="Photo taken on joining day" style="position:absolute;inset:0;width:100%;height:100%;object-fit:'+fit+';background:#EFEFEF'+extra+';display:block">';
 }
 /* real photo when the candidate has one on file, else the hue placeholder */
 function photoTile(p, seed, fit){
@@ -713,13 +713,12 @@ function _seg(v,label,n,on){
 function comparePanes(r, seed){
   var capStyle='position:absolute;left:0;right:0;bottom:0;padding:20px 11px 9px;background:linear-gradient(to top,rgba(0,0,0,.68),rgba(0,0,0,0));color:#fff';
   var paneStyle='position:relative;width:100%;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD';
-  // caption: who captured it + the photo's own date/time (mirrors the "Photo taken today" pane, per manager)
-  var capPrimary = r.by ? ('Interviewed by '+h(r.by)) : (r.src==='document' ? 'Identity document' : 'On-file photo');
-  var personIcon = r.by ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>' : '';
+  // caption mirrors the joining-day pane: "Photo taken during <round>" / date+time (per manager)
+  var capPrimary = r.by ? ('Photo taken during '+h(r.label)) : (r.src==='document' ? 'Identity document' : h(r.label||'On-file photo'));
   var refPane='<div class="rpt-pane" style="'+paneStyle+'">'+photoTile(r,seed,'contain')+
-    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3;display:flex;align-items:center;gap:5px">'+personIcon+capPrimary+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:2px">'+h(r.date)+'</div></div></div>';
+    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+capPrimary+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:2px">'+h(r.date)+'</div></div></div>';
   var todayPane='<div class="rpt-pane" style="'+paneStyle+'">'+uploadedImg('contain')+
-    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">Photo taken today</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">15 Aug 2026, 09:41</div></div></div>';
+    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">Photo taken on joining day</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">15 Aug 2026, 09:41</div></div></div>';
   return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+refPane+todayPane+'</div>';
 }
 function reportThumbs(r, seed){
@@ -748,7 +747,7 @@ function reportFeed(s, c){
   var flagged=[]; rows.forEach(function(r,i){ var st=photoState(r); if(st==='review'||st==='nomatch') flagged.push(i); });
   html += '<div id="rpt-top" class="rh-card" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 18px;scroll-margin-top:16px">'+
     '<div style="width:48px;height:60px;border-radius:8px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;flex-shrink:0;position:relative">'+uploadedImg('cover')+'</div>'+
-    '<div style="flex:1 1 180px;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.4">Photo taken today</div>'+
+    '<div style="flex:1 1 180px;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.4">Photo taken on joining day</div>'+
       '<div style="font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · 12 Aug 2026, 09:41 IST</div>'+
       ((s.attest||(s.entry&&s.entry.attest)) ? '<div style="font-size:12px;color:#1a6b34;margin-top:4px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Attested as a joining-day photo of the person who reported to join</div>':'')+
     '</div>'+

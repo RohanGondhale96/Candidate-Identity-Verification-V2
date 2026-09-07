@@ -40,11 +40,16 @@ carry the dark theme). What changed:
   round has a verdict. Submission is NOT hard-blocked — "Submit
   anyway" still works, and the submit dialog then requires the "I've reviewed all the comparisons"
   checkbox + a note for unreviewed rounds (soft-mandatory, recruiter judgment + audit trail).
-- **Reference caption:** "Interviewed by {name}" (or "Identity document" / "On-file photo") +
-  the photo's own **date & time** (`r.date`, e.g. "02 Jun 2026, 15:20"). Changed 2026-09-07 (manager):
-  it used to show a relative age ("74 days earlier", `reportRelAge`) — Rohan liked that, but the manager
-  wanted date & time to mirror the "Photo taken today · 15 Aug 2026, 09:41" pane for consistency. This
-  does repeat the round-header date, accepted for pane symmetry.
+- **Reference caption (2026-09-07, manager):** primary line **"Photo taken during {round}"** (e.g.
+  "Photo taken during Round 2 — technical", from `r.label`; documents show "Identity document", the
+  application photo shows its label) + the photo's own **date & time** (`r.date`, e.g. "02 Jun 2026,
+  15:20"). Deliberately parallels the joining-day pane **"Photo taken on joining day · 15 Aug 2026,
+  09:41"** — both start "Photo taken …". History: was "Interviewed by {name}" + a relative age ("74
+  days earlier", `reportRelAge`); the manager swapped the age for date & time, then replaced
+  "Interviewed by {name}" with the round context. The interviewer name is no longer shown here. Repeats
+  the round-header label/date — accepted for pane symmetry.
+- **"Photo taken on joining day"** replaced **"Photo taken today"** everywhere it labels the uploaded
+  joining-day photo (2026-09-07, manager): the compare pane, the report header card, and the image alt.
 - **Copy:** "Face-match score" (was "Model similarity"); "Match line · 85/65%" (was "Photos/
   Documents match at N%"); "Why this needs a look:" / "Why this may not match:" (was "Likely
   cause…"); the action prompt is "Is this the same person?"; recorded verdicts read "Same
