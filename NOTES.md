@@ -75,7 +75,9 @@ carry the dark theme). What changed:
   status dropdown; it has a single light **button group — All / Today / Delayed** (`inDateRange` now
   returns All / Today=`dayDiff===0` / Delayed=`isOverdue`; `state.dateRange` holds the choice). It's
   styled lighter than the tabs (active = blue *tint* `#EAF2FE`/`#185FA5`, tabs = solid `#0076FB`) so it
-  reads as a filter, not navigation. **Delayed** carries an amber count badge. Rationale: on a tab
+  reads as a filter, not navigation. **Delayed** carries a count badge that matches its segment state
+  (blue when the segment is active, neutral grey when not — was amber, changed 2026-09-07 as it clashed
+  with the blue active segment; the amber "Delayed" treatment stays on the row pills). Rationale: on a tab
   that's already "everything to verify", a To-verify status filter barely narrows, and it overlapped
   with Overdue — so status filtering was dropped here in favour of triaging by *timing*. The
   **Completed** tab keeps its **status dropdown** (All / Verified / Not verified) — "delayed" doesn't
