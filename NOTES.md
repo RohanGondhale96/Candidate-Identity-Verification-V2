@@ -40,9 +40,11 @@ carry the dark theme). What changed:
   round has a verdict. Submission is NOT hard-blocked — "Submit
   anyway" still works, and the submit dialog then requires the "I've reviewed all the comparisons"
   checkbox + a note for unreviewed rounds (soft-mandatory, recruiter judgment + audit trail).
-- **No repeated caption:** the reference photo's overlay no longer repeats the round label/date
-  (those live in the card header); it shows only what the header doesn't — "Interviewed by {name}"
-  (or "Identity document" / "On-file photo") + how old the photo is ("74 days earlier").
+- **Reference caption:** "Interviewed by {name}" (or "Identity document" / "On-file photo") +
+  the photo's own **date & time** (`r.date`, e.g. "02 Jun 2026, 15:20"). Changed 2026-09-07 (manager):
+  it used to show a relative age ("74 days earlier", `reportRelAge`) — Rohan liked that, but the manager
+  wanted date & time to mirror the "Photo taken today · 15 Aug 2026, 09:41" pane for consistency. This
+  does repeat the round-header date, accepted for pane symmetry.
 - **Copy:** "Face-match score" (was "Model similarity"); "Match line · 85/65%" (was "Photos/
   Documents match at N%"); "Why this needs a look:" / "Why this may not match:" (was "Likely
   cause…"); the action prompt is "Is this the same person?"; recorded verdicts read "Same

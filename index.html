@@ -711,14 +711,13 @@ function _seg(v,label,n,on){
   return '<button type="button" onclick="setReportView(\''+v+'\')" aria-pressed="'+(on?'true':'false')+'" style="border:0;background:'+(on?'#0076FB':'transparent')+';color:'+(on?'#fff':'#5A6473')+';font-family:inherit;font-size:13px;font-weight:600;padding:7px 15px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:7px">'+h(label)+'<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:'+(on?'rgba(255,255,255,.22)':'#EFF1F5')+';color:'+(on?'#fff':'#5A6473')+'">'+n+'</span></button>';
 }
 function comparePanes(r, seed){
-  var rel=reportRelAge(r);
   var capStyle='position:absolute;left:0;right:0;bottom:0;padding:20px 11px 9px;background:linear-gradient(to top,rgba(0,0,0,.68),rgba(0,0,0,0));color:#fff';
   var paneStyle='position:relative;width:100%;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD';
-  // caption carries only what the header doesn't: who captured it + how old it is (no repeated label/date)
+  // caption: who captured it + the photo's own date/time (mirrors the "Photo taken today" pane, per manager)
   var capPrimary = r.by ? ('Interviewed by '+h(r.by)) : (r.src==='document' ? 'Identity document' : 'On-file photo');
   var personIcon = r.by ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>' : '';
   var refPane='<div class="rpt-pane" style="'+paneStyle+'">'+photoTile(r,seed,'contain')+
-    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3;display:flex;align-items:center;gap:5px">'+personIcon+capPrimary+'</div>'+(rel?'<div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:2px">'+h(rel)+'</div>':'')+'</div></div>';
+    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3;display:flex;align-items:center;gap:5px">'+personIcon+capPrimary+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:2px">'+h(r.date)+'</div></div></div>';
   var todayPane='<div class="rpt-pane" style="'+paneStyle+'">'+uploadedImg('contain')+
     '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">Photo taken today</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">15 Aug 2026, 09:41</div></div></div>';
   return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+refPane+todayPane+'</div>';
