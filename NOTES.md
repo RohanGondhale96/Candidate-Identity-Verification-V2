@@ -18,8 +18,12 @@ carry the dark theme). What changed:
   nav slimmed to 54px on `#0C1016`; the thinner 3px multi-stop rainbow bar.
 
 - **Report** is a per-round **card feed** (`reportFeed` / `reportCard`): a candidate header
-  card, a "Photo taken today" card, an **All rounds / Needs review toggle** (`state.reportView`,
-  `setReportView`), then one card per round grouped by type. Matched / Couldn't-compare rounds
+  card, a "Photo taken on joining day" card, an **All rounds / Needs review** control (`state.reportView`,
+  `setReportView`, `_seg`) — styled as **RH underline tabs** (2026-09-07, manager: "make the tabs look
+  like RH"): brand-blue text + a 2px `#0076FB` underline on the active tab sitting on a `#E0E0E0` divider,
+  grey `#4B5563` inactive, count badge light-blue when active / grey when not. (RH DS has no formal Tab
+  component; underline tabs are a product convention. The worklist To-verify/Completed tabs were left as
+  their solid-blue pills for now — not yet reconciled.) Then one card per round grouped by type. Matched / Couldn't-compare rounds
   are calm collapsible strips; Needs-review / Not-a-match are full cards. Thumbnails show only
   when a card is collapsed; a collapsed flagged card keeps its verdict in the header chip.
   Verdict actions sit side by side with semantic icons. The **Submit report** control is a bar
