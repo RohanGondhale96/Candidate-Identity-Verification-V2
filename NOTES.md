@@ -88,7 +88,9 @@ carry the dark theme). What changed:
   new status value; on-time rows keep the plain grey/amber pill. Same word ("Delayed") as the filter,
   on purpose. This is a deliberate 4th overdue cue (sort-to-top + Delayed filter + red/amber date +
   pill) — the pill spells the word so overdue doesn't rely on colour alone (accessibility).
-- Kebab: "Change joining date" + "Not joining" (overdue/upcoming). Mobile row sub-lines wrap
+- Kebab: "Change joining date" + "Not joining" (overdue/upcoming) — **active tab only**; the Completed
+  tab shows no kebab (2026-09-07, manager: changing a joining date makes no sense once a candidate is
+  reviewed). Mobile row sub-lines wrap
   (`.wl-sub`). Search hint reworded.
 - **Upload / verification animation — AI-scan motif:** the joining-day photo gets a face-scan
   overlay (corner reticle, faint grid, vignette, sweeping laser line) and the loader is a
