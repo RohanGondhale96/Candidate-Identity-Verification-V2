@@ -1138,7 +1138,7 @@ function render(){
           '<label class="rh-cb" style="margin-top:14px"><input type="checkbox" '+(s.attest?'checked':'')+' onchange="toggleAttest()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>This photo was taken on the joining date, of the person who reported to join.</span></label>'+
         '</div>';
         var buttons = '<div style="display:flex;gap:12px">'+
-          '<button type="button" class="rh-btn secondary" style="flex:1" onclick="retake()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Change photo</button>'+
+          '<button type="button" class="rh-btn secondary" style="flex:1" onclick="openPicker()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Change photo</button>'+
           '<button type="button" class="rh-btn primary" style="flex:1" '+(canSubmit?'':'disabled')+' onclick="submitPhoto()">Submit</button>'+
         '</div>';
         right = '<div style="flex:1;min-width:250px;display:flex;flex-direction:column">'+
@@ -1421,7 +1421,7 @@ function pick(id){ var c=CANDIDATES.find(function(x){return x.id===id;}); if(!c)
 function setTab(t){ setState({tab:t}); }
 function changeCandidate(){ setState({cand:null, searchOpen:true, done:false, running:false, rows:[], entry:null, decision:null, decisionErr:'', viewingHistory:false}); wlSyncUrl(true); window.scrollTo({top:0,behavior:'smooth'}); }
 function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click(); }
-function openPicker(){ var el=document.getElementById('rh-file'); if(el) el.click(); }
+function openPicker(){ var el=document.getElementById('rh-file'); if(el){ el.value=''; el.click(); } }
 function onFileInput(e){ handleFile(e.target.files[0]); }
 function retake(){ clearTimers(); _runToken++; _qtoken++; setState({photo:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, upErr:'', done:false, running:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null}); }
 /* The recruiter doesn't personally confirm/deny identity — the system carries the status. They

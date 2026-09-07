@@ -90,7 +90,10 @@ carry the dark theme). What changed:
   **right** the **file name** (top), the **two consent/attestation checkboxes** (vertically centred
   against the photo), and **Change photo / Submit** side by side pinned to the **bottom** (aligned with
   the photo's bottom edge). (The explanatory helper line under the buttons was removed 2026-09-07 —
-  manager — leaving the buttons flush at the photo's bottom.) The old top-right "Use a different photo" button is gone
+  manager — leaving the buttons flush at the photo's bottom.) **Change photo** opens the file picker
+  **directly** (`openPicker`, 2026-09-07) — it no longer clears the photo back to the upload step; the
+  current photo stays until a new file is chosen (`handleFile` then swaps it and re-resets consent).
+  The old top-right "Use a different photo" button is gone
   (its job is now the bottom **Change photo**), and the hint paragraph hides once a photo is chosen.
 - **Consent-first ordering + quality as a hard gate (changed 2026-09-05, manager).** The order was
   flipped. **Before:** picking a photo *immediately* ran the quality check, then showed the consent
