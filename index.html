@@ -816,15 +816,14 @@ function wlStatus(c){
 }
 /* a check counts as "completed" once a report has been submitted (verified / not verified / needs review) */
 function isCompleted(c){ var st=wlStatus(c); return st==='verified'||st==='notverified'||st==='needsreview'; }
-function setWlTab(t){ setState({wlTab:t, filter:'all', page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
+function setWlTab(t){ setState({wlTab:t, filter:'all', dateRange:'all', page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
 function dayDiff(c){ return Math.round((WL_TODAY_MS - Date.parse(c.joiningISO+'T00:00:00Z'))/86400000); } // +past, -future, 0 today
 function isFuture(c){ return dayDiff(c) < 0; }
 function isOverdue(c){ if(isDismissed(c)) return false; var st=wlStatus(c); return dayDiff(c)>0 && (st==='toverify'||st==='inreview'); }
-function inDateRange(c){ var d=dayDiff(c), r=state.dateRange;
-  if(r==='today')  return d===0;
-  if(r==='past7')  return d>=0 && d<=7;
-  if(r==='past30') return d>=0 && d<=30;
-  if(r==='next7')  return d<=0 && d>=-7;
+/* active-tab "when" filter: All / Today / Delayed (Delayed = overdue, a status cross-cut) */
+function inDateRange(c){ var r=state.dateRange;
+  if(r==='today')   return dayDiff(c)===0;
+  if(r==='delayed') return isOverdue(c);
   return true; /* all */
 }
 function wlBase(){ return CANDIDATES.filter(function(c){ return c.eligible!==false && c.joiningISO; }); }
@@ -845,8 +844,12 @@ function wlSortList(l){ var s=state.wlSort;
 }
 function wlList(){
   var b=wlBase().filter(function(c){ return state.wlTab==='completed' ? isCompleted(c) : !isCompleted(c); });
-  var l=b.filter(inDateRange);
-  if(state.filter && state.filter!=='all') l=l.filter(function(c){ return wlStatus(c)===state.filter; });
+  var l;
+  if(state.wlTab==='completed'){
+    l = (state.filter && state.filter!=='all') ? b.filter(function(c){ return wlStatus(c)===state.filter; }) : b;
+  } else {
+    l = b.filter(inDateRange);   // active tab: All / Today / Delayed
+  }
   return wlSortList(l);
 }
 function fmtDate(iso){
@@ -990,10 +993,14 @@ function worklistView(){
   var statusOpts=tab==='completed'?[['all','All'],['verified','Verified'],['notverified','Not verified']]:[['all','All'],['toverify','To verify'],['inreview','In review']];
   var fctrl='height:34px;border:1px solid #DCE2EB;border-radius:9px;background:#fff;font-family:inherit;font-size:13px;padding:0 10px;color:#2A2A2A;cursor:pointer';
   var statusSel='<select onchange="wlSetFilter(this.value)" style="'+fctrl+'">'+statusOpts.map(function(o){ return '<option value="'+o[0]+'"'+(s.filter===o[0]?' selected':'')+'>'+h(o[1])+' ('+scnt(o[0])+')</option>'; }).join('')+'</select>';
-  var dopt=function(v,l){ return '<option value="'+v+'"'+(s.dateRange===v?' selected':'')+'>'+l+'</option>'; };
   var sopt=function(v,l){ return '<option value="'+v+'"'+(s.wlSort===v?' selected':'')+'>'+l+'</option>'; };
-  html+='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px">'+(tab==='active'?statusSel:'')+
-    '<select onchange="wlSetDate(this.value)" style="'+fctrl+'">'+dopt('all','All dates')+dopt('today','Today')+dopt('past7','Past 7 days')+dopt('past30','Past 30 days')+dopt('next7','Next 7 days')+'</select>'+
+  /* active tab: a light "when" button group (All / Today / Delayed) — lighter than the tabs so it reads as a filter, not navigation */
+  var delayedN=base.filter(isOverdue).length;
+  function whenSeg(v,label,badge){ var on=(s.dateRange||'all')===v;
+    return '<button type="button" onclick="wlSetDate(\''+v+'\')" aria-pressed="'+on+'" style="border:0;'+(v!=='all'?'border-left:1px solid #DCE2EB;':'')+'background:'+(on?'#EAF2FE':'#fff')+';color:'+(on?'#185FA5':'#5A6473')+';font-family:inherit;font-size:13px;font-weight:600;padding:0 14px;height:34px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">'+h(label)+(badge?'<span style="font-size:11px;font-weight:700;padding:0 6px;border-radius:999px;background:#FBF1DE;color:#8a6414">'+delayedN+'</span>':'')+'</button>';
+  }
+  var whenGroup='<div role="group" aria-label="Filter by timing" style="display:inline-flex;border:1px solid #DCE2EB;border-radius:9px;overflow:hidden">'+whenSeg('all','All',false)+whenSeg('today','Today',false)+whenSeg('delayed','Delayed',true)+'</div>';
+  html+='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px">'+(tab==='active'?whenGroup:statusSel)+
     '<select onchange="wlSetSort(this.value)" style="'+fctrl+'">'+sopt('overdue','Sort: Oldest first')+sopt('newest','Sort: Newest')+sopt('name','Sort: Name A–Z')+'</select>'+
   '</div>';
 
@@ -1017,7 +1024,7 @@ function worklistView(){
         candAvatar(c,42)+
         '<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:7px;min-width:0"><span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+'</span>'+upTag+'</div>'+
           '<div class="wl-sub" style="font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#667085">'+sub+'</div></div>'+
-        '<span style="flex-shrink:0;display:inline-flex;justify-content:flex-end">'+(tab==='completed'?_pill('Reviewed','#5A6473','#EFF1F5'):wlPill(st))+'</span>'+kebab+
+        '<span style="flex-shrink:0;display:inline-flex;justify-content:flex-end">'+(tab==='completed'?_pill('Reviewed','#5A6473','#EFF1F5'):(overdue?_pill((st==='inreview'?'In review':'To verify')+' · Delayed','#8a6414','#FBF1DE'):wlPill(st)))+'</span>'+kebab+
       '</div>';
     });
     if(shown < full.length){

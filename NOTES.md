@@ -59,10 +59,24 @@ carry the dark theme). What changed:
   16 Aug"), and the normal **To verify** status pill. They sort to the **bottom** under the default
   "Oldest first" sort (`isFuture` → future-last); on an explicit Newest/Name sort they intermix, but
   the "Upcoming" tag travels with the row so they stay identifiable. Overdue candidates fold to the
-  **top** of the To-verify tab (red/amber "N days ago, 3 Aug") — no separate attention block. Filters
-  (Status / Dates / Sort) are tidied and the **Status dropdown is scoped to the current tab**. Kebab:
-  "Change joining date" + "Not joining" (overdue/upcoming). Mobile row sub-lines wrap (`.wl-sub`).
-  Search hint reworded.
+  **top** of the To-verify tab (red/amber "N days ago, 3 Aug") — no separate attention block.
+- **Filters (simplified again 2026-09-05, manager).** The active **To verify** tab no longer has a
+  status dropdown; it has a single light **button group — All / Today / Delayed** (`inDateRange` now
+  returns All / Today=`dayDiff===0` / Delayed=`isOverdue`; `state.dateRange` holds the choice). It's
+  styled lighter than the tabs (active = blue *tint* `#EAF2FE`/`#185FA5`, tabs = solid `#0076FB`) so it
+  reads as a filter, not navigation. **Delayed** carries an amber count badge. Rationale: on a tab
+  that's already "everything to verify", a To-verify status filter barely narrows, and it overlapped
+  with Overdue — so status filtering was dropped here in favour of triaging by *timing*. The
+  **Completed** tab keeps its **status dropdown** (All / Verified / Not verified) — "delayed" doesn't
+  apply there. `wlList` is tab-aware (active → when-filter, completed → status filter); `setWlTab`
+  resets both. A **Sort** dropdown stays on both tabs.
+- **Delayed status pill.** An overdue active row's pill reads **"To verify · Delayed"** or **"In review
+  · Delayed"** in amber (`#8a6414`/`#FBF1DE`) — "delayed" is a *modifier* on the existing status, not a
+  new status value; on-time rows keep the plain grey/amber pill. Same word ("Delayed") as the filter,
+  on purpose. This is a deliberate 4th overdue cue (sort-to-top + Delayed filter + red/amber date +
+  pill) — the pill spells the word so overdue doesn't rely on colour alone (accessibility).
+- Kebab: "Change joining date" + "Not joining" (overdue/upcoming). Mobile row sub-lines wrap
+  (`.wl-sub`). Search hint reworded.
 - **Upload / verification animation — AI-scan motif:** the joining-day photo gets a face-scan
   overlay (corner reticle, faint grid, vignette, sweeping laser line) and the loader is a
   radar-sweep (cyan conic sweep + pulsing core), shown during **both** the quality pre-flight and

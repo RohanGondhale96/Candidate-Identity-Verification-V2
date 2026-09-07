@@ -15,6 +15,30 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-07 · Worklist filters → When button group + "Delayed" pill — BUILT + DEPLOYED
+
+- **Discussion (manager, via Rohan, wireframed first):** simplify the filters further — turn the
+  "All dates" dropdown into a **button group** with only three options.
+- **Working it out (chat + `show_widget` mocks):** (1) date ranges of 5 → 3; picked **All / Today /
+  Delayed** rather than a pure date range, because "Upcoming" would give the low-stakes future joiners
+  a button and leave the high-stakes overdue/no-shows only under "All" (Rohan caught this). (2) Rohan
+  then spotted that a "Delayed/Overdue" button **overlaps** the existing Status dropdown's "To verify"
+  — so we dropped the **Status dropdown on the active tab** entirely (option B), leaving one filter
+  axis (*timing*). "In review" survives as a row pill, just not a filter. (3) Vocabulary aligned:
+  filter button and pill **both say "Delayed"** (not "Overdue" on one and "Delayed" on the other).
+- **Change:** active To-verify tab = a light **All / Today / Delayed** button group (Delayed = amber
+  count badge), lighter than the tabs so it reads as a filter; Completed tab keeps its status dropdown.
+  `inDateRange` rewritten to All/Today(`dayDiff===0`)/Delayed(`isOverdue`); `wlList` made tab-aware;
+  `setWlTab` resets both `filter` and `dateRange`. Overdue rows' pill now reads **"To verify · Delayed"
+  / "In review · Delayed"** (amber) — "delayed" as a modifier on the status, same word as the filter.
+- **Kept as a deliberate 4th overdue cue** (sort-to-top, Delayed filter, red/amber date, pill): the
+  pill spells "Delayed" so overdue doesn't depend on colour alone (accessibility). Harness updated
+  (active tab now tests the When filter, not a status filter) + green; verified in-browser (group,
+  Delayed→3 overdue rows, pills, Completed tab keeps its dropdown).
+- **Flagged to Rohan to run past his manager:** dropping the status dropdown revisits his earlier
+  "status is fine", and turning the "dates" filter into a *timing/urgency* filter (Delayed is a status
+  cross-cut, not a date range) is a deliberate reframe. Rohan approved building it.
+
 ## 2026-09-05 · Worklist: pagination → infinite scroll — BUILT + DEPLOYED
 
 - **Discussion (Rohan):** drop the pagination on the main worklist; load rows lazily as you scroll.
