@@ -707,9 +707,8 @@ function jumpToFlagged(){
   var rows=state.rows||[];
   for(var i=0;i<rows.length;i++){ if(rowUnresolved(rows[i])){ smoothScrollToEl('rpt-round-'+i, 12, 520); return; } }
 }
-/* RH-style underline tab (brand-blue underline + text on the active tab) */
 function _seg(v,label,n,on){
-  return '<button type="button" onclick="setReportView(\''+v+'\')" aria-pressed="'+(on?'true':'false')+'" style="border:0;background:none;color:'+(on?'#0076FB':'#4B5563')+';font-family:inherit;font-size:13px;font-weight:600;padding:0 2px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;border-bottom:2px solid '+(on?'#0076FB':'transparent')+';margin-bottom:-1px">'+h(label)+'<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:'+(on?'#EFF6FF':'#EFF1F5')+';color:'+(on?'#0076FB':'#4B5563')+'">'+n+'</span></button>';
+  return '<button type="button" onclick="setReportView(\''+v+'\')" aria-pressed="'+(on?'true':'false')+'" style="border:0;background:'+(on?'#0076FB':'transparent')+';color:'+(on?'#fff':'#5A6473')+';font-family:inherit;font-size:13px;font-weight:600;padding:7px 15px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:7px">'+h(label)+'<span style="font-size:11px;font-weight:700;padding:1px 7px;border-radius:999px;background:'+(on?'rgba(255,255,255,.22)':'#EFF1F5')+';color:'+(on?'#fff':'#5A6473')+'">'+n+'</span></button>';
 }
 function comparePanes(r, seed){
   var capStyle='position:absolute;left:0;right:0;bottom:0;padding:20px 11px 9px;background:linear-gradient(to top,rgba(0,0,0,.68),rgba(0,0,0,0));color:#fff';
@@ -763,7 +762,7 @@ function reportFeed(s, c){
     html += '</div>';
   }
   html += '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 2px 14px">'+
-    '<div role="group" aria-label="Filter rounds" style="display:inline-flex;gap:26px;border-bottom:1px solid #E0E0E0">'+
+    '<div role="group" aria-label="Filter rounds" style="display:inline-flex;background:#fff;border:1px solid #E5E9F0;border-radius:999px;padding:3px;box-shadow:0 1px 2px rgba(20,30,50,.06)">'+
       _seg('all','All rounds',rows.length,view==='all')+_seg('review','Needs review',flagged.length,view==='review')+
     '</div></div>';
   var groups=[{title:'Application &amp; interview photos', sub:'', test:function(r){return r.src!=='document';}},{title:'Identity documents', sub:'scored more leniently (older, lower-quality scans)', test:function(r){return r.src==='document';}}];
@@ -983,9 +982,8 @@ function worklistView(){
   var tab=s.wlTab==='completed'?'completed':'active';
 
   /* two tabs: To verify (active) | Completed */
-  /* RH-style underline tabs (was a solid-blue pill group — revertable) */
-  function tabBtn(id,label,n){ var on=tab===id; return '<button type="button" onclick="setWlTab(\''+id+'\')" aria-pressed="'+on+'" style="border:0;background:none;color:'+(on?'#0076FB':'#4B5563')+';font-family:inherit;font-size:14px;font-weight:600;padding:0 2px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;border-bottom:2px solid '+(on?'#0076FB':'transparent')+';margin-bottom:-1px">'+h(label)+'<span style="font-size:12px;font-weight:700;padding:1px 8px;border-radius:999px;background:'+(on?'#EFF6FF':'#EFF1F5')+';color:'+(on?'#0076FB':'#4B5563')+'">'+n+'</span></button>'; }
-  var html='<div role="group" aria-label="Candidate lists" style="display:inline-flex;gap:28px;border-bottom:1px solid #E0E0E0;margin-bottom:16px">'+tabBtn('active','To verify',activeN)+tabBtn('completed','Completed',completedN)+'</div>';
+  function tabBtn(id,label,n){ var on=tab===id; return '<button type="button" onclick="setWlTab(\''+id+'\')" aria-pressed="'+on+'" style="border:0;background:'+(on?'#0076FB':'transparent')+';color:'+(on?'#fff':'#5A6473')+';font-family:inherit;font-size:14px;font-weight:600;padding:8px 18px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:8px">'+h(label)+'<span style="font-size:12px;font-weight:700;padding:1px 8px;border-radius:999px;background:'+(on?'rgba(255,255,255,.22)':'#EFF1F5')+';color:'+(on?'#fff':'#5A6473')+'">'+n+'</span></button>'; }
+  var html='<div role="group" aria-label="Candidate lists" style="display:inline-flex;background:#fff;border:1px solid #E5E9F0;border-radius:999px;padding:3px;box-shadow:0 1px 2px rgba(20,30,50,.06);margin-bottom:16px">'+tabBtn('active','To verify',activeN)+tabBtn('completed','Completed',completedN)+'</div>';
 
   /* tidy filters — status scoped to the current tab */
   var tabList=base.filter(function(c){ return tab==='completed'?isCompleted(c):!isCompleted(c); }).filter(inDateRange);
