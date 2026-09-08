@@ -19,9 +19,11 @@ carry the dark theme). What changed:
 
 - **Report** is a per-round **card feed** (`reportFeed` / `reportCard`): a candidate header
   card, a "Photo taken on joining day" card, an **All rounds / Needs review** toggle (`state.reportView`,
-  `setReportView`, `_seg`) — a **solid-blue pill segmented control** with count badges. (An RH underline-tab
-  restyle was tried on 2026-09-07 and **reverted** the same day — Rohan didn't like how it sat on the page;
-  same for the worklist tabs.) Then one card per round grouped by type. Matched / Couldn't-compare rounds
+  `setReportView`, `_seg`) — styled as **underline tabs matching the worklist tabs** (2026-09-08): active =
+  dark/bold `#2A2A2A` text + a 2px `#0076FB` underline on a full-width `#E5E7EB` divider, grey `#667085`
+  inactive, grey count badges. (A first underline attempt with blue active text + short divider was
+  reverted 2026-09-07; the dark-text / full-width-divider variant is the one that stuck, applied to both
+  the worklist tabs and this toggle.) Then one card per round grouped by type. Matched / Couldn't-compare rounds
   are calm collapsible strips; Needs-review / Not-a-match are full cards. Thumbnails show only
   when a card is collapsed; a collapsed flagged card keeps its verdict in the header chip.
   Verdict actions sit side by side with semantic icons. The **Submit report** control is a bar
