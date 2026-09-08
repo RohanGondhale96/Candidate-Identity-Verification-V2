@@ -1000,8 +1000,9 @@ function worklistView(){
   var tab=s.wlTab==='completed'?'completed':'active';
 
   /* two tabs: To verify (active) | Completed */
-  function tabBtn(id,label,n){ var on=tab===id; return '<button type="button" onclick="setWlTab(\''+id+'\')" aria-pressed="'+on+'" style="border:0;background:'+(on?'#0076FB':'transparent')+';color:'+(on?'#fff':'#5A6473')+';font-family:inherit;font-size:14px;font-weight:600;padding:8px 18px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:8px">'+h(label)+'<span style="font-size:12px;font-weight:700;padding:1px 8px;border-radius:999px;background:'+(on?'rgba(255,255,255,.22)':'#EFF1F5')+';color:'+(on?'#fff':'#5A6473')+'">'+n+'</span></button>'; }
-  var html='<div role="group" aria-label="Candidate lists" style="display:inline-flex;background:#fff;border:1px solid #E5E9F0;border-radius:999px;padding:3px;box-shadow:0 1px 2px rgba(20,30,50,.06);margin-bottom:16px">'+tabBtn('active','To verify',activeN)+tabBtn('completed','Completed',completedN)+'</div>';
+  // underline tabs: active = dark/bold text + blue underline on a full-width divider; grey count badges
+  function tabBtn(id,label,n){ var on=tab===id; return '<button type="button" onclick="setWlTab(\''+id+'\')" aria-pressed="'+on+'" style="border:0;background:none;color:'+(on?'#2A2A2A':'#667085')+';font-family:inherit;font-size:14px;font-weight:600;padding:0 2px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;border-bottom:2px solid '+(on?'#0076FB':'transparent')+';margin-bottom:-1px">'+h(label)+'<span style="font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;background:#EFF1F5;color:#667085">'+n+'</span></button>'; }
+  var html='<div role="group" aria-label="Candidate lists" style="display:flex;gap:28px;border-bottom:1px solid #E5E7EB;margin-bottom:16px">'+tabBtn('active','To verify',activeN)+tabBtn('completed','Completed',completedN)+'</div>';
 
   /* tidy filters — status scoped to the current tab */
   var tabList=base.filter(function(c){ return tab==='completed'?isCompleted(c):!isCompleted(c); }).filter(inDateRange);

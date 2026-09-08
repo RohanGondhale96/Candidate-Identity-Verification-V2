@@ -63,9 +63,11 @@ carry the dark theme). What changed:
   labelled "scored more leniently (older, lower-quality scans)".
 - **Worklist:** **two tabs** — **To verify** (active: to-verify + in-review + upcoming) and
   **Completed** (verified / not verified / needs review), each with a count (`state.wlTab`,
-  `isCompleted`, `setWlTab`, `tabBtn`). A **solid-blue pill** selector (active = `#0076FB` fill/white text,
-  count badge). (An RH underline-tab restyle was tried and reverted on 2026-09-07 — didn't sit well on the
-  page.) **Every** row uses the **same template** (changed 2026-09-04, manager):
+  `isCompleted`, `setWlTab`, `tabBtn`). **Underline tabs** (2026-09-08, from a manager reference): active =
+  **dark/bold text (`#2A2A2A`) + a 2px `#0076FB` underline** on a full-width `#E5E7EB` divider; inactive =
+  grey `#667085`; grey count badges (`#EFF1F5`/`#667085`) both states. (An earlier underline attempt with
+  *blue* active text + a short divider was reverted 2026-09-07; this cleaner dark-text / full-width-divider
+  variant is the one that stuck.) **Every** row uses the **same template** (changed 2026-09-04, manager):
   candidate photo avatar (`candAvatar`, initials fallback), name, sub-line, status pill, kebab — and
   every row is clickable. **Upcoming (future-joiner) rows are no longer a separate "Coming up"
   section** — they sit inline in the To-verify list with the same photo thumbnail, a small blue
