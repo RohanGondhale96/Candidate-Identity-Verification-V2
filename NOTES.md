@@ -107,7 +107,9 @@ carry the dark theme). What changed:
   pill) — the pill spells the word so overdue doesn't rely on colour alone (accessibility).
 - Kebab: "Change joining date" + "Not joining" (overdue/upcoming) — **active tab only**; the Completed
   tab shows no kebab (2026-09-07, manager: changing a joining date makes no sense once a candidate is
-  reviewed). Mobile row sub-lines wrap
+  reviewed) and **drops the kebab slot entirely** (2026-09-08) so the pill sits flush at the card's right
+  edge — no empty band. The active tab keeps a 30px spacer for rows without a kebab, so pills stay aligned.
+  Mobile row sub-lines wrap
   (`.wl-sub`). Search hint reworded.
 - **Upload / verification animation — AI-scan motif:** the joining-day photo gets a face-scan
   overlay (corner reticle, faint grid, vignette, sweeping laser line) and the loader is a

@@ -1031,7 +1031,8 @@ function worklistView(){
     slice.forEach(function(c){
       var fut=isFuture(c), st=wlStatus(c), overdue=isOverdue(c), d=dayDiff(c);
       var div=firstRow?'':'border-top:1px solid #EEF1F5;'; firstRow=false;
-      var kebab=(tab!=='completed' && showListKebab(c))?listKebab(c):'<span style="width:30px;flex-shrink:0"></span>';   // no kebab on Completed (change-joining-date doesn't apply)
+      // Completed tab has no kebab at all → drop the slot entirely (no empty space); active tab keeps a 30px spacer so pills stay aligned whether or not a row has a kebab
+      var kebab = tab==='completed' ? '' : (showListKebab(c) ? listKebab(c) : '<span style="width:30px;flex-shrink:0"></span>');
       var sub = fut
         ? h(c.rhid+' · '+c.req+' · Joining '+fmtDate(c.joiningISO).replace(/^\S+ /,''))
         : h(c.rhid+' · '+c.req)+(overdue?(' · <span style="color:'+(d>7?'#D93025':'#8a6414')+';font-weight:600">'+d+' day'+(d===1?'':'s')+' ago, '+fmtDate(c.joiningISO).replace(/^\S+ /,'')+'</span>'):'');
