@@ -33,15 +33,18 @@ carry the dark theme). What changed:
   (2026-09-02, manager) — per-round status pills still convey Match/Needs review/etc, and the
   post-submit confirmation card shows the final status. The old standalone verdict banner card was
   also removed earlier.
-  **Guide-review (soft gate):** while any flagged round is unreviewed the bar's primary action is
-  **"Review flagged (N)"** (`jumpToFlagged` — smooth-scrolls to the next round still needing a
-  verdict) and **"Submit anyway"** is a quiet secondary; once all flagged rounds have a verdict the
-  bar flips to a single confident **"Submit report"**. While anything is pending the verdict pill
-  reads **"Not reviewed"** (amber) with a short "N still need your review" line — the real verdict
-  (Verified / Needs review / Not verified) and the full breakdown only appear once every flagged
-  round has a verdict. Submission is NOT hard-blocked — "Submit
-  anyway" still works, and the submit dialog then requires the "I've reviewed all the comparisons"
-  checkbox + a note for unreviewed rounds (soft-mandatory, recruiter judgment + audit trail).
+  **Review gate — now HARD (changed 2026-09-08, manager).** While any flagged comparison is unresolved,
+  the bar's **only** action is **"Review flagged (N)"** (`jumpToFlagged` — smooth-scrolls to the next one
+  still needing a verdict). There is **no "Submit anyway"** — the recruiter must give every flagged
+  comparison a verdict (Match / Not a match / **Can't confirm**) before the bar flips to **"Submit
+  report"**. Rationale: "Can't confirm" already covers *"I genuinely can't tell,"* so leaving a comparison
+  totally unreviewed only meant skipping the work — and it produced the contradictory "Incomplete inside
+  Completed" status (now removed). Unfinished work simply stays **In progress** (don't submit). While
+  anything is pending the verdict pill reads **"Not reviewed"** (amber) with a "N still need your review"
+  line; the real verdict + breakdown appear once everything is resolved. (Reverses the earlier soft-gate
+  decision — justified because it predated the "Can't confirm" action, which makes the soft gate
+  redundant. The submit dialog keeps the "I've reviewed all the comparisons" checkbox; the note is now
+  always optional.)
 - **Reference caption (2026-09-07, manager):** primary line **"Photo taken during {round}"** (e.g.
   "Photo taken during Round 2 — technical", from `r.label`; documents show "Identity document", the
   application photo shows its label) + the photo's own **date & time** (`r.date`, e.g. "02 Jun 2026,
@@ -80,26 +83,23 @@ carry the dark theme). What changed:
   with the blue active segment; the amber "Delayed" treatment stays on the row pills). Rationale: on a tab
   that's already "everything to verify", a To-verify status filter barely narrows, and it overlapped
   with Overdue — so status filtering was dropped here in favour of triaging by *timing*. The
-  **Completed** tab keeps its **status dropdown**, now with three options (2026-09-07, manager) — see
-  the Completed-statuses note below. `wlList` is tab-aware (active → when-filter, completed → status
-  filter); `setWlTab` resets both. A **Sort** dropdown stays on both tabs.
-- **Completed-tab statuses — Reviewed / Inconclusive / Incomplete (2026-09-07, manager).** These describe
-  *how the review was concluded*, orthogonal to the match outcome (which lives inside the report). Set by
-  `completedStatus(c)` from the submitted report's rows (`reportSummary`), falling back to the seeded
-  `wl.completed` for demo rows:
-  - **Incomplete** (red pill, `#B42318`/`#FDECEC`) — ≥1 comparison left **unreviewed** and pushed through
-    via "Submit anyway" (`reportSummary.unresolved > 0`). Highest priority — a process/compliance flag.
-  - **Inconclusive** (amber, `#8a6414`/`#FBF1DE`) — ≥1 comparison the recruiter deliberately marked
-    **"Can't confirm"** / set aside (`ignored > 0`). A considered "can't tell."
+  **Completed** tab keeps its **status dropdown**, with two options (see the Completed-statuses note
+  below). `wlList` is tab-aware (active → when-filter, completed → status filter); `setWlTab` resets both.
+  A **Sort** dropdown stays on both tabs.
+- **Completed-tab statuses — Reviewed / Inconclusive (2026-09-07, trimmed to two 2026-09-08).** These
+  describe *how the review concluded*, orthogonal to the match outcome (which lives inside the report).
+  Set by `completedStatus(c)` from the submitted rows (`reportSummary`), falling back to the seeded
+  `wl.completed`:
+  - **Inconclusive** (amber, `#8a6414`/`#FBF1DE`) — ≥1 comparison marked **"Can't confirm"** / set aside
+    (`ignored > 0`). A considered "can't tell."
   - **Reviewed** (grey, `#5A6473`/`#EFF1F5`) — a definite call (match *or* not-a-match) on everything.
-  The three are the pills **and** the completed-tab filter options (`scnt` / `wlList` filter by
-  `completedStatus` on that tab; `wlStatus`/`isCompleted` are unchanged — they still drive the
-  active/completed split). **Why three, not two:** folding "Incomplete" into "Inconclusive" would be
-  inaccurate — a *skipped* comparison wasn't judged uncertain, it was never reviewed; and for an identity
-  check, "genuinely couldn't confirm" vs "recruiter didn't finish" is a real audit distinction. Considered
-  alternative (rejected): tighten the submit gate so a comparison can't be left unreviewed — but that
-  reverses the earlier "keep the gate soft" decision.
-- **Delayed status pill.** An overdue active row's pill reads **"To verify · Delayed"** or **"In review
+  Both are the pills **and** the completed-tab filter options (`scnt` / `wlList` filter by `completedStatus`;
+  `wlStatus`/`isCompleted` unchanged — they still drive the active/completed split). **"Incomplete" was
+  removed 2026-09-08** along with the "Submit anyway" gate — a completed candidate can no longer have an
+  unreviewed comparison (submit is hard-gated on a verdict for every flagged one), so "Incomplete inside
+  Completed" was both impossible and self-contradictory. (The match-vs-mismatch outcome is deliberately not
+  a list-level status — stays inside the report.)
+- **Delayed status pill.** An overdue active row's pill reads **"To verify · Delayed"** or **"In progress
   · Delayed"** in amber (`#8a6414`/`#FBF1DE`) — "delayed" is a *modifier* on the existing status, not a
   new status value; on-time rows keep the plain grey/amber pill. Same word ("Delayed") as the filter,
   on purpose. This is a deliberate 4th overdue cue (sort-to-top + Delayed filter + red/amber date +
@@ -533,7 +533,7 @@ doesn't surface anywhere → the person joins **unverified**. The worklist must 
 unverified person impossible to lose. All items **[agreed]** unless marked otherwise.
 
 - Kill the tabs → **one list**. Five row states (updated 2026-08-28 with the Submit model):
-  **To verify** / **In review** (amber, check run but not submitted) / **Verified** (green) /
+  **To verify** / **In progress** (amber, check run but not submitted) / **Verified** (green) /
   **Needs review** (amber) / **Not verified** (red) — the last three come from the submitted
   report's system status. Pills are all
   **filled** — colour carries the meaning, no outlined/filled mix.
@@ -607,7 +607,7 @@ unverified person impossible to lose. All items **[agreed]** unless marked other
   and given a seeded score so its report works if opened. Rahul (`c1`) and Arjun (`c2`) keep their
   fuller real sets (application + interview + documents). The **"Needs your attention" block holds
   exactly three** (per the demo): **Rahul** (12 days overdue "To verify", a real interactive
-  candidate — top of the block and page 1), **Priya** (3 days), and **Imran** (2 days, "In review").
+  candidate — top of the block and page 1), **Priya** (3 days), and **Imran** (2 days, "In progress").
   Arjun and Vikram sit at "joining today" so they stay in the list but out of attention. Clicking
   Rahul runs the real check. Meera is a future joiner with no photos (the empty-
   state case; reach her via search or `?candidateId=RH48466`). URL routing (`?f`/`?d`/`?s`/`?p`,

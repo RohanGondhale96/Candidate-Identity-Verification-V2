@@ -15,6 +15,32 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-08 · Hard-gate submit; drop "Submit anyway" + "Incomplete"; "In review" → "In progress" — BUILT + DEPLOYED
+
+- **Discussion (Rohan):** "Incomplete inside Completed looks weird" — a finished candidate that isn't
+  finished is contradictory. His insight: since **"Can't confirm"** already exists, the recruiter always
+  has a valid way to close every flagged comparison (Match / Not a match / Can't confirm), so "Submit
+  anyway" (leaving one unreviewed) only enables *skipping the work* — bad for an identity check.
+- **Decision (agreed):** make the review gate **hard**. Remove "Submit anyway"; the submit bar's only
+  action while anything is unresolved is "Review flagged (N)", and "Submit report" appears only once every
+  flagged comparison has a verdict. This eliminates the "Incomplete" state entirely (it can no longer
+  happen), so its status / red pill / filter option are removed — Completed is now just **Reviewed /
+  Inconclusive**. Unfinished work stays **In progress** (don't submit); nobody is trapped.
+  Reverses the earlier "keep the gate soft + note" call — justified because that predated "Can't confirm",
+  which makes the soft gate redundant.
+- **Also shipped (agreed earlier):** renamed the in-progress status **"In review" → "In progress"**
+  (clearer, avoids colliding with the completed "Reviewed", and forms a clean To do → In progress → Done
+  lifecycle).
+- **Change:** dropped the "Submit anyway" button in `reviewCta`; removed the `incomplete` branch from
+  `completedStatus`/`completedPill` and the "Incomplete" filter option; reclassified seeded Sana to
+  reviewed; removed the now-dead "still unreviewed, you can still submit" warning from the submit dialog
+  (note is always optional now); renamed the `inreview` pill label. Harness updated (no Incomplete;
+  reviewed=2, inconclusive=1) + green; verified in-browser (Review-flagged → resolve → Submit-report; no
+  Incomplete anywhere).
+- **Not built (Rohan's status table had it, deferred):** splitting completed "Reviewed" into **Reviewed ·
+  Match** / **Reviewed · Not a match** — offered, not yet requested. Completed stays neutral "Reviewed" for
+  now.
+
 ## 2026-09-07 · Completed-tab statuses: Reviewed / Inconclusive / Incomplete — BUILT + DEPLOYED
 
 - **Discussion (Rohan, extended):** the Completed tab flattened everything to a single "Reviewed" pill,
