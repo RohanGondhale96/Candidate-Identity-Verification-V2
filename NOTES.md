@@ -86,19 +86,20 @@ carry the dark theme). What changed:
   **Completed** tab keeps its **status dropdown**, with two options (see the Completed-statuses note
   below). `wlList` is tab-aware (active → when-filter, completed → status filter); `setWlTab` resets both.
   A **Sort** dropdown stays on both tabs.
-- **Completed-tab statuses — Reviewed / Inconclusive (2026-09-07, trimmed to two 2026-09-08).** These
-  describe *how the review concluded*, orthogonal to the match outcome (which lives inside the report).
-  Set by `completedStatus(c)` from the submitted rows (`reportSummary`), falling back to the seeded
-  `wl.completed`:
-  - **Inconclusive** (amber, `#8a6414`/`#FBF1DE`) — ≥1 comparison marked **"Can't confirm"** / set aside
-    (`ignored > 0`). A considered "can't tell."
-  - **Reviewed** (grey, `#5A6473`/`#EFF1F5`) — a definite call (match *or* not-a-match) on everything.
-  Both are the pills **and** the completed-tab filter options (`scnt` / `wlList` filter by `completedStatus`;
-  `wlStatus`/`isCompleted` unchanged — they still drive the active/completed split). **"Incomplete" was
-  removed 2026-09-08** along with the "Submit anyway" gate — a completed candidate can no longer have an
-  unreviewed comparison (submit is hard-gated on a verdict for every flagged one), so "Incomplete inside
-  Completed" was both impossible and self-contradictory. (The match-vs-mismatch outcome is deliberately not
-  a list-level status — stays inside the report.)
+- **Completed-tab statuses — Reviewed · Match / Reviewed · Not a match / Inconclusive** (evolved
+  2026-09-07 → 08). A **traffic light** of how the review concluded, set by `completedStatus(c)` from the
+  submitted rows (`reportSummary`), falling back to seeded `wl.completed`:
+  - **Reviewed · Match** (green, `#1a8a3a`/`#E7F4EC`) — every comparison confirmed the same person.
+  - **Reviewed · Not a match** (red, `#B42318`/`#FDECEC`) — a confirmed *different person* (`tier==='mismatch'`).
+    Takes precedence over inconclusive: one confirmed mismatch is the headline (a fraud flag).
+  - **Inconclusive** (amber, `#8a6414`/`#FBF1DE`) — ≥1 comparison marked **"Can't confirm"** and no
+    mismatch (`ignored > 0`).
+  Precedence: **mismatch → inconclusive → match.** These are the pills **and** the completed-tab filter
+  options (`scnt` / `wlList` filter by `completedStatus`; `wlStatus`/`isCompleted` unchanged — they still
+  drive the active/completed split). **"Incomplete" was removed 2026-09-08** with the "Submit anyway" gate:
+  submit is hard-gated on a verdict for every flagged comparison, so a completed candidate can't have an
+  unreviewed one. History: started as a flat neutral "Reviewed" (manager wanted match/not-match hidden),
+  then split back into Match / Not a match 2026-09-08 so a confirmed mismatch is visible at the list level.
 - **Delayed status pill.** An overdue active row's pill reads **"To verify · Delayed"** or **"In progress
   · Delayed"** in amber (`#8a6414`/`#FBF1DE`) — "delayed" is a *modifier* on the existing status, not a
   new status value; on-time rows keep the plain grey/amber pill. Same word ("Delayed") as the filter,

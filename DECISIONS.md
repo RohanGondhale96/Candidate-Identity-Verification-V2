@@ -15,6 +15,19 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-08 · Completed tab: split "Reviewed" into Match / Not a match — BUILT + DEPLOYED
+
+- **Discussion (Rohan):** after removing "Incomplete", he asked to split the neutral **Reviewed** pill
+  into **Reviewed · Match** and **Reviewed · Not a match** so a confirmed mismatch is visible in the list
+  (from his status-table exercise). This reverses the original "flatten to Reviewed / hide the outcome"
+  call — deliberately, now that the taxonomy is settled.
+- **Change:** `completedStatus(c)` now reads `reportSummary(rows).tier` — `mismatch` → notmatch,
+  `inconclusive`/`ignored>0` → inconclusive, else → match. Precedence **mismatch → inconclusive → match**
+  (a confirmed different-person is the headline, a fraud flag). `completedPill` is a traffic light:
+  green Reviewed · Match / red Reviewed · Not a match / amber Inconclusive. Filter options + seed
+  reclassified (Ananya=match, Sana=notmatch, Rohit=inconclusive). Harness updated + green; verified
+  in-browser (3 pills with correct colours + filter counts).
+
 ## 2026-09-08 · Hard-gate submit; drop "Submit anyway" + "Incomplete"; "In review" → "In progress" — BUILT + DEPLOYED
 
 - **Discussion (Rohan):** "Incomplete inside Completed looks weird" — a finished candidate that isn't

@@ -814,20 +814,23 @@ function wlStatus(c){
 }
 /* a check counts as "completed" once a report has been submitted (verified / not verified / needs review) */
 function isCompleted(c){ var st=wlStatus(c); return st==='verified'||st==='notverified'||st==='needsreview'; }
-/* Completed-tab display status: inconclusive = ≥1 comparison marked "Can't confirm"; else reviewed
-   (a definite call on every comparison). Submitting is hard-gated on a verdict for every flagged
-   comparison, so there is no "incomplete" state. Derived from the submitted rows, else the seed value. */
+/* Completed-tab display status — the outcome of a finished review (submit is hard-gated on a verdict
+   for every flagged comparison, so there is no "incomplete" state):
+   notmatch = a confirmed different person (mismatch); inconclusive = ≥1 "Can't confirm" (no mismatch);
+   match = every comparison confirmed the same person. Derived from the submitted rows, else the seed. */
 function completedStatus(c){
   var lc=latestCheck(c.id);
   if(lc && lc.hh && lc.hh.rows){ var v=reportSummary(lc.hh.rows);
-    if(v.ignored>0) return 'inconclusive';
-    return 'reviewed';
+    if(v.tier==='mismatch') return 'notmatch';
+    if(v.tier==='inconclusive' || v.ignored>0) return 'inconclusive';
+    return 'match';
   }
-  return (c.wl && c.wl.completed) || 'reviewed';
+  return (c.wl && c.wl.completed) || 'match';
 }
 function completedPill(c){ var k=completedStatus(c);
+  if(k==='notmatch')     return _pill('Reviewed · Not a match','#B42318','#FDECEC');
   if(k==='inconclusive') return _pill('Inconclusive','#8a6414','#FBF1DE');
-  return _pill('Reviewed','#5A6473','#EFF1F5');
+  return _pill('Reviewed · Match','#1a8a3a','#E7F4EC');
 }
 function setWlTab(t){ setState({wlTab:t, filter:'all', dateRange:'all', page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
 function dayDiff(c){ return Math.round((WL_TODAY_MS - Date.parse(c.joiningISO+'T00:00:00Z'))/86400000); } // +past, -future, 0 today
@@ -1003,7 +1006,7 @@ function worklistView(){
   /* tidy filters — status scoped to the current tab */
   var tabList=base.filter(function(c){ return tab==='completed'?isCompleted(c):!isCompleted(c); }).filter(inDateRange);
   function scnt(st){ if(st==='all') return tabList.length; return tabList.filter(function(c){ return (tab==='completed'?completedStatus(c):wlStatus(c))===st; }).length; }
-  var statusOpts=tab==='completed'?[['all','All'],['reviewed','Reviewed'],['inconclusive','Inconclusive']]:[['all','All'],['toverify','To verify'],['inreview','In progress']];
+  var statusOpts=tab==='completed'?[['all','All'],['match','Reviewed · Match'],['notmatch','Reviewed · Not a match'],['inconclusive','Inconclusive']]:[['all','All'],['toverify','To verify'],['inreview','In progress']];
   var fctrl='height:34px;border:1px solid #DCE2EB;border-radius:9px;background:#fff;font-family:inherit;font-size:13px;padding:0 10px;color:#2A2A2A;cursor:pointer';
   var statusSel='<select onchange="wlSetFilter(this.value)" style="'+fctrl+'">'+statusOpts.map(function(o){ return '<option value="'+o[0]+'"'+(s.filter===o[0]?' selected':'')+'>'+h(o[1])+' ('+scnt(o[0])+')</option>'; }).join('')+'</select>';
   var sopt=function(v,l){ return '<option value="'+v+'"'+(s.wlSort===v?' selected':'')+'>'+l+'</option>'; };
@@ -1570,9 +1573,9 @@ function buildSeeds(){
     {name:'Vikram Nair',  req:'Data Engineer',     st:'toverify',    iso:'2026-08-15', reason:'', score:91},
     {name:'Priya Sharma', req:'QA Analyst',        st:'toverify',    iso:'2026-08-12', reason:'', score:88},
     {name:'Imran Shaikh', req:'UX Designer',       st:'inreview',    iso:'2026-08-13', reason:'Checked · not submitted', score:63, cause:'the reference photo is soft and unevenly lit, so it\'s harder to be sure this is the same person.'},
-    {name:'Ananya Rao',   req:'Product Manager',   st:'verified',    completed:'reviewed',     iso:'2026-08-14', reason:'Submitted by A. Sharma · 11:14', score:94},
+    {name:'Ananya Rao',   req:'Product Manager',   st:'verified',    completed:'match',        iso:'2026-08-14', reason:'Submitted by A. Sharma · 11:14', score:94},
     {name:'Rohit Menon',  req:'SDET',              st:'verified',    completed:'inconclusive', iso:'2026-08-15', reason:'Submitted by A. Sharma · 09:32 · 1 couldn’t be confirmed', score:92},
-    {name:'Sana Kapoor',  req:'Frontend Engineer', st:'notverified', completed:'reviewed',     iso:'2026-08-13', reason:'Submitted by A. Sharma · 10:20', score:22},
+    {name:'Sana Kapoor',  req:'Frontend Engineer', st:'notverified', completed:'notmatch',     iso:'2026-08-13', reason:'Submitted by A. Sharma · 10:20', score:22},
     {name:'Dev Patel',    req:'Mobile Engineer',   st:'toverify',    iso:'2026-08-18', reason:'', score:90}
   ];
   seeds.forEach(function(x,i){
