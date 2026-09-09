@@ -50,9 +50,11 @@ module.exports = async (req, res) => {
         QualityFilter: 'NONE',      // don't drop faces for quality — the quality gate already ran
       }));
     } catch (e) {
-      // Rekognition throws InvalidParameterException when the SOURCE image has no detectable face.
+      // CompareFaces throws InvalidParameterException when EITHER image has no detectable face.
+      // The joining photo is quality-gated (DetectFaces) before we get here, so it always has a
+      // face — meaning this is the on-file reference. Render it as "Couldn't compare".
       if (e && e.name === 'InvalidParameterException') {
-        res.status(422).json({ error: 'No face detected in the joining-day photo.' });
+        res.status(422).json({ error: 'No face detected in the reference photo.' });
         return;
       }
       throw e;
