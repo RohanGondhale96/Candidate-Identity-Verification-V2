@@ -15,6 +15,28 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-09 · Switch scoring + quality from Gemini to AWS Rekognition — BUILT (needs Vercel env vars)
+
+- **Discussion (Rohan):** move the real work from Gemini to **AWS Rekognition**, single provider, and
+  stop running on seeded/mock scores — run real comparisons.
+- **Decisions:** (1) **Rekognition for both** — `CompareFaces` (scoring) + `DetectFaces` (quality gate);
+  Gemini fully dropped. (2) **No fallback** — the two only cover the same job (no capability gap), a
+  fallback means two providers / two creds / two incompatible score scales for a rare benefit; add later
+  if productionised. (3) **Region `ap-south-1`** (Mumbai). (4) Creds live in Vercel env vars
+  (`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY`/`AWS_REGION`), set by Rohan — never in the repo/browser.
+- **Scenarios (Rohan + me):** fraud and poor-quality are **tested live** (upload a different person / a
+  bad or object photo) — no seeding needed. **Couldn't-compare is pre-wired**: Vikram (`s1`) gets a
+  generated **faceless document** reference so one comparison always returns no-face. Every seed now has
+  **3 on-file photos** (their one face reused → same-person uploads match). Rahul/Arjun keep their real
+  sets. `USE_LIVE_SCORING` flipped to `true`.
+- **Change:** rewrote `api/compare.js` (CompareFaces, similarity ≥ 80 = match, no-face-in-reference →
+  422 → "Couldn't compare") and `api/quality.js` (DetectFaces → the 6 quality reasons); added
+  `package.json` (`@aws-sdk/client-rekognition`); generated `FACELESS_DOC` PNG; multi-photo seeds.
+  Contracts unchanged, so the browser + `build_repo` proxy are untouched. Harness green; key stripped.
+- **Testing note:** AWS calls are signed server-side, so real end-to-end runs only on the **deployed
+  Vercel URL after Rohan sets the env vars** — I can't exercise live Rekognition locally. Verification
+  = drive the live URL in-browser once creds are in.
+
 ## 2026-09-08 · Completed tab: split "Reviewed" into Match / Not a match — BUILT + DEPLOYED
 
 - **Discussion (Rohan):** after removing "Incomplete", he asked to split the neutral **Reviewed** pill

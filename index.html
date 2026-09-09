@@ -440,7 +440,7 @@ function pageheader(){
    model - so for the demo we drive the report from seeded per-photo scores that
    have real spread. Flip to true to call Gemini again; the real fix is a face
    embedding engine (Rekognition / Azure Face / ArcFace) - see NOTES.md. */
-var USE_LIVE_SCORING = false;
+var USE_LIVE_SCORING = true;   // live AWS Rekognition (via /api/compare) in the deployed build
 /* The source-photo quality pre-flight DOES run live: quality/occlusion/face-presence are
    describable attributes Gemini handles well (unlike the faked similarity score). Flip off to mock. */
 var USE_LIVE_QUALITY = true;
@@ -1569,10 +1569,11 @@ function hhmm(n){ var hh=9+(n%8), mm=(n*7)%60; return (hh<10?'0':'')+hh+':'+(mm<
 /* DEMO ONLY: ~60 seeded candidates so the chip counts, overdue ages and pagination are
    real. Seeds have no photos; clicking one opens the check page. The three interactive
    candidates (Rahul c1, Arjun c2, Meera c3) are the ones with real on-file photos. */
+var FACELESS_DOC='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAVQAAAG4CAAAAAA/f0CQAAAClklEQVR42u3ZQQ3AMBADweAOslIonSIoAUeVovRxp1kI87THpeMNBFChQhVUqFAFFSpUQYUKVVChQhVUqFAFFSpUQYUKVVChQhVUqFChCipUqIIKFaqgQoUqqFChCipUqIIKFaqgQoUqqFChCipUqFAFFSpUHUF9dDyoUKFCFVSoUAUVKlRBhQpVUKFCFVSoUAUVKlRBhQpVUKFCFVSoUKHmppZBhQoVKlSoUKFChQoVKlSoHVBlpYIKVVChQhVUqFAFFSpUQYUKVVChQhVUqFChplzPUKFChQoVKlSoUKFChQoVam9UQYUKVVChQhVUqFAFFSpUQYUKVVChQhVUqFChplzPUKFChQoVKlSoUKFChQoVam9UQYUKVVChQhVUqFAFFSpUQYUKVVChQhVUqFChpqa2Lm+oUKFChQoVKlSoUKFChQq1CqqsVFChCipUqIIKFaqgQoUqqFChCipUqIIKFSrUlOsZKlSoUKFChQoVKlSoUKFC7Y0qqFChCipUqIIKFaqgQoUqqFChCipUqIIKFSrUlOsZKlSoUKFChQoVKlSoUKFC7Y0qqFChCipUqIIKFaqgQoUqqFChCipUqIIKFSrUVPVb+v4xqFChQoUKFSpUqFChQoUKtQNq9aBChQoVKlSoUKFChQoVKlSoUKFChQoVKlSoUKFChQrVRe33hwoVKlSoUKFChQoVKlSoUA0qUKFChQoVKlSoUKFChQoVKlSoUKFChQoVKlSoUKFCheqi9vtDhQoVKlSoUKFChQoVKlSoBhWoUKFChQoVKlSoUKFChQoVqnaCChUqVEGFClVQoUIVVKhQBRUqVEGFClVQoUIVVKhQBRUqVEGFChWqoEKFKqhQoQoqVKiCChWqoEKFqo9eNKQmfg2ibyYAAAAASUVORK5CYII=';   // a faceless document scan -> Rekognition finds no face -> "Couldn't compare"
 function buildSeeds(){
   // Small demo set: 7 seeds + the 3 real candidates (Rahul, Arjun, Meera) = 10 total.
   var seeds=[
-    {name:'Vikram Nair',  req:'Data Engineer',     st:'toverify',    iso:'2026-08-15', reason:'', score:91},
+    {name:'Vikram Nair',  req:'Data Engineer',     st:'toverify',    iso:'2026-08-15', reason:'', score:91, noface:true},
     {name:'Priya Sharma', req:'QA Analyst',        st:'toverify',    iso:'2026-08-12', reason:'', score:88},
     {name:'Imran Shaikh', req:'UX Designer',       st:'inreview',    iso:'2026-08-13', reason:'Checked · not submitted', score:63, cause:'the reference photo is soft and unevenly lit, so it\'s harder to be sure this is the same person.'},
     {name:'Ananya Rao',   req:'Product Manager',   st:'verified',    completed:'match',        iso:'2026-08-14', reason:'Submitted by A. Sharma · 11:14', score:94},
@@ -1583,8 +1584,14 @@ function buildSeeds(){
   seeds.forEach(function(x,i){
     var key='s'+(i+1);
     var img=(window.RH_IMAGES && window.RH_IMAGES[key] && window.RH_IMAGES[key][0]) || null;
+    var photos=[
+      {label:'Application photo',   src:'application', date:'02 Apr 2026',        by:null,       score:x.score, img:img, cause:(x.cause||null)},
+      {label:'Round 1 — screening', src:'interview',   date:'18 Apr 2026, 10:30', by:'S. Iyer',  score:x.score, img:img},
+      {label:'Round 2 — technical', src:'interview',   date:'02 May 2026, 15:20', by:'R. Menon', score:x.score, img:img}
+    ];
+    if(x.noface) photos.push({label:'Aadhaar card', src:'document', date:'20 Apr 2026', by:null, score:x.score, img:FACELESS_DOC, cant:true});
     CANDIDATES.push({ id:key, name:x.name, rhid:'RH'+(49001+i), req:x.req, reqid:'REQ-'+(2401+i), stage:'Onboarding', eligible:true, joiningISO:x.iso, joining:fmtLong(x.iso), owner:'me',
-      photos:[{label:'Application photo', src:'application', date:'02 Apr 2026', by:null, score:x.score, img:img, cause:(x.cause||null)}],
+      photos:photos,
       wl:{status:x.st, completed:x.completed||null, by:'A. Sharma', at:hhmm(i+2), reason:x.reason} });
   });
 }

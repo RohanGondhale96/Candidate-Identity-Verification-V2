@@ -408,25 +408,29 @@ Nothing here persists to a server — it lives in the browser session and resets
 - In the real product these would come from the candidate-portal document uploads, and the
   face would be detected/cropped from the actual document image.
 
-## Scoring engine — known bug, and why the demo is seeded
+## Scoring engine — now AWS Rekognition (switched 2026-09-09, manager)
 
-- **Gemini is not a face-recognition model.** With live scoring on, `gemini-2.5-flash` returned
-  a near-constant score per image *type* — every interview ~92, every document ~96 — regardless
-  of the actual faces. It ignores the "use non-round, non-repeating numbers" instruction, which
-  is the tell that the number is a confabulation, not a measurement. Eight identical scores that
-  turn into eight green pills look perfect while telling you nothing.
-- **So the demo does not score with Gemini.** `USE_LIVE_SCORING` (top of the app script) defaults
-  to **`false`**: the report is driven by **seeded per-photo scores** that have real spread, so
-  the four states, reason codes, and banner logic are all demonstrable. Rahul (`RH48213`) is the
-  mixed showcase (a review, a no-match, an unreadable PAN); Arjun (`RH47980`) is a clean all-match.
-- Flip `USE_LIVE_SCORING` to `true` to call Gemini again (`api/compare.js`, key from the
-  **`GEMINI_API_KEY`** Vercel env var, never in the repo/browser; joining photo downscaled
-  ≤1280px before upload). But **don't ship pills on top of it** — the real fix is a genuine face
-  **embedding** engine that returns a true per-pair distance: AWS Rekognition `CompareFaces`,
-  Azure Face `verify`, or the ArcFace/Facenet path in the DeepFace POC. That's the v2 workstream.
-- Gemini stays useful for one thing it's actually good at: the **"Couldn't compare"** check (is
-  there a usable face at all). Split architecture for v2 — embedding model for the score, vision
-  model for the quality gate.
+- **Why we moved off Gemini.** `gemini-2.5-flash` is not a face-recognition model — with live scoring
+  on it returned a near-constant score per image *type* (~92 interviews, ~96 documents) regardless of
+  the actual faces: a confabulated number, not a measurement. So the demo ran on **seeded scores**.
+- **Now: AWS Rekognition, single provider (2026-09-09).** Both serverless functions call Rekognition:
+  - `api/compare.js` → **`CompareFaces`** — real per-pair similarity (0–100). similarity ≥ **80** ⇒
+    same person; a face that doesn't match ⇒ low score (different person); **no face in the reference**
+    ⇒ HTTP 422 ⇒ the browser proxy throws ⇒ the report renders **"Couldn't compare"**.
+  - `api/quality.js` → **`DetectFaces`** (ALL attrs) — the quality gate: `no_face` / `multiple_faces` /
+    `face_obscured` / `blurry` (sharpness/brightness) / `not_facing` (pose) / `ok`.
+  - Gemini fully unplugged (old code in git history); one provider, no fallback (see DECISIONS for why).
+- **Credentials:** IAM user with `rekognition:CompareFaces` + `DetectFaces`; keys in the Vercel env vars
+  **`AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION`** (`ap-south-1`) — server-side only,
+  never in the repo or browser. `package.json` pulls in `@aws-sdk/client-rekognition`.
+- **`USE_LIVE_SCORING = true`** now (was `false`). Real Rekognition scores replace the old seeded
+  outcomes for any comparison that is *run*. Local preview can't reach AWS (creds are server-side), so
+  it stays effectively mock; **real testing happens on the deployed Vercel URL**.
+- **Test candidates / scenarios (2026-09-09):** Rahul (`c1`, 8 photos) and Arjun (`c2`, 6) keep their
+  real sets; every seed now has **3 on-file photos** (their one face reused, so a same-person upload
+  matches). Designed scenarios: **fraud / poor-quality are tested live** by uploading a different person
+  or a bad/object photo; **"Couldn't compare" is pre-wired** — **Vikram (`s1`)** carries a **faceless
+  document** reference (`FACELESS_DOC`, a generated no-face PNG) so one comparison always returns no-face.
 
 ## Demo tips
 
@@ -512,12 +516,12 @@ All five locked; seeded quality flags approved for the prototype.
   above; the full both-layers record is retained in the row data.
 - **Per-evidence quality is seeded** (`quality`/`qreason` per on-file photo, like the scores under
   `USE_LIVE_SCORING`) so the states/reasons are demonstrable.
-- **Source-photo pre-flight (#4) is LIVE, via Gemini** (`USE_LIVE_QUALITY = true`, on by default).
-  When the recruiter adds the joining-day photo, `geminiQuality()` (→ `api/quality.js` serverless,
-  same key-safe proxy as compare) checks it and returns `{usable, reason, message}`. Quality /
-  occlusion / face-presence are describable attributes Gemini genuinely does well — unlike the
-  similarity *number*, which it fakes — so this one runs for real. The prompt judges **facial
-  occlusion only, never headwear type/religion**. Quality now runs **on Submit, after consent** (not
+- **Source-photo pre-flight (#4) is LIVE, via Rekognition `DetectFaces`** (`USE_LIVE_QUALITY = true`;
+  moved off Gemini 2026-09-09). When the recruiter adds the joining-day photo, `geminiQuality()` (name
+  kept; → `api/quality.js`, same key-safe proxy) returns `{usable, reason, message}` from Rekognition's
+  face attributes — sharpness/brightness (blurry/dark), pose (not_facing), `FaceOccluded` (face_obscured),
+  face count (no_face / multiple_faces). Thresholds are tunable at the top of `api/quality.js`. Quality
+  runs **on Submit, after consent** (not
   on photo-select — changed 2026-09-05), and is a **hard gate**: a **fail blocks** with a red error and
   the recruiter must pick a different photo; a **pass auto-runs** the comparison. A call failure falls
   back to usable so it can't trap the recruiter. Flip `USE_LIVE_QUALITY` off to mock it (assumed-pass →
