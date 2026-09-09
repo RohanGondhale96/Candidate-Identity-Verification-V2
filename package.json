@@ -1,0 +1,8 @@
+{
+  "name": "candidate-identity-verification-v2",
+  "private": true,
+  "description": "Joining-day identity verification prototype — Vercel serverless functions call AWS Rekognition.",
+  "dependencies": {
+    "@aws-sdk/client-rekognition": "^3.700.0"
+  }
+}
