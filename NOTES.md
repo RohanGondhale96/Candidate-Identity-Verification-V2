@@ -13,7 +13,9 @@ implemented directly in `verify-identity.html` (the source that builds `index.ht
 mode only for now — dark mode / the nav sun-moon toggle are deferred (the standalone R&D mocks
 carry the dark theme). What changed:
 
-- **Shared visual tokens** aligned to the mocks: cool-grey ground `#EEF1F5`; every `.rh-card` at
+- **Shared visual tokens** aligned to the mocks: page ground `#F7F8FA` (the RippleHire DS page
+  background; was `#EEF1F5`, changed 2026-09-09 to match the DS — white cards stay defined by their
+  border+shadow); every `.rh-card` at
   16px radius with the soft lifted shadow (`0 1px 2px … , 0 8px 22px …`) and `#E5E9F0` border;
   nav slimmed to 54px on `#0C1016`; the thinner 3px multi-stop rainbow bar.
 
