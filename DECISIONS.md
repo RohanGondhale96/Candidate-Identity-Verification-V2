@@ -15,6 +15,32 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-09 · Processing animation — two-step staged-progress loader [agreed]
+
+- **Discussion (Rohan):** shared a video/mock of a nicer "checking" animation — a photo with a
+  face-detection overlay plus a stepped progress list on the right, replacing the current single radar
+  spinner ("Checking photo…" / "Running verification…") which tells the recruiter nothing about what's
+  happening. Mock had three steps (quality → "reading facial geometry / building a face signature" →
+  compare) with the overlay morphing from a framing bracket to landmark dots.
+- **Decisions:** (1) **Two steps, not three.** Dropped the middle "reading facial geometry / building a
+  face signature" step — it maps to no real call (Rekognition CompareFaces does the matching in one
+  shot) and "building a face signature" implies biometric enrolment/storage we don't do (a DPO-flag
+  phrasing). Two steps map exactly 1:1 to our two real calls: **Checking photo quality** (`/api/quality`)
+  and **Comparing against photos on file** (`/api/compare`). (2) **Honest wiring** — step states are
+  derived from the real flags (`qualityChecking` → step 1 active; `running` → step 1 done, step 2
+  active), not a timer; if quality **fails**, the loader is replaced by the red blocking error and never
+  advances to step 2. (3) **Phase-specific photo overlay** — the existing bracket/scan-line during
+  quality, a new face-landmark **mesh** (`faceMesh`, 11 dots + 16 lines) during compare, echoing the
+  two mock frames. (4) A **live caption** ("Reading the uploaded photo" → "Matching against photos on
+  file") with an animated ellipsis for a sense of life. (5) The single-surface photos-on-file list is
+  **suppressed while busy** so the loader is the whole story (it returns idle/done). Copy on the right is
+  improvable and can be tweaked; kept close to the mock for now.
+- **Change:** built + deployed. New CSS (`.stp-spin`, `.stp-dots`, `.rh-mesh*`), helpers `faceMesh()` /
+  `procStep()`, busy-branch rewrite in the upload card. Verified both phases render (spinner→check,
+  mesh present), harness green, zero em dashes, no key in `index.html`.
+
+---
+
 ## 2026-09-09 · Pre-run photos-on-file list copy — clearer header + per-group counts [agreed]
 
 - **Discussion (Rohan):** the idle setup list said "Comparing against 8 photos on file", but nothing is

@@ -156,8 +156,20 @@ carry the dark theme). What changed:
   quality a **hard gate** (it used to be a soft warning you could run past) and ensures **no image
   processing happens before consent is given**. A quality-service *error* (couldn't check) is treated
   as a pass so it can't trap the recruiter. While the quality check or the comparison is running, the
-  right column shows the radar status ("Checking photo…" / "Running verification…") and the buttons are
-  hidden. On mobile the row wraps (checkboxes/buttons drop below the photo).
+  right column shows a **two-step staged-progress loader** (2026-09-09, from a manager reference):
+  **1. Checking photo quality** then **2. Comparing against photos on file**, each with its own count
+  sub-line ("5 interview photos, 3 identity documents"). The two steps map 1:1 to the two real calls —
+  step 1 is `/api/quality` (active while `qualityChecking`), step 2 is `/api/compare` (active while
+  `running`); step 1 flips to a green check with "Sharp, front facing, face fills the frame" once the
+  comparison starts. A live caption tracks the active phase ("Reading the uploaded photo" → "Matching
+  against photos on file") with an animated ellipsis. The photo carries a phase-specific overlay — the
+  bracket/scan-line (`scanOverlay`) during quality, a face-landmark **mesh** (`faceMesh`: 11 dots + 16
+  connecting lines) during compare. Helpers: `procStep(state,title,sub)` for a step row; step states are
+  derived from `qualityChecking`/`running`. If quality **fails**, the loader is replaced by the red
+  blocking error (stops at step 1). The single-surface photos-on-file list is **suppressed while busy**
+  so the loader is the whole story; it returns for the idle and done states. (The old radar status line
+  "Checking photo…" / "Running verification…" was retired.) The buttons stay hidden during processing;
+  on mobile the row wraps (checkboxes/buttons drop below the photo).
 - **Future joiners can be opened, but the joining-day upload is blocked (added 2026-09-04, manager).**
   Clicking an upcoming candidate opens their profile like anyone else — header (email / phone / joining
   date) and the on-file **application / interview / document photos** are all visible. But because the

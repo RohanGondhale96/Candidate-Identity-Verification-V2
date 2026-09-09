@@ -53,6 +53,21 @@
   .rh-scan .tr{top:8px;right:8px;border-left:0;border-bottom:0}
   .rh-scan .bl{bottom:8px;left:8px;border-right:0;border-top:0}
   .rh-scan .br{bottom:8px;right:8px;border-left:0;border-top:0}
+  /* staged-progress loader (upload -> quality -> compare) */
+  .stp-spin{width:24px;height:24px;flex-shrink:0;box-sizing:border-box;border-radius:50%;border:2.5px solid #E4E9F2;border-top-color:#0076FB;animation:rh-spin .8s linear infinite}
+  .stp-dots{display:inline-flex;align-items:center;gap:3px;margin-left:1px}
+  .stp-dots i{width:4px;height:4px;border-radius:50%;background:#98A2B3;animation:rh-dotb 1s ease-in-out infinite}
+  .stp-dots i:nth-child(2){animation-delay:.15s}
+  .stp-dots i:nth-child(3){animation-delay:.3s}
+  @keyframes rh-dotb{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-2px)}}
+  /* face-mesh overlay for the compare phase */
+  .rh-mesh{position:absolute;inset:0;pointer-events:none;border-radius:inherit;z-index:2;overflow:hidden}
+  .rh-mesh .tint{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 42%,transparent 55%,rgba(6,22,44,.26))}
+  .rh-mesh-svg{position:absolute;inset:0;width:100%;height:100%}
+  .rh-mesh-svg line{stroke:rgba(96,156,255,.55);stroke-width:.5;stroke-dasharray:2 2;animation:rh-mdash 1.2s linear infinite}
+  @keyframes rh-mdash{to{stroke-dashoffset:-4}}
+  .rh-mesh-svg circle{fill:#7FB0FF;filter:drop-shadow(0 0 2px rgba(96,156,255,.9));animation:rh-mdot 1.5s ease-in-out infinite}
+  @keyframes rh-mdot{0%,100%{opacity:.55}50%{opacity:1}}
   @media (prefers-reduced-motion:reduce){
     .rh-scan .line{display:none}
     *{animation-duration:0.001ms !important;animation-iteration-count:1 !important;transition-duration:0.001ms !important;scroll-behavior:auto !important}
@@ -277,6 +292,28 @@ function photoTile(p, seed, fit){
 }
 /* AI face-scan overlay - drop inside a position:relative photo box while checking/comparing */
 function scanOverlay(){ return '<span class="rh-scan" aria-hidden="true"><span class="tint"></span><span class="grid"></span><span class="line"></span><span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span></span>'; }
+/* face-landmark mesh overlay - drop inside a position:relative photo box during the compare phase */
+function faceMesh(){
+  var P={fh:[50,25],le:[35,40],re:[65,40],nb:[50,47],nt:[50,57],ml:[40,70],mr:[60,70],mc:[50,72],lc:[27,58],rc:[73,58],ch:[50,84]};
+  var lines=[['le','re'],['le','nb'],['re','nb'],['nb','nt'],['nt','mc'],['ml','mr'],['ml','mc'],['mr','mc'],['le','lc'],['re','rc'],['lc','ml'],['rc','mr'],['ml','ch'],['mr','ch'],['le','fh'],['re','fh']];
+  var svg='<svg class="rh-mesh-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">';
+  lines.forEach(function(l){ var a=P[l[0]], b=P[l[1]]; svg+='<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'"/>'; });
+  Object.keys(P).forEach(function(k,i){ var p=P[k]; svg+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="1.6" style="animation-delay:'+(i*0.11).toFixed(2)+'s"/>'; });
+  svg+='</svg>';
+  return '<span class="rh-mesh" aria-hidden="true"><span class="tint"></span>'+svg+'</span>';
+}
+/* one row of the staged-progress loader. st: 'done' | 'active' | 'pending' */
+function procStep(st, title, sub){
+  var icon;
+  if(st==='done') icon='<span style="width:24px;height:24px;border-radius:50%;background:#1a8a3a;display:grid;place-items:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>';
+  else if(st==='active') icon='<span class="stp-spin" aria-hidden="true"></span>';
+  else icon='<span style="width:24px;height:24px;border-radius:50%;border:2px solid #D0D5DD;box-sizing:border-box;flex-shrink:0"></span>';
+  var tc = st==='pending' ? '#98A2B3' : '#2A2A2A';
+  var sc = st==='pending' ? '#B0B7C3' : '#667085';
+  return '<div style="display:flex;align-items:flex-start;gap:12px">'+icon+
+    '<div style="min-width:0"><div style="font-size:15px;font-weight:600;color:'+tc+';line-height:1.35">'+h(title)+'</div>'+
+    '<div style="font-size:13px;color:'+sc+';margin-top:2px">'+h(sub)+'</div></div></div>';
+}
 /* preview: whole frame matters (round chrome) -> contain, capped at 62vh, never cropped */
 function lightboxImg(p, seed){
   if(p && p.img) return '<img src="'+p.img+'" alt="" style="display:block;max-width:100%;max-height:62vh;border-radius:4px">';
@@ -1137,13 +1174,26 @@ function render(){
       var busy = s.qualityChecking || s.running;
       var failed = s.quality && s.quality.usable===false && !busy;
       var canSubmit = s.photo && s.consent && s.attest && !failed;
+      var overlay = busy ? (s.running ? faceMesh() : scanOverlay()) : '';
       var photoBox = '<div style="width:132px;flex-shrink:0;display:flex;min-height:190px">'+
-        '<div style="flex:1;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+uploadedImg('cover')+(busy?scanOverlay():'')+'</div></div>';
+        '<div style="flex:1;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+uploadedImg('cover')+overlay+'</div></div>';
       var fileName = s.photoName ? '<div style="font-size:14px;color:#2A2A2A;word-break:break-all">'+h(s.photoName)+'</div>' : '';
       var right;
       if(busy){
-        right = '<div style="flex:1;min-width:250px;display:flex;flex-direction:column;justify-content:center;gap:12px">'+fileName+
-          '<div style="display:flex;align-items:center;gap:10px;color:#667085;font-size:14px"><span class="rh-radar" aria-hidden="true"></span>'+(s.running?'Running verification…':'Checking photo…')+'</div>'+
+        // two real stages: quality (/api/quality) then compare (/api/compare)
+        var st1 = s.qualityChecking ? 'active' : 'done';   // done once we've moved on to comparing
+        var st2 = s.running ? 'active' : 'pending';
+        var step1Sub = st1==='done' ? 'Sharp, front facing, face fills the frame' : 'Sharpness, lighting and framing';
+        var nDoc = c.photos.filter(function(p){ return p.src==='document'; }).length;
+        var nInt = c.photos.length - nDoc;
+        var step2Sub = nInt+' interview photo'+(nInt===1?'':'s')+', '+nDoc+' identity document'+(nDoc===1?'':'s');
+        var caption = s.running ? 'Matching against photos on file' : 'Reading the uploaded photo';
+        right = '<div style="flex:1;min-width:250px;display:flex;flex-direction:column;justify-content:center;gap:18px">'+fileName+
+          '<div style="display:flex;flex-direction:column;gap:16px">'+
+            procStep(st1, 'Checking photo quality', step1Sub)+
+            procStep(st2, 'Comparing against photos on file', step2Sub)+
+          '</div>'+
+          '<div style="display:flex;align-items:center;gap:7px;font-size:13px;color:#667085">'+h(caption)+'<span class="stp-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>'+
         '</div>';
       } else {
         var errBlock = failed
@@ -1175,7 +1225,7 @@ function render(){
   /* 3b + 4 + 5. PHOTOS-ON-FILE - v2 card feed once done; idle/running keep the single-surface list */
   if(c && c.photos.length && s.done){
     html += reportFeed(s, c);
-  } else if(c && c.photos.length){
+  } else if(c && c.photos.length && !s.qualityChecking && !s.running){
     var _done = s.done, _running = s.running, _idle = !_done && !_running;
     var tableRows = (_running || _done) ? s.rows : c.photos;
     html += '<div class="rh-card" style="padding:0"><div style="border-radius:8px;overflow:hidden">';
