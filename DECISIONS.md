@@ -15,6 +15,24 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-09 · Completed candidates must open to the report, not the upload flow [agreed]
+
+- **Discussion (Rohan):** opening a Completed candidate (Sana) showed the "Upload joining day photo" card
+  again — it should land on the final report only.
+- **Root cause:** `pick()` routes to the read-only report (`openHistory`) when a stored check exists, else
+  to the upload flow (`select`). The completed **seeds** carried only a worklist status, no stored report,
+  so they hit the upload flow.
+- **Decision / change:** added `synthCompletedEntry(c)` — at init, for every seed with `wl.completed`, we
+  reconstruct a consistent submitted report (scored rows + a `decision` mirroring `confirmSubmit`'s shape)
+  and push it into `state.history`, so `pick()` opens it via `openHistory` (done + `viewingHistory` = no
+  reshoot/resubmit). Rows are built so the derived worklist pill matches the seed's intent (match / not a
+  match / inconclusive-via-one-set-aside); the joining photo reuses the candidate's own on-file face as a
+  stand-in. Verified in-browser: Sana → Not verified, Ananya → Verified/Match, Rohit → Verified/Inconclusive,
+  none show the upload card; to-verify candidates still open the upload flow; worklist counts unchanged
+  (7 / 3). Harness green, zero em dashes, no key in `index.html`.
+
+---
+
 ## 2026-09-09 · Processing animation — two-step staged-progress loader [agreed]
 
 - **Discussion (Rohan):** shared a video/mock of a nicer "checking" animation — a photo with a

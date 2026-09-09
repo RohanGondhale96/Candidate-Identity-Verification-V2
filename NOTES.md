@@ -170,6 +170,19 @@ carry the dark theme). What changed:
   so the loader is the whole story; it returns for the idle and done states. (The old radar status line
   "Checking photo…" / "Running verification…" was retired.) The buttons stay hidden during processing;
   on mobile the row wraps (checkboxes/buttons drop below the photo).
+- **Completed candidates open straight to their finished report, not the upload flow (2026-09-09).**
+  Clicking a Completed row must show the **read-only submitted report**, never the "Upload joining day
+  photo" card. Routing already works via `pick()` → `openHistory` when a stored check exists; the gap was
+  that the completed **seeds** (Ananya, Rohit, Sana) only carried a worklist status with no stored report,
+  so they fell through to `select()` (the upload flow). Fixed by `synthCompletedEntry(c)` — at init we
+  reconstruct a consistent submitted report (rows + `decision`) for every seed with `wl.completed` and push
+  it into `state.history`, so `pick()` routes it through `openHistory` (done + `viewingHistory`, so no
+  reshoot / resubmit). The synthesized rows derive to the same worklist pill the seed intended: **match** →
+  all rows match (pill Match, chip Verified); **notmatch** → rows scored low + `review:'notmatch'` (pill Not
+  a match, chip Not verified); **inconclusive** → one comparable row set aside `review:'ignore'` with the
+  rest matching (pill Inconclusive, chip Verified with "1 set aside" — the same conservative pill/banner
+  split a real inconclusive submission produces). The joining-day photo uses the candidate's own on-file
+  face as a stand-in. To-verify candidates are unaffected — they still open the upload flow.
 - **Future joiners can be opened, but the joining-day upload is blocked (added 2026-09-04, manager).**
   Clicking an upcoming candidate opens their profile like anyone else — header (email / phone / joining
   date) and the on-file **application / interview / document photos** are all visible. But because the

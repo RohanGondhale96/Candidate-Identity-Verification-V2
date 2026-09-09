@@ -1645,12 +1645,38 @@ function buildSeeds(){
       wl:{status:x.st, completed:x.completed||null, by:'A. Sharma', at:hhmm(i+2), reason:x.reason} });
   });
 }
+/* A completed candidate must open straight to its final (read-only) report, not the upload flow.
+   The seeds only carried a worklist status, so here we reconstruct a consistent submitted report
+   (rows + decision) and store it as a history entry - pick() then routes it through openHistory,
+   reusing all the real report rendering. Kept internally consistent so the worklist pill and the
+   report banner agree the same way a real submission would. */
+function synthCompletedEntry(c){
+  var kind = (c.wl && c.wl.completed) || 'match';
+  var joining = (c.photos[0] && c.photos[0].img) || null;
+  var rows = c.photos.map(function(p){
+    var r = Object.assign({}, p, {status:'done', confidence:92, review:null, asked:true});
+    if(p.cant){ r.status='error'; r.err='No face detected in this document'; r.score=null; return r; }
+    if(kind==='notmatch'){ r.score = Math.min((p.score||20), 22); r.samePerson=false; r.review='notmatch'; }  // recruiter confirmed a different person
+    else { r.score = Math.max((p.score||90), 90); r.samePerson=true; }                                        // a clear match
+    return r;
+  });
+  if(kind==='inconclusive'){ // recruiter set one comparison aside as "Can't confirm"; the rest matched
+    for(var i=0;i<rows.length;i++){ if(rows[i].status==='done' && rows[i].src!=='document'){ rows[i].review='ignore'; break; } }
+  }
+  var v = reportSummary(rows);
+  var at = (c.wl && c.wl.at) || '10:00';
+  var when = (c.joining || '') + (c.joining ? ', ' : '') + at;
+  var decision = { action:'submitted', by:(c.wl && c.wl.by) || 'A. Sharma', at:when, note:'', status:v.tier, unreviewed:v.unresolved };
+  return { cand:c, photo:joining, rows:rows, shared:[], at:at, decision:decision, attest:true, quality:{usable:true, reason:'ok', message:''} };
+}
 
 /* ---------- entry ---------- */
 (function init(){
   // attach real on-file photos (injected as data-URIs) to the matching candidate
   if(window.RH_IMAGES){ Object.keys(window.RH_IMAGES).forEach(function(cid){ var cc=CANDIDATES.find(function(x){return x.id===cid;}); if(cc) cc.photos.forEach(function(p,i){ if(window.RH_IMAGES[cid][i]) p.img=window.RH_IMAGES[cid][i]; }); }); }
   buildSeeds();
+  // completed candidates open to their finished report (not the upload flow): seed a stored check
+  CANDIDATES.forEach(function(c){ if(c.wl && c.wl.completed && c.photos && c.photos.length){ state.history.push(synthCompletedEntry(c)); } });
   var params = new URLSearchParams(location.search);
   if((params.get('entry')||'')==='norounds') state.roundsConfigured=false;
   // "Take photo" is a mobile-only affordance (desktop shows Choose file only)
