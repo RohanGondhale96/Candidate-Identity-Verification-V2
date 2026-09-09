@@ -59,6 +59,10 @@ carry the dark theme). What changed:
   the round-header label/date — accepted for pane symmetry.
 - **"Photo taken on joining day"** replaced **"Photo taken today"** everywhere it labels the uploaded
   joining-day photo (2026-09-07, manager): the compare pane, the report header card, and the image alt.
+- **Copy convention (2026-09-09, manager): no em dashes (—) anywhere in the build.** All product copy
+  uses commas / colons / periods / parentheses instead; round labels read "Round 2: technical" (was
+  "Round 2 — technical"); empty-value placeholders are "-". Code comments were hyphenated too so the
+  shipped `index.html` contains zero em dashes. Keep new copy em-dash-free.
 - **Copy:** "Face-match score" (was "Model similarity"); "Match line · 85/65%" (was "Photos/
   Documents match at N%"); "Why this needs a look:" / "Why this may not match:" (was "Likely
   cause…"); the action prompt is "Is this the same person?"; recorded verdicts read "Same

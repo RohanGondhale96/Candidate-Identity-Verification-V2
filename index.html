@@ -172,7 +172,7 @@
 <script>
 "use strict";
 var TODAY = '12 Aug 2026';
-/* worklist demo "today" — overdue ages are computed against this fixed date */
+/* worklist demo "today" - overdue ages are computed against this fixed date */
 var WL_TODAY_MS = Date.parse('2026-08-15T00:00:00Z');
 var TONES = { clear:{bg:'#DDE4E9',fg:'#9FADB8'}, soft:{bg:'#E4E8EA',fg:'#B4BDC4'}, dark:{bg:'#8E979E',fg:'#6E777E'} };
 
@@ -181,10 +181,10 @@ var CANDIDATES = [
     req:'Senior Backend Engineer', reqid:'REQ-2291', stage:'Onboarding', eligible:true, joining:'3 Aug 2026', joiningISO:'2026-08-03', owner:'me',
     photos:[
       {label:'Application photo', src:'application', date:'14 Apr 2026', by:null, score:94, tone:'clear'},
-      {label:'Round 1 — screening', src:'interview', date:'06 May 2026, 10:15', by:'K. Deshpande', score:92, tone:'clear'},
-      {label:'Round 2 — technical', src:'interview', date:'02 Jun 2026, 15:20', by:'R. Menon', score:61, tone:'dark', cause:'the reference frame catches the candidate mid-turn, so much of the face is out of view.'},
-      {label:'Round 3 — manager round', src:'interview', date:'18 Jun 2026, 11:05', by:'S. Iyer', score:91, tone:'clear', quality:'poor', qreason:'Not facing the camera', cause:'the candidate is turned away from the camera in this reference, so key facial features are hard to line up.'},
-      {label:'Round 4 — HR discussion', src:'interview', date:'27 Jun 2026, 16:40', by:'A. Sharma', score:89, tone:'soft'},
+      {label:'Round 1: screening', src:'interview', date:'06 May 2026, 10:15', by:'K. Deshpande', score:92, tone:'clear'},
+      {label:'Round 2: technical', src:'interview', date:'02 Jun 2026, 15:20', by:'R. Menon', score:61, tone:'dark', cause:'the reference frame catches the candidate mid-turn, so much of the face is out of view.'},
+      {label:'Round 3: manager round', src:'interview', date:'18 Jun 2026, 11:05', by:'S. Iyer', score:91, tone:'clear', quality:'poor', qreason:'Not facing the camera', cause:'the candidate is turned away from the camera in this reference, so key facial features are hard to line up.'},
+      {label:'Round 4: HR discussion', src:'interview', date:'27 Jun 2026, 16:40', by:'A. Sharma', score:89, tone:'soft'},
       {label:'Aadhaar card', src:'document', date:'Identity document', by:null, score:71},
       {label:'PAN card', src:'document', date:'Identity document', by:null, cant:true},
       {label:'Driving licence', src:'document', date:'Identity document', by:null, score:22, cause:'the face on this document is clearly different from today\'s photo.'}
@@ -193,8 +193,8 @@ var CANDIDATES = [
     req:'Product Designer', reqid:'REQ-2244', stage:'Hired', eligible:true, joining:'15 Aug 2026', joiningISO:'2026-08-15', owner:'me',
     photos:[
       {label:'Application photo', src:'application', date:'21 Mar 2026', by:null, score:96, tone:'clear'},
-      {label:'Round 1 — portfolio review', src:'interview', date:'09 Apr 2026, 12:00', by:'N. Bhatia', score:93, tone:'clear'},
-      {label:'Round 2 — craft interview', src:'interview', date:'24 Apr 2026, 14:30', by:'T. Rao', score:95, tone:'clear'},
+      {label:'Round 1: portfolio review', src:'interview', date:'09 Apr 2026, 12:00', by:'N. Bhatia', score:93, tone:'clear'},
+      {label:'Round 2: craft interview', src:'interview', date:'24 Apr 2026, 14:30', by:'T. Rao', score:95, tone:'clear'},
       {label:'Aadhaar card', src:'document', date:'Identity document', by:null, score:88},
       {label:'PAN card', src:'document', date:'Identity document', by:null, score:84},
       {label:'Driving licence', src:'document', date:'Identity document', by:null, score:79}
@@ -209,10 +209,10 @@ var USERS = [
   { id:'u3', name:'Sandeep Iyer',   role:'Engineering manager',          email:'sandeep.iyer@ripplehire.com',  tier:'view' },
   { id:'u4', name:'Divya Raghavan', role:'HR operations',                email:'divya.r@ripplehire.com',       tier:'view' },
   { id:'u5', name:'Farah Qureshi',  role:'Recruiter',                    email:'farah.q@ripplehire.com',       tier:'verify' },
-  { id:'u6', name:'Tarun Rao',      role:'Client HR — Acme Systems',     email:'tarun.rao@acmesystems.in',     tier:'view' }
+  { id:'u6', name:'Tarun Rao',      role:'Client HR, Acme Systems',     email:'tarun.rao@acmesystems.in',     tier:'view' }
 ];
 
-/* Feature flags — hidden for now; flip to true to bring these back */
+/* Feature flags - hidden for now; flip to true to bring these back */
 var SHOW_STAGE_BADGE = false;     // candidate "stage" pill (e.g. Onboarding) on the candidate card
 var SHOW_REPORT_ACTIONS = false;  // Download PDF + Share report buttons in the report header
 
@@ -275,7 +275,7 @@ function photoTile(p, seed, fit){
   if(p && p.img) return '<img src="'+p.img+'" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:'+fit+';background:#EFEFEF'+extra+';display:block">';
   return photoPlaceholder(seed);
 }
-/* AI face-scan overlay — drop inside a position:relative photo box while checking/comparing */
+/* AI face-scan overlay - drop inside a position:relative photo box while checking/comparing */
 function scanOverlay(){ return '<span class="rh-scan" aria-hidden="true"><span class="tint"></span><span class="grid"></span><span class="line"></span><span class="c tl"></span><span class="c tr"></span><span class="c bl"></span><span class="c br"></span></span>'; }
 /* preview: whole frame matters (round chrome) -> contain, capped at 62vh, never cropped */
 function lightboxImg(p, seed){
@@ -389,7 +389,7 @@ function settleRow(i, token, res, err){
     var entry = {cand:prev.cand, photo:prev.photo, rows:rows, shared:prev.shared, at:at, decision:null, attest:prev.attest, quality:prev.quality};
     return {rows:rows, running:false, done:true, history:prev.history.concat([entry]), entry:entry, decision:null, decisionErr:''};
   }, function(){
-    // run just finished — glide up to the top of the results instead of snapping mid-report
+    // run just finished - glide up to the top of the results instead of snapping mid-report
     if(state.done){ setTimeout(function(){ smoothScrollToEl('rpt-top', 16, 700); }, 240); }
   });
 }
@@ -460,7 +460,7 @@ function photoState(r){
   if(!r) return null;
   if(r.status==='error') return 'cant';
   if(r.status!=='done' || typeof r.score!=='number') return null;
-  if(r.quality==='poor') return 'review';               // confidence gate — quality overrides score
+  if(r.quality==='poor') return 'review';               // confidence gate - quality overrides score
   if(r.score >= photoBar(r)) return 'match';
   if(r.score >= reviewFloor(r)) return 'review';        // borderline similarity
   return 'nomatch';                                     // confident: different person
@@ -478,7 +478,7 @@ function aiStateLabel(r){ var st=photoState(r); return st==='cant'?"Couldn’t c
 
 /* the human's action on a flagged row (structured, non-binding on the number) */
 var ACTIONS = { same:'Same person', notmatch:'Not a match', ignore:'Can\'t confirm' };
-var IGNORE_REASONS = ['Can’t tell — too close to call','Wrong photo (not this candidate)','Too blurry / dark / low-res','Face not clearly visible','Too old — appearance changed','Document scan unreadable','Duplicate of another photo','Other'];
+var IGNORE_REASONS = ['Can’t tell, too close to call','Wrong photo (not this candidate)','Too blurry / dark / low-res','Face not clearly visible','Too old, appearance changed','Document scan unreadable','Duplicate of another photo','Other'];
 /* the submitted report's status chip, keyed by the banner tier */
 var SUBMIT_STATUS = { match:{t:'Verified',c:'#1a8a3a',bg:'#E7F4EC'}, reviewed:{t:'Verified',c:'#1a8a3a',bg:'#E7F4EC'}, review:{t:'Needs review',c:'#B7791F',bg:'#FBF1DE'}, mismatch:{t:'Not verified',c:'#D93025',bg:'#FDECEC'}, inconclusive:{t:'Inconclusive',c:'#5F5E5A',bg:'#F1EFE8'} };
 /* pos = human vouches same person, neg = says different, excluded = ignore the photo, open = undecided */
@@ -528,7 +528,7 @@ function reportSummary(rows){
   var base = {matched:matched, total:Y, cant:cant, ignored:ignored, unresolved:unresolved, reviewedCount:reviewedCount, vouchPos:vouchPos};
   function out(o){ for(var k in base) o[k]=base[k]; return o; }
   if(Y===0){
-    return out({tier:'inconclusive', color:'#5F5E5A', bg:'#F1EFE8', title:"Couldn’t run the check", sub:'No readable photos to compare against.'+extraNote, suggest:"Can’t verify — nothing to compare"});
+    return out({tier:'inconclusive', color:'#5F5E5A', bg:'#F1EFE8', title:"Couldn’t run the check", sub:'No readable photos to compare against.'+extraNote, suggest:"Can’t verify, nothing to compare"});
   }
   if(vouchNeg>0 || openNoMatch>0){
     var m = vouchNeg + openNoMatch;
@@ -553,7 +553,7 @@ function bannerIcon(tier, color){
 }
 function nowTime(){ return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
 var NOTMATCH_REASONS = ['Clearly a different person','Facial features don\'t match','Other'];
-/* full-sentence "likely cause" — seeded per flagged photo for the demo; live version comes from the model */
+/* full-sentence "likely cause" - seeded per flagged photo for the demo; live version comes from the model */
 function causeText(r){ return (r && r.cause) || aiReason(r); }
 /* positive explanation for a model match (seeded per-photo via r.matchCause; the live version comes from the model) */
 function matchReason(r){
@@ -609,7 +609,7 @@ function reasonCodes(i, r){
   if(r.review){
     var o = codeOutcome(r.review);
     var dot = o==='neg' ? '#D93025' : (o==='excluded' ? '#5F5E5A' : '#1a8a3a');
-    var lead = r.review==='same' ? 'Same person' : (r.review==='notmatch' ? 'Marked not a match' : 'Set aside — couldn’t confirm');
+    var lead = r.review==='same' ? 'Same person' : (r.review==='notmatch' ? 'Marked not a match' : 'Set aside, couldn’t confirm');
     var tail = r.review==='same' ? ', confirmed by review'
              : (r.reasonLabel ? (r.review==='notmatch' ? (', '+r.reasonLabel) : (' · '+r.reasonLabel)) : '');
     out += '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px;border-top:1px solid #E0E0E0;padding-top:12px">'+
@@ -621,8 +621,8 @@ function reasonCodes(i, r){
   }
   out += '<div style="font-size:12px;font-weight:700;color:#747474;letter-spacing:.05em;text-transform:uppercase;margin-top:16px">Is this the same person?</div>';
   var acts = st==='nomatch'
-    ? [['same','Match','Same person'],['ignore','Can\'t confirm','Set aside — leave out of the score']]
-    : [['same','Match','Same person'],['notmatch','Not a match','Different person'],['ignore','Can\'t confirm','Set aside — leave out of the score']];
+    ? [['same','Match','Same person'],['ignore','Can\'t confirm','Set aside, leave out of the score']]
+    : [['same','Match','Same person'],['notmatch','Not a match','Different person'],['ignore','Can\'t confirm','Set aside, leave out of the score']];
   var ICONS = {
     same:   {col:'#1a8a3a', bg:'#E7F4EC', svg:'<path d="M5 12l5 5L20 7"/>'},
     notmatch:{col:'#D93025', bg:'#FDECEC', svg:'<path d="M7 7l10 10M17 7L7 17"/>'},
@@ -787,7 +787,7 @@ function reportFeed(s, c){
     var pending=dv.unresolved>0;
     var bpC=pending?'#8a6414':sm.c, bpBg=pending?'#FBF1DE':sm.bg, bpT=pending?'Not reviewed':sm.t;
     var bInfo=pending?(dv.unresolved+' comparison'+(dv.unresolved>1?'s':'')+' still need'+(dv.unresolved>1?'':'s')+' your review'):h(dv.sub);
-    // hard gate: while any flagged comparison is open, the only action is "Review flagged" — no submit.
+    // hard gate: while any flagged comparison is open, the only action is "Review flagged" - no submit.
     // The recruiter resolves every one (Match / Not a match / Can't confirm); only then does Submit appear.
     var reviewCta = dv.unresolved>0
       ? '<button type="button" onclick="jumpToFlagged()" style="border:0;color:#fff;background:#0076FB;border-radius:8px;padding:11px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;white-space:nowrap"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Review flagged ('+dv.unresolved+')</button>'
@@ -814,7 +814,7 @@ function wlStatus(c){
 }
 /* a check counts as "completed" once a report has been submitted (verified / not verified / needs review) */
 function isCompleted(c){ var st=wlStatus(c); return st==='verified'||st==='notverified'||st==='needsreview'; }
-/* Completed-tab display status — the outcome of a finished review (submit is hard-gated on a verdict
+/* Completed-tab display status - the outcome of a finished review (submit is hard-gated on a verdict
    for every flagged comparison, so there is no "incomplete" state):
    notmatch = a confirmed different person (mismatch); inconclusive = ≥1 "Can't confirm" (no mismatch);
    match = every comparison confirmed the same person. Derived from the submitted rows, else the seed. */
@@ -890,7 +890,7 @@ function wlReason(c){
   if(c.wl && c.wl.reason) return c.wl.reason;
   return (c.photos && c.photos.length) ? '' : 'No photos on file';
 }
-/* kebab on a main-list row — offers "Change joining date". Shown on to-verify / not-verified /
+/* kebab on a main-list row - offers "Change joining date". Shown on to-verify / not-verified /
    coming-up rows (where a date change is most likely). Menu key is 'l'+id (distinct from attention). */
 function showListKebab(c){ return isFuture(c) || isOverdue(c) || wlStatus(c)==='toverify' || wlStatus(c)==='notverified'; }
 function listKebab(c){
@@ -924,12 +924,12 @@ function wlObserveMore(){
 function wlToggleMine(){ setState({mineOnly:!state.mineOnly, page:1}); wlSyncUrl(true); }
 function wlToggleMenu(id){ setState({wlMenu: state.wlMenu===id?null:id}); }
 function wlDismiss(id, reason, comment){ var m=Object.assign({}, state.dismissed); m[id]={reason:reason, comment:comment||'', by:'A. Sharma', at:'now'}; setState({dismissed:m, wlMenu:null, notJoinModal:null}); }
-/* "Not joining" — capture an optional comment, then dismiss from attention */
+/* "Not joining" - capture an optional comment, then dismiss from attention */
 function openNotJoin(id){ var c=CANDIDATES.find(function(x){return x.id===id;}); if(!c) return; setState({notJoinModal:{id:id, name:c.name}, wlMenu:null}); }
 function cancelNotJoin(){ setState({notJoinModal:null}); }
 function scrimNotJoin(e){ if(e.target===e.currentTarget) cancelNotJoin(); }
 function confirmNotJoin(){ var m=state.notJoinModal; if(!m) return; var el=document.getElementById('rh-notjoin-note'); wlDismiss(m.id, 'Not joining', el?el.value.trim():''); }
-/* change a candidate's joining date (+ optional comment) — from the list kebab or the attention "Joining date changed" */
+/* change a candidate's joining date (+ optional comment) - from the list kebab or the attention "Joining date changed" */
 function openDateModal(id){ var c=CANDIDATES.find(function(x){return x.id===id;}); if(!c) return; setState({dateModal:{id:id, name:c.name, date:c.joiningISO||''}, wlMenu:null}); }
 function cancelDate(){ setState({dateModal:null}); }
 function scrimDate(e){ if(e.target===e.currentTarget) cancelDate(); }
@@ -983,7 +983,7 @@ function findCandidateCard(ok){
     '<div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid #A5A5A5;padding:6px 0">'+searchIcon2()+
       '<input id="rh-q" type="search" placeholder="Search by name, RHID or email" autocomplete="off" value="'+h(s.q)+'" oninput="onQuery(this.value)" style="flex:1;min-width:0;border:0;outline:0;background:none;font-family:inherit;font-size:14px;font-weight:500;color:#2A2A2A">'+
     '</div>'+
-    '<div style="font-size:12px;color:#747474;margin-top:8px;display:flex;align-items:center;gap:6px"><span style="width:5px;height:5px;border-radius:50%;background:#0076FB;flex-shrink:0"></span>Search anyone who\'s been hired — even if they\'re not on today\'s list</div>';
+    '<div style="font-size:12px;color:#747474;margin-top:8px;display:flex;align-items:center;gap:6px"><span style="width:5px;height:5px;border-radius:50%;background:#0076FB;flex-shrink:0"></span>Search anyone who\'s been hired, even if they\'re not on today\'s list</div>';
   if(ok.length){
     html+='<div style="margin-top:12px;border:1px solid #DDD;border-radius:6px;overflow:hidden">';
     ok.forEach(function(x){ html+='<button type="button" onclick="pick(\''+x.id+'\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;background:#fff;border:0;border-bottom:1px solid #E0E0E0;text-align:left;cursor:pointer;font-family:inherit">'+avatar(x.name,32)+'<span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">'+h(x.name)+'</span><span style="font-size:12.5px;color:#747474">'+h(x.rhid+' · '+x.req)+'</span></span></button>'; });
@@ -1004,14 +1004,14 @@ function worklistView(){
   function tabBtn(id,label,n){ var on=tab===id; return '<button type="button" onclick="setWlTab(\''+id+'\')" aria-pressed="'+on+'" style="border:0;background:none;color:'+(on?'#2A2A2A':'#667085')+';font-family:inherit;font-size:14px;font-weight:600;padding:0 2px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;border-bottom:2px solid '+(on?'#0076FB':'transparent')+';margin-bottom:-1px">'+h(label)+'<span style="font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;background:#EFF1F5;color:#667085">'+n+'</span></button>'; }
   var html='<div role="group" aria-label="Candidate lists" style="display:flex;gap:28px;border-bottom:1px solid #E5E7EB;margin-bottom:16px">'+tabBtn('active','To verify',activeN)+tabBtn('completed','Completed',completedN)+'</div>';
 
-  /* tidy filters — status scoped to the current tab */
+  /* tidy filters - status scoped to the current tab */
   var tabList=base.filter(function(c){ return tab==='completed'?isCompleted(c):!isCompleted(c); }).filter(inDateRange);
   function scnt(st){ if(st==='all') return tabList.length; return tabList.filter(function(c){ return (tab==='completed'?completedStatus(c):wlStatus(c))===st; }).length; }
   var statusOpts=tab==='completed'?[['all','All'],['match','Reviewed · Match'],['notmatch','Reviewed · Not a match'],['inconclusive','Inconclusive']]:[['all','All'],['toverify','To verify'],['inreview','In progress']];
   var fctrl='height:34px;border:1px solid #DCE2EB;border-radius:9px;background:#fff;font-family:inherit;font-size:13px;padding:0 10px;color:#2A2A2A;cursor:pointer';
   var statusSel='<select onchange="wlSetFilter(this.value)" style="'+fctrl+'">'+statusOpts.map(function(o){ return '<option value="'+o[0]+'"'+(s.filter===o[0]?' selected':'')+'>'+h(o[1])+' ('+scnt(o[0])+')</option>'; }).join('')+'</select>';
   var sopt=function(v,l){ return '<option value="'+v+'"'+(s.wlSort===v?' selected':'')+'>'+l+'</option>'; };
-  /* active tab: a light "when" button group (All / Today / Delayed) — lighter than the tabs so it reads as a filter, not navigation */
+  /* active tab: a light "when" button group (All / Today / Delayed) - lighter than the tabs so it reads as a filter, not navigation */
   var delayedN=base.filter(isOverdue).length;
   function whenSeg(v,label,badge){ var on=(s.dateRange||'all')===v;
     return '<button type="button" onclick="wlSetDate(\''+v+'\')" aria-pressed="'+on+'" style="border:0;'+(v!=='all'?'border-left:1px solid #DCE2EB;':'')+'background:'+(on?'#EAF2FE':'#fff')+';color:'+(on?'#185FA5':'#5A6473')+';font-family:inherit;font-size:13px;font-weight:600;padding:0 14px;height:34px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">'+h(label)+(badge?'<span style="font-size:11px;font-weight:700;padding:0 6px;border-radius:999px;background:'+(on?'#D6E6FB':'#EFF1F5')+';color:'+(on?'#185FA5':'#5A6473')+'">'+delayedN+'</span>':'')+'</button>';
@@ -1093,20 +1093,20 @@ function render(){
         (SHOW_STAGE_BADGE ? '<span class="rh-chip chip-stage" style="margin-left:auto">'+h(c.stage)+'</span>' : '')+
       '</div>'+
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px 20px">'+
-        [{k:'Email',v:c.email||'—'},{k:'Phone',v:c.phone||'—'},{k:'Joining date',v:c.joining||'—'}].map(function(f){
+        [{k:'Email',v:c.email||'-'},{k:'Phone',v:c.phone||'-'},{k:'Joining date',v:c.joining||'-'}].map(function(f){
           return '<div><div style="font-size:13px;color:#747474;margin-bottom:3px">'+h(f.k)+'</div><div style="font-size:14px;font-weight:600;word-break:break-word">'+h(f.v)+'</div></div>';
         }).join('')+
       '</div>';
     if(!c.photos.length){
       var noPh = isFuture(c)
-        ? 'No photos on file for this profile yet. '+h(c.name)+' joins on '+h(c.joining||fmtDate(c.joiningISO))+' — once their application or interview photos are on file and they’ve reported to join, you can take the joining-day photo and run the check.'
-        : 'No photos on file for this profile. There’s nothing to compare a joining-day photo against, so there’s no check to run — you’ll need at least one application, interview or document photo first.';
+        ? 'No photos on file for this profile yet. '+h(c.name)+' joins on '+h(c.joining||fmtDate(c.joiningISO))+'. Once their application or interview photos are on file and they’ve reported to join, you can take the joining-day photo and run the check.'
+        : 'No photos on file for this profile. There’s nothing to compare a joining-day photo against, so there’s no check to run. You’ll need at least one application, interview or document photo first.';
       html += '<div class="note" style="margin-top:18px">'+noPh+'</div>';
     }
     html += '</div>';
   }
 
-  /* 3a. FUTURE JOINER — can view the profile + on-file photos, but the joining-day upload is blocked until they join */
+  /* 3a. FUTURE JOINER - can view the profile + on-file photos, but the joining-day upload is blocked until they join */
   if(c && c.photos.length && !s.done && isFuture(c)){
     html += '<div class="rh-card">'+
       '<div style="display:flex;gap:13px;align-items:flex-start">'+
@@ -1172,7 +1172,7 @@ function render(){
     html += '</div>';
   }
 
-  /* 3b + 4 + 5. PHOTOS-ON-FILE — v2 card feed once done; idle/running keep the single-surface list */
+  /* 3b + 4 + 5. PHOTOS-ON-FILE - v2 card feed once done; idle/running keep the single-surface list */
   if(c && c.photos.length && s.done){
     html += reportFeed(s, c);
   } else if(c && c.photos.length){
@@ -1275,10 +1275,10 @@ function render(){
 
     if(_done){ html += '<p style="margin:0;padding:14px 20px;font-size:12.5px;color:#747474;line-height:1.6">Photos count as a match at 85%+, identity documents at 65%+ (they\'re older and lower quality). Open any flagged row to compare the two photos and record what you found.</p>'; }
 
-    // overall verdict banner — sits right above the decision (evidence -> verdict -> decide)
+    // overall verdict banner - sits right above the decision (evidence -> verdict -> decide)
     if(_done){ html += verdictBanner(s.rows); }
 
-    // the recruiter reviews the flagged comparisons, then submits — the system carries the verdict
+    // the recruiter reviews the flagged comparisons, then submits - the system carries the verdict
     if(_done){
       if(s.decision){
         var dec = s.decision, sm = SUBMIT_STATUS[dec.status] || SUBMIT_STATUS.review;
@@ -1291,7 +1291,7 @@ function render(){
         '</div>';
       } else {
         var dv = reportSummary(s.rows);
-        var helper = dv.unresolved>0 ? (dv.unresolved+' comparison'+(dv.unresolved>1?'s':'')+' still need'+(dv.unresolved>1?'':'s')+' your review — you can still submit.')
+        var helper = dv.unresolved>0 ? (dv.unresolved+' comparison'+(dv.unresolved>1?'s':'')+' still need'+(dv.unresolved>1?'':'s')+' your review. You can still submit.')
                     : 'All comparisons reviewed.';
         html += '<div style="border-top:1px solid #E0E0E0;background:#FBFBFA;padding:16px 20px">'+
           '<div style="font-size:14px;font-weight:600">Submit report</div>'+
@@ -1359,7 +1359,7 @@ function render(){
     '</div></div>';
   }
 
-  /* REASON POPUP — Not a match / Can't confirm (set aside) */
+  /* REASON POPUP - Not a match / Can't confirm (set aside) */
   if(s.rmodal){
     var rm = s.rmodal;
     var rmReasons = rm.action==='notmatch' ? NOTMATCH_REASONS : IGNORE_REASONS;
@@ -1367,7 +1367,7 @@ function render(){
     html += '<div class="rh-scrim" onclick="scrimReason(event)"><div class="rh-dialog" style="width:420px">'+
       '<header><h2>'+rmTitle+'</h2><button class="x" onclick="cancelReason()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<p style="margin:0 0 6px;font-size:12.5px;color:#747474">Pick a reason — recorded against your name.</p>'+
+        '<p style="margin:0 0 6px;font-size:12.5px;color:#747474">Pick a reason, recorded against your name.</p>'+
         rmReasons.map(function(rz,idx){ var on=rm.reason===rz; return '<button type="button" onclick="pickModalReason('+idx+')" style="display:block;width:100%;box-sizing:border-box;text-align:left;border:'+(on?'1.5px solid #378ADD':'1px solid #DDD')+';background:'+(on?'#E6F1FB':'#fff')+';color:'+(on?'#185FA5':'#2A2A2A')+';border-radius:8px;margin-top:7px;padding:9px 11px;font-size:13px;font-weight:'+(on?'600':'400')+';cursor:pointer;font-family:inherit">'+h(rz)+'</button>'; }).join('')+
         '<textarea id="rh-reason-note" placeholder="'+(rm.reason==='Other'?'Add a note (required)':'Add a note (optional)')+'" style="width:100%;box-sizing:border-box;margin-top:10px;min-height:48px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid '+(rm.err?'#EB4040':'#DDD')+';border-radius:8px">'+h(rm.note||'')+'</textarea>'+
         (rm.err ? '<div style="font-size:12.5px;color:#EB4040;margin-top:6px">'+h(rm.err)+'</div>' : '')+
@@ -1441,7 +1441,7 @@ function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click
 function openPicker(){ var el=document.getElementById('rh-file'); if(el){ el.value=''; el.click(); } }
 function onFileInput(e){ handleFile(e.target.files[0]); }
 function retake(){ clearTimers(); _runToken++; _qtoken++; setState({photo:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, upErr:'', done:false, running:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null}); }
-/* The recruiter doesn't personally confirm/deny identity — the system carries the status. They
+/* The recruiter doesn't personally confirm/deny identity - the system carries the status. They
    review the flagged comparisons, then SUBMIT the report, confirming they've reviewed everything.
    Submitting never auto-executes an adverse action; the hire/no-hire call is downstream. */
 function openSubmit(){ setState({submitModal:{confirmed:false, note:'', err:''}}); }
@@ -1453,7 +1453,7 @@ function confirmSubmit(){
   var el=document.getElementById('rh-submit-note'); var note=el?el.value.trim():((m.note||'').trim());
   var v=reportSummary(state.rows);
   if(!m.confirmed){ setState({submitModal:Object.assign({}, m, {note:note, err:'Confirm you’ve reviewed all comparisons.'})}); return; }
-  if(v.unresolved>0 && !note){ setState({submitModal:Object.assign({}, m, {note:note, err:'Add a note — '+v.unresolved+' comparison'+(v.unresolved>1?'s are':' is')+' still unreviewed.'})}); return; }
+  if(v.unresolved>0 && !note){ setState({submitModal:Object.assign({}, m, {note:note, err:'Add a note. '+v.unresolved+' comparison'+(v.unresolved>1?'s are':' is')+' still unreviewed.'})}); return; }
   var at = new Date().toLocaleString([], {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
   var dec = {action:'submitted', by:'A. Sharma', at:at, note:note, status:v.tier, unreviewed:v.unresolved};
   if(state.entry) state.entry.decision = dec;   // persist onto the saved check record
@@ -1476,7 +1476,7 @@ function resolveRow(i, code){
   if(state.entry) state.entry.rows = rows;
   setState({rows:rows, openRows:openRows});
 }
-/* "Change" on a reviewed row — clear the verdict and re-show the action cards (row stays open) */
+/* "Change" on a reviewed row - clear the verdict and re-show the action cards (row stays open) */
 function clearRowVerdict(i){
   var rows=state.rows.slice();
   rows[i]=Object.assign({}, rows[i], {review:null, reasonLabel:null, reasonNote:'', reviewedBy:null, reviewedAt:null});
@@ -1586,8 +1586,8 @@ function buildSeeds(){
     var img=(window.RH_IMAGES && window.RH_IMAGES[key] && window.RH_IMAGES[key][0]) || null;
     var photos=[
       {label:'Application photo',   src:'application', date:'02 Apr 2026',        by:null,       score:x.score, img:img, cause:(x.cause||null)},
-      {label:'Round 1 — screening', src:'interview',   date:'18 Apr 2026, 10:30', by:'S. Iyer',  score:x.score, img:img},
-      {label:'Round 2 — technical', src:'interview',   date:'02 May 2026, 15:20', by:'R. Menon', score:x.score, img:img}
+      {label:'Round 1: screening', src:'interview',   date:'18 Apr 2026, 10:30', by:'S. Iyer',  score:x.score, img:img},
+      {label:'Round 2: technical', src:'interview',   date:'02 May 2026, 15:20', by:'R. Menon', score:x.score, img:img}
     ];
     if(x.noface) photos.push({label:'Aadhaar card', src:'document', date:'20 Apr 2026', by:null, score:x.score, img:FACELESS_DOC, cant:true});
     CANDIDATES.push({ id:key, name:x.name, rhid:'RH'+(49001+i), req:x.req, reqid:'REQ-'+(2401+i), stage:'Onboarding', eligible:true, joiningISO:x.iso, joining:fmtLong(x.iso), owner:'me',
