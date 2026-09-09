@@ -765,12 +765,12 @@ function reportFeed(s, c){
   html += '<div role="group" aria-label="Filter rounds" style="display:flex;gap:26px;border-bottom:1px solid #E5E7EB;margin:18px 0 14px">'+
       _seg('all','All rounds',rows.length,view==='all')+_seg('review','Needs review',flagged.length,view==='review')+
     '</div>';
-  var groups=[{title:'Application &amp; interview photos', sub:'', test:function(r){return r.src!=='document';}},{title:'Identity documents', sub:'scored more leniently (older, lower-quality scans)', test:function(r){return r.src==='document';}}];
+  var groups=[{title:'Application &amp; interview photos', test:function(r){return r.src!=='document';}},{title:'Identity documents', test:function(r){return r.src==='document';}}];
   groups.forEach(function(g){
     var idxs=[]; rows.forEach(function(r,i){ if(g.test(r)) idxs.push(i); });
     if(view==='review') idxs=idxs.filter(function(i){ return flagged.indexOf(i)>=0; });
     if(!idxs.length) return;
-    html += '<div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#667085;margin:20px 4px 10px">'+g.title+(g.sub?' <span style="text-transform:none;letter-spacing:0;font-weight:400">· '+g.sub+'</span>':'')+'</div>';
+    html += '<div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#667085;margin:20px 4px 10px">'+g.title+' ('+idxs.length+')</div>';
     idxs.forEach(function(i){ html += reportCard(i, rows[i], c); });
   });
   if(s.decision){
@@ -1184,7 +1184,7 @@ function render(){
     } else if(_idle){
       var idleLabel = isFuture(c)
         ? (c.photos.length+' photo'+(c.photos.length===1?'':'s')+' on file')
-        : ('Comparing against '+c.photos.length+' photo'+(c.photos.length===1?'':'s')+' on file');
+        : ('Total '+c.photos.length+' photo'+(c.photos.length===1?'':'s')+' on file');
       html += '<div style="padding:13px 20px;border-bottom:1px solid #E0E0E0;font-size:13px;color:#747474">'+h(idleLabel)+'</div>';
     }
     if(_done){
@@ -1216,15 +1216,15 @@ function render(){
 
     // rows grouped by source: application/interview photos, then identity documents
     var groups = [
-      {title:'Application &amp; interview photos', sub:'', test:function(r){return r.src!=='document';}},
-      {title:'Identity documents', sub:'scored more leniently (older, lower-quality scans)', test:function(r){return r.src==='document';}}
+      {title:'Application &amp; interview photos', test:function(r){return r.src!=='document';}},
+      {title:'Identity documents', test:function(r){return r.src==='document';}}
     ];
     groups.forEach(function(g){
       var idxs = [];
       tableRows.forEach(function(r,i){ if(g.test(r)) idxs.push(i); });
       if(!idxs.length) return;
       html += '<div class="rpt-head" style="display:flex;align-items:center;gap:14px;padding:10px 20px;background:#F7F8FA;border-bottom:1px solid #DDD;font-size:12px;font-weight:600;color:#747474">'+
-        '<span style="flex:1;min-width:0">'+g.title+(g.sub?' <span style="font-weight:400;color:#6E6E6E">· '+g.sub+'</span>':'')+'</span>'+
+        '<span style="flex:1;min-width:0">'+g.title+' ('+idxs.length+')</span>'+
       '</div>';
       idxs.forEach(function(i){
         var r = tableRows[i];

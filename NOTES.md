@@ -67,8 +67,13 @@ carry the dark theme). What changed:
   Documents match at N%"); "Why this needs a look:" / "Why this may not match:" (was "Likely
   cause…"); the action prompt is "Is this the same person?"; recorded verdicts read "Same
   person, confirmed by review" / "Marked not a match" / "Set aside — couldn't confirm …".
-- **Setup:** the pre-run preview chip reads **"Not matched yet"**; the documents group is
-  labelled "scored more leniently (older, lower-quality scans)".
+- **Setup:** the pre-run preview chip reads **"Not matched yet"**. The idle list header reads
+  **"Total N photos on file"** (2026-09-09; was "Comparing against N photos on file" — that phrasing
+  now stays only on the running header while the check is in flight; the future-joiner header is still
+  just "N photos on file"). Each group header carries its own count: **"Application & interview photos
+  (5)"** and **"Identity documents (3)"** (the "scored more leniently (older, lower-quality scans)"
+  sub-label was dropped 2026-09-09). The same count-in-title convention is applied to the report feed's
+  group headers.
 - **Worklist:** **two tabs** — **To verify** (active: to-verify + in-review + upcoming) and
   **Completed** (verified / not verified / needs review), each with a count (`state.wlTab`,
   `isCompleted`, `setWlTab`, `tabBtn`). **Underline tabs** (2026-09-08, from a manager reference): active =

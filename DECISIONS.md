@@ -15,6 +15,23 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-09 · Pre-run photos-on-file list copy — clearer header + per-group counts [agreed]
+
+- **Discussion (Rohan):** the idle setup list said "Comparing against 8 photos on file", but nothing is
+  being compared yet at that point — it's just the inventory. And the two group headers read as prose
+  ("Application & interview photos", "Identity documents · scored more leniently…") without telling the
+  recruiter how many of each are on file.
+- **Decision:** (1) idle header → **"Total N photos on file"** (kept "Comparing against N…" only on the
+  *running* header, where a comparison actually is happening; future-joiner header stays "N photos on
+  file"). (2) each group header shows its count in parentheses — **"Application & interview photos (5)"**,
+  **"Identity documents (3)"** — computed from the rows actually shown. (3) dropped the "scored more
+  leniently (older, lower-quality scans)" sub-label from the documents group (redundant detail; the
+  document-tier scoring is documented in NOTES, not surfaced as a caption). Same count-in-title convention
+  applied to the report-feed group headers for consistency.
+- **Change:** built + deployed. Harness green, zero em dashes, no key in `index.html`.
+
+---
+
 ## 2026-09-09 · Switch scoring + quality from Gemini to AWS Rekognition — BUILT (needs Vercel env vars)
 
 - **Discussion (Rohan):** move the real work from Gemini to **AWS Rekognition**, single provider, and
