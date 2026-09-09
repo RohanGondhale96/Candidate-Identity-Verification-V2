@@ -1354,7 +1354,7 @@ function render(){
   if(s.confirmReshoot){
     html += '<div class="rh-scrim" onclick="scrimReshoot(event)"><div class="rh-dialog" style="width:420px">'+
       '<header><h2>Use a different photo?</h2><button class="x" onclick="cancelReshoot()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
-      '<div class="dbody"><p style="margin:0;font-size:13.5px;color:#747474;line-height:1.55">This closes the current result so you can upload a new joining-day photo. It stays saved under <b style="color:#333;font-weight:600">Checks you ran today</b>.</p></div>'+
+      '<div class="dbody"><p style="margin:0;font-size:13.5px;color:#747474;line-height:1.55">This deletes the current joining-day photo and its result. You’ll need to upload a new photo and run the check again.</p></div>'+
       '<footer><span style="flex:1"></span><button class="rh-btn tertiary sm" onclick="cancelReshoot()">Cancel</button><button class="rh-btn primary sm" onclick="doReshoot()">Use a different photo</button></footer>'+
     '</div></div>';
   }
