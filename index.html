@@ -338,7 +338,7 @@ function applyEntry(mode){
 function searchHits(){
   var v = state.q.trim().toLowerCase();
   if(!state.roundsConfigured || v.length<2) return {ok:[],blocked:[]};
-  var hits = CANDIDATES.filter(function(c){ return c.name.toLowerCase().indexOf(v)>=0 || c.rhid.toLowerCase().indexOf(v)>=0 || c.email.toLowerCase().indexOf(v)>=0; });
+  var hits = CANDIDATES.filter(function(c){ return (c.name||'').toLowerCase().indexOf(v)>=0 || (c.rhid||'').toLowerCase().indexOf(v)>=0 || (c.email||'').toLowerCase().indexOf(v)>=0; });
   return { ok:hits.filter(function(c){return c.eligible;}), blocked:hits.filter(function(c){return !c.eligible;}) };
 }
 function handleFile(f){
@@ -1066,17 +1066,24 @@ function worklistView(){
     statCard('delayed','Delayed',nDelayed,true)+
   '</div>';
 
-  /* filter bar: joining-date range + sort */
+  /* search bar + sort (slim, directly under the stat cards - matches the finalized wireframe).
+     Search is global (anyone hired, not just today's list); typed results drop down under the input. */
   var sopt=function(v,l){ return '<option value="'+v+'"'+(s.wlSort===v?' selected':'')+'>'+l+'</option>'; };
-  var hasDates=!!(s.dateFrom||s.dateTo);
-  html+='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px">'+
-    '<div style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#667085">Joining date'+
-      '<input type="date" value="'+h(s.dateFrom||'')+'" onchange="wlSetDateFrom(this.value)" aria-label="Joining date from" style="'+fctrl+'">'+
-      '<span>to</span>'+
-      '<input type="date" value="'+h(s.dateTo||'')+'" onchange="wlSetDateTo(this.value)" aria-label="Joining date to" style="'+fctrl+'">'+
-      (hasDates?'<button type="button" onclick="wlClearDates()" style="border:0;background:none;color:#0076FB;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:4px">Clear</button>':'')+
+  var hits=searchHits(), ok=hits.ok, typed=(s.q||'').trim().length>=2;
+  var resultRows='';
+  if(typed){
+    resultRows = ok.length
+      ? ok.map(function(x){ return '<button type="button" onclick="pick(\''+x.id+'\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;background:#fff;border:0;border-bottom:1px solid #EEF1F5;text-align:left;cursor:pointer;font-family:inherit">'+avatar(x.name,32)+'<span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">'+h(x.name)+'</span><span style="font-size:12.5px;color:#747474">'+h(x.rhid+' · '+x.req)+'</span></span></button>'; }).join('')
+      : '<div style="padding:14px;font-size:13px;color:#747474">No candidates match that search.</div>';
+  }
+  var dropdown = typed ? '<div style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;background:#fff;border:1px solid #E5E9F0;border-radius:12px;box-shadow:0 10px 26px rgba(20,30,50,.14);overflow:hidden;max-height:340px;overflow-y:auto">'+resultRows+'</div>' : '';
+  html+='<div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">'+
+    '<div style="flex:1;min-width:0;position:relative">'+
+      '<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E5E9F0;border-radius:12px;padding:0 14px;height:44px;box-shadow:0 1px 2px rgba(20,30,50,.05)">'+searchIcon2()+
+        '<input id="rh-q" type="search" placeholder="Search by name, RHID or email" autocomplete="off" value="'+h(s.q)+'" oninput="onQuery(this.value)" style="flex:1;min-width:0;border:0;outline:0;background:none;font-family:inherit;font-size:14px;color:#2A2A2A">'+
+      '</div>'+dropdown+
     '</div>'+
-    '<select onchange="wlSetSort(this.value)" style="'+fctrl+';margin-left:auto">'+sopt('overdue','Sort: Oldest first')+sopt('newest','Sort: Newest')+sopt('name','Sort: Name A-Z')+'</select>'+
+    '<select onchange="wlSetSort(this.value)" aria-label="Sort" style="'+fctrl+';height:44px">'+sopt('overdue','Sort: Oldest first')+sopt('newest','Sort: Newest')+sopt('name','Sort: Name A-Z')+'</select>'+
   '</div>';
 
   /* list */
@@ -1130,14 +1137,13 @@ function render(){
   html += pageheader();
   html += '<main class="stack">';
 
-  /* 1. SEARCH */
+  /* 1. SEARCH + WORKLIST. Search now lives as a slim bar inside worklistView (under the stat cards),
+     so only the non-typed notices (no rounds / deep-miss) render as a card here; the typed no-match
+     message is shown in the search dropdown. */
   if(s.searchOpen){
-    if(noteBold||noteRest){
+    if((noteBold||noteRest) && !typed){
       html += '<div class="rh-card" style="margin-bottom:16px"><div class="note">'+(noteBold?'<b style="font-weight:600">'+h(noteBold)+'</b> ':'')+h(noteRest)+'</div></div>';
     }
-    if(s.roundsConfigured) html += findCandidateCard(ok);
-
-    /* single worklist (replaces the old Joining-today / Checks-you-ran tabs) */
     if(s.roundsConfigured){ html += worklistView(); }
   }
 

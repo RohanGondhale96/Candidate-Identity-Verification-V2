@@ -79,9 +79,13 @@ carry the dark theme). What changed:
   gone.** A row of **4 clickable stat cards is the status filter** — **Pending · In progress · Completed ·
   Delayed** — the selected card is highlighted (2px `#0076FB`, `#F0F7FF` fill); **Delayed** is the red
   attention cross-cut (overdue Pending/In progress; not a 4th status). `state.wlView` holds the choice
-  (`pending` default), set by `setWlView`; `wlList` filters by it. Below the cards: a **joining-date range**
-  (two native date inputs → `state.dateFrom`/`dateTo`, `inJoinRange`, filters `joiningISO` lexically, with a
-  Clear button) plus the **Sort** dropdown. The global "Find a candidate" search card stays above. Rows keep
+  (`pending` default), set by `setWlView`; `wlList` filters by it. Below the cards: a **slim search bar +
+  Sort dropdown** (corrected 2026-09-11 to match the finalized wireframe). The global "anyone hired" search
+  (`searchHits`/`onQuery`, `#rh-q`) was moved out of the old separate "Find a candidate" card into this bar;
+  typed results (≥2 chars) drop down under the input, with a "No candidates match" message. (Fixed a latent
+  crash: `searchHits` did `c.email.toLowerCase()` but seed candidates have no email → guarded with
+  `(c.email||'')`.) A joining-date range from a first build attempt was **removed** to match the wireframe
+  (its `dateFrom`/`dateTo`/`inJoinRange`/`wlSetDate*` plumbing stays, unused, so it can be re-added). Rows keep
   the same template (photo, name, sub-line, status badge, kebab) but restyled; **status naming updated** —
   `Pending` (grey), `Pending · Delayed` / `In progress · Delayed` (amber), `In progress` (blue tint),
   `Completed · Match` (green) / `Completed · Not a match` (red). Completed rows have **no kebab**. The status
