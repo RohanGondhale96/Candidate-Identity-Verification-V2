@@ -240,6 +240,7 @@ var state = {
   attest:false, qualityChecking:false, quality:null, rmodal:null, submitModal:null, reportView:'all',
   /* worklist */
   filter:'all', dateRange:'all', wlSort:'overdue', mineOnly:true, page:1, perPage:10, wlShown:20, wlTab:'active',
+  wlView:'pending', dateFrom:'', dateTo:'',
   dismissed:{}, wlMenu:null, wlConfirmAll:false, dateModal:null, notJoinModal:null
 };
 
@@ -864,10 +865,12 @@ function completedStatus(c){
   }
   return (c.wl && c.wl.completed) || 'match';
 }
-function completedPill(c){ var k=completedStatus(c);
-  if(k==='notmatch')     return _pill('Reviewed · Not a match','#B42318','#FDECEC');
-  if(k==='inconclusive') return _pill('Inconclusive','#8a6414','#FBF1DE');
-  return _pill('Reviewed · Match','#1a8a3a','#E7F4EC');
+/* Completed outcome badge - only Match / Not a match now (Inconclusive was dropped: a can't-confirm
+   comparison is excluded and the verdict falls to the rest, so a finished check is always one or the other). */
+function completedPill(c){
+  return completedStatus(c)==='notmatch'
+    ? _pill('Completed · Not a match','#B42318','#FDECEC')
+    : _pill('Completed · Match','#1a8a3a','#E7F4EC');
 }
 function setWlTab(t){ setState({wlTab:t, filter:'all', dateRange:'all', page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
 function dayDiff(c){ return Math.round((WL_TODAY_MS - Date.parse(c.joiningISO+'T00:00:00Z'))/86400000); } // +past, -future, 0 today
@@ -879,6 +882,8 @@ function inDateRange(c){ var r=state.dateRange;
   if(r==='delayed') return isOverdue(c);
   return true; /* all */
 }
+/* redesigned worklist: joining-date range filter (YYYY-MM-DD compares lexically) */
+function inJoinRange(c){ var f=state.dateFrom, t=state.dateTo; if(f && c.joiningISO < f) return false; if(t && c.joiningISO > t) return false; return true; }
 function wlBase(){ return CANDIDATES.filter(function(c){ return c.eligible!==false && c.joiningISO; }); }
 function wlCount(status){
   var b=wlBase();
@@ -896,14 +901,14 @@ function wlSortList(l){ var s=state.wlSort;
   });
 }
 function wlList(){
-  var b=wlBase().filter(function(c){ return state.wlTab==='completed' ? isCompleted(c) : !isCompleted(c); });
-  var l;
-  if(state.wlTab==='completed'){
-    l = (state.filter && state.filter!=='all') ? b.filter(function(c){ return completedStatus(c)===state.filter; }) : b;
-  } else {
-    l = b.filter(inDateRange);   // active tab: All / Today / Delayed
-  }
-  return wlSortList(l);
+  var v=state.wlView||'pending';
+  var b=wlBase().filter(function(c){
+    if(v==='completed')  return isCompleted(c);
+    if(v==='delayed')    return isOverdue(c);                          // cross-cut: overdue Pending/In progress
+    if(v==='inprogress') return !isCompleted(c) && wlStatus(c)==='inreview';
+    return !isCompleted(c) && wlStatus(c)==='toverify';                // pending (default)
+  }).filter(inJoinRange);
+  return wlSortList(b);
 }
 function fmtDate(iso){
   var d=new Date(Date.parse(iso+'T00:00:00Z'));
@@ -949,6 +954,11 @@ function listKebab(c){
 function wlSetFilter(f){ setState({filter:f, page:1, wlShown:WL_PAGE, wlMenu:null, wlConfirmAll:false}); wlSyncUrl(true); }
 function wlSetDate(d){ setState({dateRange:d, page:1, wlShown:WL_PAGE}); wlSyncUrl(true); }
 function wlSetSort(s){ setState({wlSort:s, page:1, wlShown:WL_PAGE}); wlSyncUrl(true); }
+/* redesigned worklist: stat cards are the status filter (no tabs); joining-date range narrows the list */
+function setWlView(v){ setState({wlView:v, page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
+function wlSetDateFrom(v){ setState({dateFrom:v||'', page:1, wlShown:WL_PAGE}); }
+function wlSetDateTo(v){ setState({dateTo:v||'', page:1, wlShown:WL_PAGE}); }
+function wlClearDates(){ setState({dateFrom:'', dateTo:'', page:1, wlShown:WL_PAGE}); }
 /* infinite scroll: append the next batch when the sentinel scrolls into view */
 function wlLoadMore(){ var full=wlList(); if((state.wlShown||WL_PAGE) >= full.length) return; setState({wlShown:(state.wlShown||WL_PAGE)+WL_PAGE}); }
 function wlObserveMore(){
@@ -994,8 +1004,7 @@ function wlSyncUrl(replace){
     var p=new URLSearchParams();
     if(state.cand) p.set('candidateId', state.cand.id);
     else {
-      if(state.filter!=='all')     p.set('f', state.filter);
-      if(state.dateRange!=='all')  p.set('d', state.dateRange);
+      if(state.wlView && state.wlView!=='pending') p.set('v', state.wlView);
       if(state.wlSort!=='overdue') p.set('s', state.wlSort);
       if(!state.mineOnly)          p.set('mine','0');
       if(state.page>1)             p.set('p', state.page);
@@ -1009,7 +1018,7 @@ function wlApplyUrl(){
   var cid=p.get('candidateId');
   if(cid){ var c=CANDIDATES.find(function(x){ return x.id===cid || x.rhid===cid; }); if(c){ select(c, true); return; } if(p.get('candidateId')){ setState({deepMiss:cid, searchOpen:true, cand:null}); return; } }
   setState({ cand:null, searchOpen:true, done:false, running:false, rows:[], entry:null, decision:null, viewingHistory:false,
-    filter:p.get('f')||'all', dateRange:p.get('d')||'all', wlSort:p.get('s')||'overdue', mineOnly:p.get('mine')!=='0', page:parseInt(p.get('p')||'1',10)||1 });
+    wlView:p.get('v')||'pending', dateFrom:'', dateTo:'', wlSort:p.get('s')||'overdue', mineOnly:p.get('mine')!=='0', page:parseInt(p.get('p')||'1',10)||1 });
 }
 
 function searchIcon2(){ return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#6E6E6E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>'; }
@@ -1032,30 +1041,42 @@ function findCandidateCard(ok){
 
 function worklistView(){
   var s=state, base=wlBase();
-  var activeN=base.filter(function(c){ return !isCompleted(c); }).length;
-  var completedN=base.filter(isCompleted).length;
-  var tab=s.wlTab==='completed'?'completed':'active';
-
-  /* two tabs: To verify (active) | Completed */
-  // underline tabs: active = dark/bold text + blue underline on a full-width divider; grey count badges
-  function tabBtn(id,label,n){ var on=tab===id; return '<button type="button" onclick="setWlTab(\''+id+'\')" aria-pressed="'+on+'" style="border:0;background:none;color:'+(on?'#2A2A2A':'#667085')+';font-family:inherit;font-size:14px;font-weight:600;padding:0 2px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;border-bottom:2px solid '+(on?'#0076FB':'transparent')+';margin-bottom:-1px">'+h(label)+'<span style="font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;background:#EFF1F5;color:#667085">'+n+'</span></button>'; }
-  var html='<div role="group" aria-label="Candidate lists" style="display:flex;gap:28px;border-bottom:1px solid #E5E7EB;margin-bottom:16px">'+tabBtn('active','To verify',activeN)+tabBtn('completed','Completed',completedN)+'</div>';
-
-  /* tidy filters - status scoped to the current tab */
-  var tabList=base.filter(function(c){ return tab==='completed'?isCompleted(c):!isCompleted(c); }).filter(inDateRange);
-  function scnt(st){ if(st==='all') return tabList.length; return tabList.filter(function(c){ return (tab==='completed'?completedStatus(c):wlStatus(c))===st; }).length; }
-  var statusOpts=tab==='completed'?[['all','All'],['match','Reviewed · Match'],['notmatch','Reviewed · Not a match'],['inconclusive','Inconclusive']]:[['all','All'],['toverify','To verify'],['inreview','In progress']];
+  var view=s.wlView||'pending';
+  var nPending=base.filter(function(c){ return !isCompleted(c) && wlStatus(c)==='toverify'; }).length;
+  var nProg=base.filter(function(c){ return !isCompleted(c) && wlStatus(c)==='inreview'; }).length;
+  var nDone=base.filter(isCompleted).length;
+  var nDelayed=base.filter(isOverdue).length;
   var fctrl='height:34px;border:1px solid #DCE2EB;border-radius:9px;background:#fff;font-family:inherit;font-size:13px;padding:0 10px;color:#2A2A2A;cursor:pointer';
-  var statusSel='<select onchange="wlSetFilter(this.value)" style="'+fctrl+'">'+statusOpts.map(function(o){ return '<option value="'+o[0]+'"'+(s.filter===o[0]?' selected':'')+'>'+h(o[1])+' ('+scnt(o[0])+')</option>'; }).join('')+'</select>';
-  var sopt=function(v,l){ return '<option value="'+v+'"'+(s.wlSort===v?' selected':'')+'>'+l+'</option>'; };
-  /* active tab: a light "when" button group (All / Today / Delayed) - lighter than the tabs so it reads as a filter, not navigation */
-  var delayedN=base.filter(isOverdue).length;
-  function whenSeg(v,label,badge){ var on=(s.dateRange||'all')===v;
-    return '<button type="button" onclick="wlSetDate(\''+v+'\')" aria-pressed="'+on+'" style="border:0;'+(v!=='all'?'border-left:1px solid #DCE2EB;':'')+'background:'+(on?'#EAF2FE':'#fff')+';color:'+(on?'#185FA5':'#5A6473')+';font-family:inherit;font-size:13px;font-weight:600;padding:0 14px;height:34px;cursor:pointer;display:inline-flex;align-items:center;gap:6px">'+h(label)+(badge?'<span style="font-size:11px;font-weight:700;padding:0 6px;border-radius:999px;background:'+(on?'#D6E6FB':'#EFF1F5')+';color:'+(on?'#185FA5':'#5A6473')+'">'+delayedN+'</span>':'')+'</button>';
+
+  /* stat cards ARE the status filter (no tabs). Selected card is highlighted; Delayed is the red
+     attention cross-cut (overdue Pending/In progress). */
+  function statCard(key,label,n,danger){
+    var on=view===key;
+    var numColor=on?'#0076FB':((danger&&n>0)?'#D93025':'#1F2733');
+    var labColor=on?'#0C447C':'#667085';
+    return '<button type="button" onclick="setWlView(\''+key+'\')" aria-pressed="'+on+'" style="text-align:left;cursor:pointer;font-family:inherit;background:'+(on?'#F0F7FF':'#fff')+';border:'+(on?'2px solid #0076FB':'1px solid #E5E9F0')+';border-radius:12px;padding:'+(on?'12px 15px':'13px 16px')+';display:flex;flex-direction:column;gap:5px;box-shadow:0 1px 2px rgba(20,30,50,.05)">'+
+      '<span style="font-size:26px;font-weight:700;line-height:1;color:'+numColor+'">'+n+'</span>'+
+      '<span style="font-size:13px;font-weight:600;color:'+labColor+';display:inline-flex;align-items:center;gap:6px">'+((danger&&n>0)?'<span style="width:7px;height:7px;border-radius:50%;background:#D93025;flex-shrink:0"></span>':'')+h(label)+'</span>'+
+    '</button>';
   }
-  var whenGroup='<div role="group" aria-label="Filter by timing" style="display:inline-flex;border:1px solid #DCE2EB;border-radius:9px;overflow:hidden">'+whenSeg('all','All',false)+whenSeg('today','Today',false)+whenSeg('delayed','Delayed',true)+'</div>';
-  html+='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px">'+(tab==='active'?whenGroup:statusSel)+
-    '<select onchange="wlSetSort(this.value)" style="'+fctrl+'">'+sopt('overdue','Sort: Oldest first')+sopt('newest','Sort: Newest')+sopt('name','Sort: Name A–Z')+'</select>'+
+  var html='<div role="group" aria-label="Filter candidates by status" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px">'+
+    statCard('pending','Pending',nPending,false)+
+    statCard('inprogress','In progress',nProg,false)+
+    statCard('completed','Completed',nDone,false)+
+    statCard('delayed','Delayed',nDelayed,true)+
+  '</div>';
+
+  /* filter bar: joining-date range + sort */
+  var sopt=function(v,l){ return '<option value="'+v+'"'+(s.wlSort===v?' selected':'')+'>'+l+'</option>'; };
+  var hasDates=!!(s.dateFrom||s.dateTo);
+  html+='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px">'+
+    '<div style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#667085">Joining date'+
+      '<input type="date" value="'+h(s.dateFrom||'')+'" onchange="wlSetDateFrom(this.value)" aria-label="Joining date from" style="'+fctrl+'">'+
+      '<span>to</span>'+
+      '<input type="date" value="'+h(s.dateTo||'')+'" onchange="wlSetDateTo(this.value)" aria-label="Joining date to" style="'+fctrl+'">'+
+      (hasDates?'<button type="button" onclick="wlClearDates()" style="border:0;background:none;color:#0076FB;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:4px">Clear</button>':'')+
+    '</div>'+
+    '<select onchange="wlSetSort(this.value)" style="'+fctrl+';margin-left:auto">'+sopt('overdue','Sort: Oldest first')+sopt('newest','Sort: Newest')+sopt('name','Sort: Name A-Z')+'</select>'+
   '</div>';
 
   /* list */
@@ -1067,10 +1088,10 @@ function worklistView(){
   } else {
     var firstRow=true;
     slice.forEach(function(c){
-      var fut=isFuture(c), st=wlStatus(c), overdue=isOverdue(c), d=dayDiff(c);
+      var fut=isFuture(c), st=wlStatus(c), overdue=isOverdue(c), d=dayDiff(c), done=isCompleted(c);
       var div=firstRow?'':'border-top:1px solid #EEF1F5;'; firstRow=false;
-      // Completed tab has no kebab at all → drop the slot entirely (no empty space); active tab keeps a 30px spacer so pills stay aligned whether or not a row has a kebab
-      var kebab = tab==='completed' ? '' : (showListKebab(c) ? listKebab(c) : '<span style="width:30px;flex-shrink:0"></span>');
+      // Completed rows have no kebab (a joining-date change no longer applies) → drop the slot; others keep a 30px spacer so pills stay aligned
+      var kebab = done ? '' : (showListKebab(c) ? listKebab(c) : '<span style="width:30px;flex-shrink:0"></span>');
       var sub = fut
         ? h(c.rhid+' · '+c.req+' · Joining '+fmtDate(c.joiningISO).replace(/^\S+ /,''))
         : h(c.rhid+' · '+c.req)+(overdue?(' · <span style="color:'+(d>7?'#D93025':'#8a6414')+';font-weight:600">'+d+' day'+(d===1?'':'s')+' ago, '+fmtDate(c.joiningISO).replace(/^\S+ /,'')+'</span>'):'');
@@ -1079,7 +1100,7 @@ function worklistView(){
         candAvatar(c,42)+
         '<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:7px;min-width:0"><span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+'</span>'+upTag+'</div>'+
           '<div class="wl-sub" style="font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#667085">'+sub+'</div></div>'+
-        '<span style="flex-shrink:0;display:inline-flex;justify-content:flex-end">'+(tab==='completed'?completedPill(c):(overdue?_pill((st==='inreview'?'In progress':'To verify')+' · Delayed','#8a6414','#FBF1DE'):wlPill(st)))+'</span>'+kebab+
+        '<span style="flex-shrink:0;display:inline-flex;justify-content:flex-end">'+(done?completedPill(c):(overdue?_pill((st==='inreview'?'In progress':'Pending')+' · Delayed','#8a6414','#FBF1DE'):(st==='inreview'?_pill('In progress','#185FA5','#EAF2FE'):_pill('Pending','#5F5E5A','#ECEEF1'))))+'</span>'+kebab+
       '</div>';
     });
     if(shown < full.length){

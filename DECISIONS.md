@@ -15,6 +15,31 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-11 · Planning reset with manager — feature backlog + main-list redesign [in progress]
+
+- **Context:** extensive manager feedback; we paused feature work and went back to planning. Captured the
+  full backlog (logic, status model, screens, entry points) and are working it one item at a time. Items
+  still to do: match-row override + narrowed can't-confirm reasons + submit-confirmation table + verdict
+  rules (A-block); report redesign; collaboration tab; candidate-page verdict bar; top-nav + round-level
+  entry points; admin screen. Integration screens will be **static mockups in a separate showcase area** of
+  this prototype (the prototype stays standalone). See the conversation backlog for the full list.
+- **Decisions locked so far:**
+  - **Status model → Pending / In progress / Completed** (renamed "To verify" to **Pending**). **Delayed**
+    is a modifier badge on Pending/In progress. **Inconclusive is dropped entirely** — a can't-confirm
+    comparison is excluded and the verdict falls to the rest, so a finished check is always Match or Not a
+    match.
+  - **Can't confirm** is only offered on rows the AI flagged (Needs review / Not a match), never on a clean
+    Match; its reason list is cut to 3 (source photo blurry / appearance changed / document unclear).
+  - **Main list = Option B:** stat cards are the filter, no tabs (chosen over keeping tabs — having both the
+    cards and tabs shows the counts twice). List stays a **row list**, not cards.
+- **Change (this entry):** built the **main-list redesign** — 4 clickable stat-card filters
+  (`setWlView`/`state.wlView`), joining-date range + sort, restyled rows with the new status badges,
+  Completed rows lose the kebab, `completedPill` now Match / Not a match only. Verified all four views +
+  date range in-browser; harness updated to the stat-card model and green; zero em dashes; no key in the
+  build. Everything else in the backlog is still pending.
+
+---
+
 ## 2026-09-09 · Completed candidates must open to the report, not the upload flow [agreed]
 
 - **Discussion (Rohan):** opening a Completed candidate (Sana) showed the "Upload joining day photo" card

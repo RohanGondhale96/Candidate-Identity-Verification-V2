@@ -74,7 +74,21 @@ carry the dark theme). What changed:
   (5)"** and **"Identity documents (3)"** (the "scored more leniently (older, lower-quality scans)"
   sub-label was dropped 2026-09-09). The same count-in-title convention is applied to the report feed's
   group headers.
-- **Worklist:** **two tabs** — **To verify** (active: to-verify + in-review + upcoming) and
+- **Worklist redesigned to stat-card filtering (2026-09-11, manager; Option B).** The whole main list
+  was rebuilt around the RippleHire "Agents setup" layout (layout only, not its elements). **The tabs are
+  gone.** A row of **4 clickable stat cards is the status filter** — **Pending · In progress · Completed ·
+  Delayed** — the selected card is highlighted (2px `#0076FB`, `#F0F7FF` fill); **Delayed** is the red
+  attention cross-cut (overdue Pending/In progress; not a 4th status). `state.wlView` holds the choice
+  (`pending` default), set by `setWlView`; `wlList` filters by it. Below the cards: a **joining-date range**
+  (two native date inputs → `state.dateFrom`/`dateTo`, `inJoinRange`, filters `joiningISO` lexically, with a
+  Clear button) plus the **Sort** dropdown. The global "Find a candidate" search card stays above. Rows keep
+  the same template (photo, name, sub-line, status badge, kebab) but restyled; **status naming updated** —
+  `Pending` (grey), `Pending · Delayed` / `In progress · Delayed` (amber), `In progress` (blue tint),
+  `Completed · Match` (green) / `Completed · Not a match` (red). Completed rows have **no kebab**. The status
+  model is now **Pending → In progress → Completed**, with **Delayed** a modifier and **Inconclusive dropped**
+  (see the note below). The bullets that follow describe the older 2-tab / All-Today-Delayed model and are
+  kept only as history.
+- *(historical)* **Worklist:** **two tabs** — **To verify** (active: to-verify + in-review + upcoming) and
   **Completed** (verified / not verified / needs review), each with a count (`state.wlTab`,
   `isCompleted`, `setWlTab`, `tabBtn`). **Underline tabs** (2026-09-08, from a manager reference): active =
   **dark/bold text (`#2A2A2A`) + a 2px `#0076FB` underline** on a full-width `#E5E7EB` divider; inactive =
