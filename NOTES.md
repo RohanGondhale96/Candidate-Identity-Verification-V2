@@ -84,8 +84,9 @@ carry the dark theme). What changed:
   (`searchHits`/`onQuery`, `#rh-q`) was moved out of the old separate "Find a candidate" card into this bar;
   typed results (≥2 chars) drop down under the input, with a "No candidates match" message. (Fixed a latent
   crash: `searchHits` did `c.email.toLowerCase()` but seed candidates have no email → guarded with
-  `(c.email||'')`.) A joining-date range from a first build attempt was **removed** to match the wireframe
-  (its `dateFrom`/`dateTo`/`inJoinRange`/`wlSetDate*` plumbing stays, unused, so it can be re-added). Rows keep
+  `(c.email||'')`.) The bar carries, left to right, the **search**, a **joining-date range** (two native
+  date inputs → `dateFrom`/`dateTo`, `inJoinRange` filters `joiningISO` lexically, with a Clear button that
+  appears once a bound is set), and the **Sort** dropdown; it wraps on narrow widths. Rows keep
   the same template (photo, name, sub-line, status badge, kebab) but restyled; **status naming updated** —
   `Pending` (grey), `Pending · Delayed` / `In progress · Delayed` (amber), `In progress` (blue tint),
   `Completed · Match` (green) / `Completed · Not a match` (red). Completed rows have **no kebab**. The status

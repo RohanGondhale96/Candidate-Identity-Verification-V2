@@ -1077,12 +1077,20 @@ function worklistView(){
       : '<div style="padding:14px;font-size:13px;color:#747474">No candidates match that search.</div>';
   }
   var dropdown = typed ? '<div style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;background:#fff;border:1px solid #E5E9F0;border-radius:12px;box-shadow:0 10px 26px rgba(20,30,50,.14);overflow:hidden;max-height:340px;overflow-y:auto">'+resultRows+'</div>' : '';
-  html+='<div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">'+
-    '<div style="flex:1;min-width:0;position:relative">'+
+  var hasDates=!!(s.dateFrom||s.dateTo);
+  var dateCtrl='<div style="display:flex;align-items:center;gap:7px;font-size:13px;color:#667085;flex-shrink:0">Joining date'+
+    '<input type="date" value="'+h(s.dateFrom||'')+'" onchange="wlSetDateFrom(this.value)" aria-label="Joining date from" style="'+fctrl+';height:44px">'+
+    '<span>to</span>'+
+    '<input type="date" value="'+h(s.dateTo||'')+'" onchange="wlSetDateTo(this.value)" aria-label="Joining date to" style="'+fctrl+';height:44px">'+
+    (hasDates?'<button type="button" onclick="wlClearDates()" style="border:0;background:none;color:#0076FB;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;padding:4px">Clear</button>':'')+
+  '</div>';
+  html+='<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px">'+
+    '<div style="flex:1;min-width:220px;position:relative">'+
       '<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E5E9F0;border-radius:12px;padding:0 14px;height:44px;box-shadow:0 1px 2px rgba(20,30,50,.05)">'+searchIcon2()+
         '<input id="rh-q" type="search" placeholder="Search by name, RHID or email" autocomplete="off" value="'+h(s.q)+'" oninput="onQuery(this.value)" style="flex:1;min-width:0;border:0;outline:0;background:none;font-family:inherit;font-size:14px;color:#2A2A2A">'+
       '</div>'+dropdown+
     '</div>'+
+    dateCtrl+
     '<select onchange="wlSetSort(this.value)" aria-label="Sort" style="'+fctrl+';height:44px">'+sopt('overdue','Sort: Oldest first')+sopt('newest','Sort: Newest')+sopt('name','Sort: Name A-Z')+'</select>'+
   '</div>';
 
