@@ -15,6 +15,25 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-15 · A-block built — review overrides + verdict rules [agreed]
+
+- **Context:** the substance of the manager backlog (A1-A5), built straight into the prototype since the
+  report already had most of the review machinery.
+- **Built:** (A1) matched rows get a **Change** override revealing Match / Not a match (flagged rows keep
+  their inline action cards); (A2) **Can't confirm** stays gated to flagged rows only; (A3) can't-confirm
+  reasons cut to **three** (source photo blurry / appearance changed (age) / document photo not clear);
+  (A4) verdict rules confirmed in `reportSummary` — one Not a match → Not verified, Can't confirm excludes
+  that comparison and the verdict falls to the rest, no Inconclusive except the parked all-can't-confirm
+  edge; (A5) the Submit dialog shows a **table of every comparison, AI verdict vs the recruiter's review**
+  before the confirm checkbox.
+- **Verified in-browser** (desktop + mobile): match-row override shows 2 options (no Can't confirm), the 3
+  reasons, override→Not a match flips the verdict to mismatch, a set-aside row is excluded, and the submit
+  table renders. Harness green (71 PASS), zero em dashes, no key in `index.html`.
+- **Still pending from the backlog:** C2 report redesign, C3 collaboration (Q5 open), C4 verdict bar,
+  C5 admin (Q6 open), D1/D2 entry points.
+
+---
+
 ## 2026-09-13 · Worklist v2 — 3 status cards + context-sensitive segment filter [agreed]
 
 - **Context:** iterated the main-list design in a throwaway **wireframe artifact** (in-chat), then ported the

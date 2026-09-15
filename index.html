@@ -250,7 +250,7 @@ var SHOW_REPORT_ACTIONS = false;  // Download PDF + Share report buttons in the 
 
 var state = {
   q:'', searchOpen:true, cand:null, photo:null, consent:false,
-  rows:[], open:null, openRows:{}, running:false, done:false, shared:[],
+  rows:[], open:null, openRows:{}, overrideOpen:{}, running:false, done:false, shared:[],
   upErr:'', drag:false, showShare:false, picked:[], pickQ:'',
   toast:'', roundsConfigured:true, lightbox:null, history:[], hasCamera:true, deepMiss:null,
   confirmReshoot:false, viewingHistory:false, decision:null, decisionErr:'', entry:null, tab:'joining', _refocus:null,
@@ -533,7 +533,7 @@ function aiStateLabel(r){ var st=photoState(r); return st==='cant'?"Couldn’t c
 
 /* the human's action on a flagged row (structured, non-binding on the number) */
 var ACTIONS = { same:'Same person', notmatch:'Not a match', ignore:'Can\'t confirm' };
-var IGNORE_REASONS = ['Can’t tell, too close to call','Wrong photo (not this candidate)','Too blurry / dark / low-res','Face not clearly visible','Too old, appearance changed','Document scan unreadable','Duplicate of another photo','Other'];
+var IGNORE_REASONS = ['The source photo is blurry','Appearance changed (age)','The document photo isn’t clear'];
 /* the submitted report's status chip, keyed by the banner tier */
 var SUBMIT_STATUS = { match:{t:'Verified',c:'#1a8a3a',bg:'#E7F4EC'}, reviewed:{t:'Verified',c:'#1a8a3a',bg:'#E7F4EC'}, review:{t:'Needs review',c:'#B7791F',bg:'#FBF1DE'}, mismatch:{t:'Not verified',c:'#D93025',bg:'#FDECEC'}, inconclusive:{t:'Inconclusive',c:'#5F5E5A',bg:'#F1EFE8'} };
 /* pos = human vouches same person, neg = says different, excluded = ignore the photo, open = undecided */
@@ -695,6 +695,60 @@ function reasonCodes(i, r){
   out += '</div>';
   return out;
 }
+/* A1: a matched row can also be overridden. Show "Why this is a match", then a Change link that
+   reveals Match / Not a match (no Can't confirm on a confident match, per A2). */
+function overrideCard(i, code, title, sub, col, bg, svg){
+  var onclick = code==='same' ? ('resolveRow('+i+',\'same\')') : ('openReasonModal('+i+',\''+code+'\')');
+  return '<button type="button" onclick="'+onclick+'" style="display:flex;align-items:center;gap:11px;text-align:left;border:1px solid #C6C6C6;background:#fff;border-radius:12px;padding:11px 12px;cursor:pointer;font-family:inherit">'+
+    '<span style="width:28px;height:28px;border-radius:50%;background:'+bg+';display:grid;place-items:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="'+col+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+svg+'</svg></span>'+
+    '<span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600;color:#2A2A2A">'+h(title)+'</span><span style="display:block;font-size:12px;color:#747474;margin-top:2px">'+h(sub)+'</span></span></button>';
+}
+function matchOverride(i, r){
+  var out = reasonNote('match','Why this is a match:', matchReason(r));
+  if(r.review){   // recruiter already overrode -> show the recorded verdict + Change
+    var o=codeOutcome(r.review), dot=o==='neg'?'#D93025':(o==='excluded'?'#5F5E5A':'#1a8a3a');
+    var lead=r.review==='same'?'Confirmed a match':(r.review==='notmatch'?'Marked not a match':'Set aside, couldn’t confirm');
+    var tail=r.reasonLabel?(r.review==='notmatch'?(', '+r.reasonLabel):(' · '+r.reasonLabel)):'';
+    out += '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;border-top:1px solid #E0E0E0;padding-top:12px">'+
+      '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#747474"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex-shrink:0"></span><b style="font-weight:600;color:#2A2A2A">'+h(lead)+'</b>'+h(tail)+(r.reviewedAt?(' · '+h(r.reviewedAt)):'')+'</span>'+
+      '<button type="button" onclick="clearRowVerdict('+i+')" style="margin-left:auto;border:0;background:none;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Change</button>'+
+      (r.reasonNote?'<div style="flex-basis:100%;font-size:12px;color:#6E6E6E">“'+h(r.reasonNote)+'”</div>':'')+
+    '</div>';
+    return out;
+  }
+  if(state.overrideOpen && state.overrideOpen[i]){   // Change clicked -> show the override options
+    out += '<div style="font-size:12px;font-weight:700;color:#747474;letter-spacing:.05em;text-transform:uppercase;margin-top:16px">Override the verdict</div>'+
+      '<div class="rpt-acts" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px">'+
+      overrideCard(i,'same','Match','Same person','#1a8a3a','#E7F4EC','<path d="M5 12l5 5L20 7"/>')+
+      overrideCard(i,'notmatch','Not a match','Different person','#D93025','#FDECEC','<path d="M7 7l10 10M17 7L7 17"/>')+
+    '</div>';
+    return out;
+  }
+  out += '<div style="display:flex;margin-top:14px;border-top:1px solid #E0E0E0;padding-top:12px"><button type="button" onclick="toggleOverride('+i+')" style="margin-left:auto;border:0;background:none;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Change</button></div>';
+  return out;
+}
+function toggleOverride(i){ var m=Object.assign({}, state.overrideOpen); m[i]=!m[i]; setState({overrideOpen:m}); }
+/* A5: verdict pills for the submit confirmation table */
+function aiVerdictLabel(r){
+  var st=photoState(r);
+  return ({match:{t:'Match',c:'#1a8a3a',bg:'#E7F4EC'},review:{t:'Needs review',c:'#8a6414',bg:'#FBF1DE'},nomatch:{t:'Not a match',c:'#B42318',bg:'#FDECEC'},cant:{t:'Couldn’t compare',c:'#5F5E5A',bg:'#EFEFEF'}})[st] || {t:'-',c:'#747474',bg:'#EFEFEF'};
+}
+function reviewedVerdictLabel(r){
+  if(r.review==='same')     return {t:'Match',c:'#1a8a3a',bg:'#E7F4EC'};
+  if(r.review==='notmatch') return {t:'Not a match',c:'#B42318',bg:'#FDECEC'};
+  if(r.review==='ignore')   return {t:'Set aside',c:'#5F5E5A',bg:'#EFEFEF'};
+  var st=photoState(r);
+  if(st==='cant')  return {t:'Set aside',c:'#5F5E5A',bg:'#EFEFEF'};   // couldn't compare -> excluded
+  if(st==='match') return {t:'Match',c:'#1a8a3a',bg:'#E7F4EC'};       // agrees with the AI
+  return {t:'-',c:'#747474',bg:'#EFEFEF'};
+}
+function minipill(x){ return '<span style="background:'+x.bg+';color:'+x.c+';border-radius:999px;padding:3px 9px;font-size:11.5px;font-weight:600;white-space:nowrap">'+h(x.t)+'</span>'; }
+function submitReviewTable(rows){
+  return '<div style="margin:2px 0 14px;border:1px solid #E5E9F0;border-radius:10px;overflow:hidden">'+
+    '<div style="display:flex;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8A97A8;background:#F7F8FA;padding:8px 12px"><span style="flex:1;min-width:0">Comparison</span><span style="width:92px;flex-shrink:0">AI verdict</span><span style="width:92px;flex-shrink:0">Your review</span></div>'+
+    rows.map(function(r){ return '<div style="display:flex;align-items:center;font-size:12.5px;padding:8px 12px;border-top:1px solid #EEF1F5"><span style="flex:1;min-width:0;color:#2A2A2A;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px">'+h(r.label)+'</span><span style="width:92px;flex-shrink:0">'+minipill(aiVerdictLabel(r))+'</span><span style="width:92px;flex-shrink:0">'+minipill(reviewedVerdictLabel(r))+'</span></div>'; }).join('')+
+  '</div>';
+}
 
 /* overall verdict across all scored photos, using the source-aware bars */
 function overallVerdict(rows){
@@ -816,7 +870,7 @@ function reportCard(i, r, c){
   '</div>';
   var body='';
   if(isCant){ body='<div style="padding:0 16px 16px">'+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
-  else if(open){ body='<div style="padding:0 16px 16px">'+comparePanes(r,seed)+(flagged?reasonCodes(i,r):reasonNote('match','Why this is a match:', matchReason(r)))+'</div>'; }
+  else if(open){ body='<div style="padding:0 16px 16px">'+comparePanes(r,seed)+(flagged?reasonCodes(i,r):matchOverride(i,r))+'</div>'; }
   return '<article id="rpt-round-'+i+'" style="'+V2CARD+';scroll-margin-top:12px'+(flagged?';border-color:#D9DFE8':'')+'">'+head+body+'</article>';
 }
 function reportFeed(s, c){
@@ -1500,7 +1554,8 @@ function render(){
     html += '<div class="rh-scrim" onclick="scrimSubmit(event)"><div class="rh-dialog" style="width:440px">'+
       '<header><h2>Submit report</h2><button class="x" onclick="cancelSubmit()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<p style="margin:0 0 10px;font-size:13px;color:#747474;line-height:1.55">Submitting the identity check for <b style="color:#333;font-weight:600">'+h(s.cand?s.cand.name:'')+'</b>. Recorded status: <b style="color:'+ssm.c+';font-weight:600">'+ssm.t+'</b>.</p>'+
+        '<p style="margin:0 0 12px;font-size:13px;color:#747474;line-height:1.55">Submitting the identity check for <b style="color:#333;font-weight:600">'+h(s.cand?s.cand.name:'')+'</b>. Recorded status: <b style="color:'+ssm.c+';font-weight:600">'+ssm.t+'</b>.</p>'+
+        submitReviewTable(s.rows)+
         '<label class="rh-cb" style="align-items:flex-start"><input type="checkbox" '+(su.confirmed?'checked':'')+' onchange="toggleSubmitConfirm()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>I’ve reviewed all the comparisons for this candidate before submitting.</span></label>'+
         '<textarea id="rh-submit-note" placeholder="Add a note (optional)" style="width:100%;box-sizing:border-box;margin-top:10px;min-height:48px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid '+(su.err?'#EB4040':'#DDD')+';border-radius:8px">'+h(su.note||'')+'</textarea>'+
         (su.err ? '<div style="font-size:12.5px;color:#EB4040;margin-top:6px">'+h(su.err)+'</div>' : '')+

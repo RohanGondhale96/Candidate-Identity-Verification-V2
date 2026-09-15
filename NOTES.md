@@ -49,6 +49,23 @@ carry the dark theme). What changed:
   decision — justified because it predated the "Can't confirm" action, which makes the soft gate
   redundant. The submit dialog keeps the "I've reviewed all the comparisons" checkbox; the note is now
   always optional.)
+- **Review overrides + verdict rules — A-block (2026-09-15, manager backlog A1-A5).**
+  - **A1 — override every row.** Flagged rows (needs review / not a match) still show the action cards
+    inline. **Matched rows** now also carry a **Change** link (`matchOverride`/`toggleOverride`,
+    `state.overrideOpen`) under "Why this is a match"; clicking it reveals **Match / Not a match**
+    override cards (`overrideCard`). Once overridden, the row shows the recorded verdict + Change (reuses
+    `clearRowVerdict`).
+  - **A2 — Can't confirm is gated.** It appears only on flagged rows (`reasonCodes`); a confident Match
+    row's override is Match / Not a match only, so the recruiter can't dodge the call.
+  - **A3 — three can't-confirm reasons** (`IGNORE_REASONS`): "The source photo is blurry" ·
+    "Appearance changed (age)" · "The document photo isn't clear" (was an 8-item list incl. Other).
+  - **A4 — verdict rules** (already in `reportSummary`, re-verified): any single **Not a match**
+    (`vouchNeg`/`openNoMatch`) → overall **Not verified**; a **Can't confirm** row is **excluded** and the
+    verdict falls to the rest; Matches count in. No **Inconclusive** at submit except the parked
+    all-can't-confirm edge (`Y===0`).
+  - **A5 — submit confirmation table** (`submitReviewTable`/`aiVerdictLabel`/`reviewedVerdictLabel`/
+    `minipill`): the Submit dialog now lists every comparison with **AI verdict vs Your review** before
+    the "I've reviewed all comparisons" checkbox. Fits desktop and mobile (names truncate).
 - **Reference caption (2026-09-07, manager):** primary line **"Photo taken during {round}"** (e.g.
   "Photo taken during Round 2 — technical", from `r.label`; documents show "Identity document", the
   application photo shows its label) + the photo's own **date & time** (`r.date`, e.g. "02 Jun 2026,
