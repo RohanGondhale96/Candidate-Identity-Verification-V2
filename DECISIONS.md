@@ -15,6 +15,28 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-13 · Worklist v2 — 3 status cards + context-sensitive segment filter [agreed]
+
+- **Context:** iterated the main-list design in a throwaway **wireframe artifact** (in-chat), then ported the
+  agreed result to the prototype and deployed in one pass.
+- **Decisions:** (1) **3 status cards** (Pending / In progress / Completed) — the Delayed card is gone.
+  (2) A **segment group** on the same line as search + sort filters *within* the selected status, with live
+  counts: **timing** (All / Today / Upcoming / Delayed) for open work, **outcome** (All / Match / Not a match)
+  for Completed. "Delayed" is now a timing segment, not a top card. (3) To see "pending but not delayed" the
+  recruiter uses **Today / Upcoming** — seeing those separately was accepted as enough (no combined
+  "on-time" view). (4) **Two separate pills** per row (Pending + Delayed, Completed + Match/Not a match),
+  **dot removed**. (5) **Mobile is a hard requirement now** — every design change must work on a phone; the
+  list reflows (cards stay in a row, segment group scrolls, pills drop under the name).
+- **Edge cases (from review):** *all-can't-confirm completed* → parked, treated as extremely rare (revisit
+  with A4/Q2); *search* clears the active filter; a *Today* candidate flips to *Delayed* at end of the
+  joining day; an overall cross-status "delayed" total is intentionally not surfaced (open, low priority);
+  zero-count segments are shown as `(0)` for now (open).
+- **Change:** deployed. `setWlView`/`setWlWhen`/`wlStatusRows`/`inWhen`/`rowPills`/`pill2`, `.wl-*` classes +
+  a ≤680px media block. Harness updated to the sub-filter model and green; verified desktop + mobile
+  in-browser; zero em dashes; no key in `index.html`.
+
+---
+
 ## 2026-09-11 · Planning reset with manager — feature backlog + main-list redesign [in progress]
 
 - **Context:** extensive manager feedback; we paused feature work and went back to planning. Captured the

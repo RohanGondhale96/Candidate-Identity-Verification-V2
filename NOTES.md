@@ -74,24 +74,25 @@ carry the dark theme). What changed:
   (5)"** and **"Identity documents (3)"** (the "scored more leniently (older, lower-quality scans)"
   sub-label was dropped 2026-09-09). The same count-in-title convention is applied to the report feed's
   group headers.
-- **Worklist redesigned to stat-card filtering (2026-09-11, manager; Option B).** The whole main list
-  was rebuilt around the RippleHire "Agents setup" layout (layout only, not its elements). **The tabs are
-  gone.** A row of **4 clickable stat cards is the status filter** — **Pending · In progress · Completed ·
-  Delayed** — the selected card is highlighted (2px `#0076FB`, `#F0F7FF` fill); **Delayed** is the red
-  attention cross-cut (overdue Pending/In progress; not a 4th status). `state.wlView` holds the choice
-  (`pending` default), set by `setWlView`; `wlList` filters by it. Below the cards: a **slim search bar +
-  Sort dropdown** (corrected 2026-09-11 to match the finalized wireframe). The global "anyone hired" search
-  (`searchHits`/`onQuery`, `#rh-q`) was moved out of the old separate "Find a candidate" card into this bar;
-  typed results (≥2 chars) drop down under the input, with a "No candidates match" message. (Fixed a latent
-  crash: `searchHits` did `c.email.toLowerCase()` but seed candidates have no email → guarded with
-  `(c.email||'')`.) The bar carries just the **search** and the **Sort** dropdown. (A joining-date range was
-  added then **reverted on request** — its `dateFrom`/`dateTo`/`inJoinRange`/`wlSetDate*` plumbing stays in
-  place, unused, so it can be re-added if needed.) Rows keep
-  the same template (photo, name, sub-line, status badge, kebab) but restyled; **status naming updated** —
-  `Pending` (grey), `Pending · Delayed` / `In progress · Delayed` (amber), `In progress` (blue tint),
-  `Completed · Match` (green) / `Completed · Not a match` (red). Completed rows have **no kebab**. The status
-  model is now **Pending → In progress → Completed**, with **Delayed** a modifier and **Inconclusive dropped**
-  (see the note below). The bullets that follow describe the older 2-tab / All-Today-Delayed model and are
+- **Worklist: 3 status cards + a sub-filter segment group (2026-09-13, prototyped in a wireframe artifact,
+  then ported).** The main list has **3 clickable status cards** — **Pending · In progress · Completed**
+  (`state.wlView`, `setWlView`, `.wl-stats`); the Delayed card was **removed** (delayed is no longer a
+  top-level view). Directly under them, one line: **search · a segment group · Sort** (`.wl-bar`, wraps on
+  mobile). The **segment group** (`.wl-seg`, `state.wlWhen`, `setWlWhen`) is context-sensitive with live
+  counts: for Pending/In progress it filters by **timing — All · Today · Upcoming · Delayed**; for Completed
+  it filters by **outcome — All · Match · Not a match**. `inWhen(c,w,v)` is the predicate (today =
+  `dayDiff===0`, upcoming = `isFuture`, delayed = `isOverdue`; match = `completedStatus!=='notmatch'`);
+  `wlStatusRows(v)` gives a view's rows before the sub-filter (used for both counts and `wlList`). Rationale:
+  Pending always mixed the delayed ones in, so Today/Upcoming isolate the non-delayed slices and Delayed
+  isolates the overdue ones (an at-a-glance overall delayed total is intentionally not shown — parked). The
+  **row status is two separate pills** (no dot, via `pill2`/`rowPills`): **Pending** (grey) + **Delayed**
+  (amber) when overdue; **In progress** (blue) + Delayed; **Completed** (grey) + **Match** (green) / **Not a
+  match** (red). Completed rows have **no kebab**. The global "anyone hired" search (`searchHits`/`onQuery`,
+  `#rh-q`) lives in the bar with a typed-results dropdown. **Mobile (≤680px):** the 3 cards stay in a row,
+  the segment group wraps to its own row and scrolls horizontally, and each list row drops its pills to a
+  line under the name (`.wl-row`/`.wl-grow`/`.wl-pills`/`.wl-kebab` + a media block). Behavior rules noted
+  for later logic work: **search clears the active filter**, and a **Today** candidate becomes **Delayed at
+  end of the joining day**. The bullets that follow describe the older 2-tab / All-Today-Delayed model and are
   kept only as history.
 - *(historical)* **Worklist:** **two tabs** — **To verify** (active: to-verify + in-review + upcoming) and
   **Completed** (verified / not verified / needs review), each with a count (`state.wlTab`,

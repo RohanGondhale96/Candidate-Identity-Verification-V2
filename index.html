@@ -178,6 +178,23 @@
     .rpt-pane{aspect-ratio:1/1 !important}
     .wl-sub{white-space:normal !important;overflow:visible !important}
   }
+  /* redesigned worklist (3 status cards + timing/outcome segment group) */
+  .wl-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+  .wl-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+  .wl-seg{display:inline-flex;border:1px solid #DCE2EB;border-radius:9px;overflow:hidden;background:#fff;flex-shrink:0}
+  .wl-seg button{border:0;background:none;font-family:inherit;font-size:13px;font-weight:600;color:#5A6473;padding:0 13px;height:44px;cursor:pointer;white-space:nowrap}
+  .wl-seg button + button{border-left:1px solid #DCE2EB}
+  .wl-seg button.on{background:#EAF2FE;color:#185FA5}
+  .wl-row{display:flex;align-items:center;gap:13px;padding:13px 16px;cursor:pointer}
+  .wl-grow{flex:1;min-width:0}
+  .wl-pills{display:inline-flex;gap:6px;flex-shrink:0}
+  @media (max-width:680px){
+    .wl-stats{gap:8px}
+    .wl-seg{flex-basis:100%;overflow-x:auto}
+    .wl-row{flex-wrap:wrap;align-items:flex-start}
+    .wl-pills{order:3;flex-basis:100%;margin-left:55px;margin-top:6px}
+    .wl-kebab{order:2}
+  }
 </style>
 </head>
 <body>
@@ -240,7 +257,7 @@ var state = {
   attest:false, qualityChecking:false, quality:null, rmodal:null, submitModal:null, reportView:'all',
   /* worklist */
   filter:'all', dateRange:'all', wlSort:'overdue', mineOnly:true, page:1, perPage:10, wlShown:20, wlTab:'active',
-  wlView:'pending', dateFrom:'', dateTo:'',
+  wlView:'pending', wlWhen:'all', dateFrom:'', dateTo:'',
   dismissed:{}, wlMenu:null, wlConfirmAll:false, dateModal:null, notJoinModal:null
 };
 
@@ -698,6 +715,27 @@ function verdictBadge(rows){
     '<span style="width:6px;height:6px;border-radius:50%;background:'+v.color+';flex-shrink:0"></span>'+h(txt)+'</span>';
 }
 function _pill(txt,color,bg){ return '<span style="display:inline-flex;align-items:center;gap:6px;background:'+bg+';color:'+color+';border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;flex-shrink:0;white-space:nowrap"><span style="width:6px;height:6px;border-radius:50%;background:'+color+';flex-shrink:0"></span>'+h(txt)+'</span>'; }
+/* worklist row pill without the leading dot (status + modifier show as separate pills) */
+function pill2(txt,color,bg){ return '<span style="background:'+bg+';color:'+color+';border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;white-space:nowrap">'+h(txt)+'</span>'; }
+/* the row status pills: base status + a modifier (Delayed) / outcome (Match / Not a match) */
+function rowPills(c){
+  if(isCompleted(c)){
+    return pill2('Completed','#5A6473','#ECEEF1') + (completedStatus(c)==='notmatch'
+      ? pill2('Not a match','#B42318','#FDECEC')
+      : pill2('Match','#1A7A3A','#E7F4EC'));
+  }
+  var base = wlStatus(c)==='inreview' ? pill2('In progress','#185FA5','#EAF2FE') : pill2('Pending','#5A6473','#ECEEF1');
+  return base + (isOverdue(c) ? pill2('Delayed','#8A6414','#FBF1DE') : '');
+}
+/* a candidate matches a sub-filter: timing (today/upcoming/delayed) for open work, outcome (match/notmatch) for completed */
+function inWhen(c,w,v){
+  if(w==='all') return true;
+  if(v==='completed') return w==='notmatch' ? completedStatus(c)==='notmatch' : completedStatus(c)!=='notmatch';
+  if(w==='today')    return dayDiff(c)===0;
+  if(w==='upcoming') return isFuture(c);
+  if(w==='delayed')  return isOverdue(c);
+  return true;
+}
 function todoBadge(){ return _pill('To verify','#5F5E5A','#ECEEF1'); }
 function pendingBadge(){ return _pill('Decision pending','#B7791F','#FBF1DE'); }
 function decisionBadge(dec){ return dec.action==='confirm' ? _pill('Confirmed','#1a8a3a','#E7F4EC') : _pill("Can’t confirm",'#D93025','#FDECEC'); }
@@ -900,15 +938,17 @@ function wlSortList(l){ var s=state.wlSort;
     return dayDiff(c)-dayDiff(a); /* most overdue first */
   });
 }
-function wlList(){
-  var v=state.wlView||'pending';
-  var b=wlBase().filter(function(c){
+/* rows for a status view (before the sub-filter) */
+function wlStatusRows(v){
+  return wlBase().filter(function(c){
     if(v==='completed')  return isCompleted(c);
-    if(v==='delayed')    return isOverdue(c);                          // cross-cut: overdue Pending/In progress
     if(v==='inprogress') return !isCompleted(c) && wlStatus(c)==='inreview';
-    return !isCompleted(c) && wlStatus(c)==='toverify';                // pending (default)
-  }).filter(inJoinRange);
-  return wlSortList(b);
+    return !isCompleted(c) && wlStatus(c)==='toverify';               // pending (default)
+  });
+}
+function wlList(){
+  var v=state.wlView||'pending', w=state.wlWhen||'all';
+  return wlSortList(wlStatusRows(v).filter(function(c){ return inWhen(c,w,v); }));
 }
 function fmtDate(iso){
   var d=new Date(Date.parse(iso+'T00:00:00Z'));
@@ -938,7 +978,7 @@ function showListKebab(c){ return isFuture(c) || isOverdue(c) || wlStatus(c)==='
 function listKebab(c){
   var key='l'+c.id, open=state.wlMenu===key, notJoin=isFuture(c)||isOverdue(c);
   var item=function(label,onclick){ return '<button type="button" onclick="event.stopPropagation();'+onclick+'" style="display:block;width:100%;text-align:left;border:0;background:none;padding:9px 12px;font-size:13px;font-family:inherit;cursor:pointer;color:#2A2A2A" onmouseover="this.style.background=\'#F7F8FA\'" onmouseout="this.style.background=\'none\'">'+h(label)+'</button>'; };
-  return '<span style="position:relative;flex-shrink:0;width:30px;display:inline-flex;justify-content:center">'+
+  return '<span class="wl-kebab" style="position:relative;flex-shrink:0;width:30px;display:inline-flex;justify-content:center">'+
     '<button type="button" onclick="event.stopPropagation();wlToggleMenu(\''+key+'\')" aria-label="More actions" aria-haspopup="true" style="border:0;background:'+(open?'#EFEFEF':'none')+';color:#6E6E6E;font-size:20px;line-height:1;padding:2px 6px;border-radius:6px;cursor:pointer">&#8942;</button>'+
     (open ?
       '<div onclick="event.stopPropagation()" style="position:absolute;right:0;top:calc(100% + 4px);z-index:41;background:#fff;border:1px solid #E0E0E0;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.14);min-width:184px;overflow:hidden;text-align:left;padding:4px 0">'+
@@ -955,7 +995,8 @@ function wlSetFilter(f){ setState({filter:f, page:1, wlShown:WL_PAGE, wlMenu:nul
 function wlSetDate(d){ setState({dateRange:d, page:1, wlShown:WL_PAGE}); wlSyncUrl(true); }
 function wlSetSort(s){ setState({wlSort:s, page:1, wlShown:WL_PAGE}); wlSyncUrl(true); }
 /* redesigned worklist: stat cards are the status filter (no tabs); joining-date range narrows the list */
-function setWlView(v){ setState({wlView:v, page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
+function setWlView(v){ setState({wlView:v, wlWhen:'all', page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
+function setWlWhen(w){ setState({wlWhen:w, page:1, wlShown:WL_PAGE}); wlSyncUrl(true); }
 function wlSetDateFrom(v){ setState({dateFrom:v||'', page:1, wlShown:WL_PAGE}); }
 function wlSetDateTo(v){ setState({dateTo:v||'', page:1, wlShown:WL_PAGE}); }
 function wlClearDates(){ setState({dateFrom:'', dateTo:'', page:1, wlShown:WL_PAGE}); }
@@ -1005,6 +1046,7 @@ function wlSyncUrl(replace){
     if(state.cand) p.set('candidateId', state.cand.id);
     else {
       if(state.wlView && state.wlView!=='pending') p.set('v', state.wlView);
+      if(state.wlWhen && state.wlWhen!=='all') p.set('w', state.wlWhen);
       if(state.wlSort!=='overdue') p.set('s', state.wlSort);
       if(!state.mineOnly)          p.set('mine','0');
       if(state.page>1)             p.set('p', state.page);
@@ -1018,7 +1060,7 @@ function wlApplyUrl(){
   var cid=p.get('candidateId');
   if(cid){ var c=CANDIDATES.find(function(x){ return x.id===cid || x.rhid===cid; }); if(c){ select(c, true); return; } if(p.get('candidateId')){ setState({deepMiss:cid, searchOpen:true, cand:null}); return; } }
   setState({ cand:null, searchOpen:true, done:false, running:false, rows:[], entry:null, decision:null, viewingHistory:false,
-    wlView:p.get('v')||'pending', dateFrom:'', dateTo:'', wlSort:p.get('s')||'overdue', mineOnly:p.get('mine')!=='0', page:parseInt(p.get('p')||'1',10)||1 });
+    wlView:p.get('v')||'pending', wlWhen:p.get('w')||'all', dateFrom:'', dateTo:'', wlSort:p.get('s')||'overdue', mineOnly:p.get('mine')!=='0', page:parseInt(p.get('p')||'1',10)||1 });
 }
 
 function searchIcon2(){ return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#6E6E6E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>'; }
@@ -1040,49 +1082,48 @@ function findCandidateCard(ok){
 }
 
 function worklistView(){
-  var s=state, base=wlBase();
-  var view=s.wlView||'pending';
-  var nPending=base.filter(function(c){ return !isCompleted(c) && wlStatus(c)==='toverify'; }).length;
-  var nProg=base.filter(function(c){ return !isCompleted(c) && wlStatus(c)==='inreview'; }).length;
-  var nDone=base.filter(isCompleted).length;
-  var nDelayed=base.filter(isOverdue).length;
+  var s=state, view=s.wlView||'pending', when=s.wlWhen||'all';
+  var nPending=wlStatusRows('pending').length, nProg=wlStatusRows('inprogress').length, nDone=wlStatusRows('completed').length;
   var fctrl='height:34px;border:1px solid #DCE2EB;border-radius:9px;background:#fff;font-family:inherit;font-size:13px;padding:0 10px;color:#2A2A2A;cursor:pointer';
 
-  /* stat cards ARE the status filter (no tabs). Selected card is highlighted; Delayed is the red
-     attention cross-cut (overdue Pending/In progress). */
-  function statCard(key,label,n,danger){
+  /* three status cards (no Delayed card - delayed is now a timing segment below). */
+  function statCard(key,label,n){
     var on=view===key;
-    var numColor=on?'#0076FB':((danger&&n>0)?'#D93025':'#1F2733');
-    var labColor=on?'#0C447C':'#667085';
     return '<button type="button" onclick="setWlView(\''+key+'\')" aria-pressed="'+on+'" style="text-align:left;cursor:pointer;font-family:inherit;background:'+(on?'#F0F7FF':'#fff')+';border:'+(on?'2px solid #0076FB':'1px solid #E5E9F0')+';border-radius:12px;padding:'+(on?'12px 15px':'13px 16px')+';display:flex;flex-direction:column;gap:5px;box-shadow:0 1px 2px rgba(20,30,50,.05)">'+
-      '<span style="font-size:26px;font-weight:700;line-height:1;color:'+numColor+'">'+n+'</span>'+
-      '<span style="font-size:13px;font-weight:600;color:'+labColor+';display:inline-flex;align-items:center;gap:6px">'+((danger&&n>0)?'<span style="width:7px;height:7px;border-radius:50%;background:#D93025;flex-shrink:0"></span>':'')+h(label)+'</span>'+
+      '<span style="font-size:26px;font-weight:700;line-height:1;color:'+(on?'#0076FB':'#1F2733')+'">'+n+'</span>'+
+      '<span style="font-size:13px;font-weight:600;color:'+(on?'#0C447C':'#667085')+'">'+h(label)+'</span>'+
     '</button>';
   }
-  var html='<div role="group" aria-label="Filter candidates by status" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px">'+
-    statCard('pending','Pending',nPending,false)+
-    statCard('inprogress','In progress',nProg,false)+
-    statCard('completed','Completed',nDone,false)+
-    statCard('delayed','Delayed',nDelayed,true)+
+  var html='<div class="wl-stats" role="group" aria-label="Filter candidates by status">'+
+    statCard('pending','Pending',nPending)+
+    statCard('inprogress','In progress',nProg)+
+    statCard('completed','Completed',nDone)+
   '</div>';
 
-  /* search bar + sort (slim, directly under the stat cards - matches the finalized wireframe).
-     Search is global (anyone hired, not just today's list); typed results drop down under the input. */
+  /* sub-filter segment group with counts: timing for open work, outcome for completed */
+  var statusRows=wlStatusRows(view);
+  var SEG = view==='completed'
+    ? [['all','All'],['match','Match'],['notmatch','Not a match']]
+    : [['all','All'],['today','Today'],['upcoming','Upcoming'],['delayed','Delayed']];
+  var segHtml='<div class="wl-seg" role="group" aria-label="Filter list">'+SEG.map(function(t){
+    var n=statusRows.filter(function(c){ return inWhen(c,t[0],view); }).length;
+    return '<button type="button" onclick="setWlWhen(\''+t[0]+'\')"'+(when===t[0]?' class="on"':'')+'>'+h(t[1])+' ('+n+')</button>';
+  }).join('')+'</div>';
+
+  /* search (global) + segment group + sort - one line, wraps on mobile */
   var sopt=function(v,l){ return '<option value="'+v+'"'+(s.wlSort===v?' selected':'')+'>'+l+'</option>'; };
   var hits=searchHits(), ok=hits.ok, typed=(s.q||'').trim().length>=2;
-  var resultRows='';
-  if(typed){
-    resultRows = ok.length
+  var resultRows = typed ? (ok.length
       ? ok.map(function(x){ return '<button type="button" onclick="pick(\''+x.id+'\')" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;background:#fff;border:0;border-bottom:1px solid #EEF1F5;text-align:left;cursor:pointer;font-family:inherit">'+avatar(x.name,32)+'<span style="flex:1;min-width:0;display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">'+h(x.name)+'</span><span style="font-size:12.5px;color:#747474">'+h(x.rhid+' · '+x.req)+'</span></span></button>'; }).join('')
-      : '<div style="padding:14px;font-size:13px;color:#747474">No candidates match that search.</div>';
-  }
+      : '<div style="padding:14px;font-size:13px;color:#747474">No candidates match that search.</div>') : '';
   var dropdown = typed ? '<div style="position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;background:#fff;border:1px solid #E5E9F0;border-radius:12px;box-shadow:0 10px 26px rgba(20,30,50,.14);overflow:hidden;max-height:340px;overflow-y:auto">'+resultRows+'</div>' : '';
-  html+='<div style="display:flex;gap:10px;align-items:center;margin-bottom:16px">'+
+  html+='<div class="wl-bar">'+
     '<div style="flex:1;min-width:0;position:relative">'+
       '<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E5E9F0;border-radius:12px;padding:0 14px;height:44px;box-shadow:0 1px 2px rgba(20,30,50,.05)">'+searchIcon2()+
         '<input id="rh-q" type="search" placeholder="Search by name, RHID or email" autocomplete="off" value="'+h(s.q)+'" oninput="onQuery(this.value)" style="flex:1;min-width:0;border:0;outline:0;background:none;font-family:inherit;font-size:14px;color:#2A2A2A">'+
       '</div>'+dropdown+
     '</div>'+
+    segHtml+
     '<select onchange="wlSetSort(this.value)" aria-label="Sort" style="'+fctrl+';height:44px">'+sopt('overdue','Sort: Oldest first')+sopt('newest','Sort: Newest')+sopt('name','Sort: Name A-Z')+'</select>'+
   '</div>';
 
@@ -1095,19 +1136,19 @@ function worklistView(){
   } else {
     var firstRow=true;
     slice.forEach(function(c){
-      var fut=isFuture(c), st=wlStatus(c), overdue=isOverdue(c), d=dayDiff(c), done=isCompleted(c);
+      var fut=isFuture(c), overdue=isOverdue(c), d=dayDiff(c), done=isCompleted(c);
       var div=firstRow?'':'border-top:1px solid #EEF1F5;'; firstRow=false;
-      // Completed rows have no kebab (a joining-date change no longer applies) → drop the slot; others keep a 30px spacer so pills stay aligned
-      var kebab = done ? '' : (showListKebab(c) ? listKebab(c) : '<span style="width:30px;flex-shrink:0"></span>');
+      // Completed rows have no kebab; others keep a 30px spacer so pills stay aligned
+      var kebab = done ? '' : (showListKebab(c) ? listKebab(c) : '<span class="wl-kebab" style="width:30px;flex-shrink:0"></span>');
       var sub = fut
         ? h(c.rhid+' · '+c.req+' · Joining '+fmtDate(c.joiningISO).replace(/^\S+ /,''))
         : h(c.rhid+' · '+c.req)+(overdue?(' · <span style="color:'+(d>7?'#D93025':'#8a6414')+';font-weight:600">'+d+' day'+(d===1?'':'s')+' ago, '+fmtDate(c.joiningISO).replace(/^\S+ /,'')+'</span>'):'');
       var upTag = fut ? '<span style="flex-shrink:0;font-size:11px;font-weight:600;color:#185FA5;background:#EAF2FE;border-radius:999px;padding:2px 8px;line-height:1.45">Upcoming</span>' : '';
-      html+='<div role="button" tabindex="0" onclick="pick(\''+c.id+'\')" style="display:flex;align-items:center;gap:13px;padding:13px 16px;'+div+'cursor:pointer">'+
+      html+='<div class="wl-row" role="button" tabindex="0" onclick="pick(\''+c.id+'\')" style="'+div+'">'+
         candAvatar(c,42)+
-        '<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:7px;min-width:0"><span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+'</span>'+upTag+'</div>'+
+        '<div class="wl-grow"><div style="display:flex;align-items:center;gap:7px;min-width:0"><span style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+'</span>'+upTag+'</div>'+
           '<div class="wl-sub" style="font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#667085">'+sub+'</div></div>'+
-        '<span style="flex-shrink:0;display:inline-flex;justify-content:flex-end">'+(done?completedPill(c):(overdue?_pill((st==='inreview'?'In progress':'Pending')+' · Delayed','#8a6414','#FBF1DE'):(st==='inreview'?_pill('In progress','#185FA5','#EAF2FE'):_pill('Pending','#5F5E5A','#ECEEF1'))))+'</span>'+kebab+
+        '<span class="wl-pills">'+rowPills(c)+'</span>'+kebab+
       '</div>';
     });
     if(shown < full.length){
