@@ -195,6 +195,13 @@
     .wl-pills{order:3;flex-basis:100%;margin-left:55px;margin-top:6px}
     .wl-kebab{order:2}
   }
+  /* F2: printing the report (Save as PDF) strips the app chrome and interactive controls */
+  @media print{
+    .rh-nav,.rh-accent,.rh-ph,.rpt-headacts,.rpt-subbar{display:none !important}
+    main{max-width:none;padding:0}
+    .rh-card{box-shadow:none;break-inside:avoid}
+    body{background:#fff}
+  }
 </style>
 </head>
 <body>
@@ -876,14 +883,28 @@ function reportCard(i, r, c){
 function reportFeed(s, c){
   var rows=s.rows, view=s.reportView||'all', html='';
   var flagged=[]; rows.forEach(function(r,i){ var st=photoState(r); if(st==='review'||st==='nomatch') flagged.push(i); });
+  // C2: completed report leads with the verdict. Only shown once submitted (s.decision).
+  if(s.decision){
+    var dsm = SUBMIT_STATUS[s.decision.status] || SUBMIT_STATUS.review;
+    var dico = (s.decision.status==='mismatch') ? '<path d="M7 7l10 10M17 7L7 17"/>'
+      : ((s.decision.status==='match'||s.decision.status==='reviewed') ? '<path d="M5 12.5l4.5 4.5L19 7.5"/>'
+      : '<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.6v.1"/>');
+    html += '<div class="rh-card rpt-verdict" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 18px;background:'+dsm.bg+';border:1px solid '+dsm.c+'55;margin-bottom:14px">'+
+      '<span style="width:44px;height:44px;border-radius:50%;background:'+dsm.c+';display:grid;place-items:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">'+dico+'</svg></span>'+
+      '<div style="flex:1 1 180px;min-width:0"><div style="font-size:19px;font-weight:700;color:'+dsm.c+'">'+h(dsm.t)+'</div>'+
+        '<div style="font-size:12.5px;color:#5A6473;margin-top:2px">'+h((s.cand&&s.cand.name)||'')+((s.cand&&s.cand.rhid)?' · '+h(s.cand.rhid):'')+((s.cand&&s.cand.req)?' · '+h(s.cand.req):'')+'</div></div>'+
+      '<div style="text-align:right;font-size:12px;color:#747474;flex-shrink:0">Submitted by '+h(s.decision.by)+'<br>'+h(s.decision.at)+'</div>'+
+    '</div>';
+  }
   html += '<div id="rpt-top" class="rh-card" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 18px;scroll-margin-top:16px">'+
     '<div style="width:48px;height:60px;border-radius:8px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;flex-shrink:0;position:relative">'+uploadedImg('cover')+'</div>'+
     '<div style="flex:1 1 180px;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.4">Photo taken on joining day</div>'+
       '<div style="font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · 12 Aug 2026, 09:41 IST</div>'+
       ((s.attest||(s.entry&&s.entry.attest)) ? '<div style="font-size:12px;color:#1a6b34;margin-top:4px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Attested as a joining-day photo of the person who reported to join</div>':'')+
     '</div>'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
+    '<div class="rpt-headacts" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
       (!s.viewingHistory ? '<button class="rh-btn secondary sm" onclick="askReshoot()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Use a different photo</button>' : '')+
+      (s.decision ? '<button class="rh-btn secondary sm" onclick="downloadReport()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>Download report</button>' : '')+
       (SHOW_REPORT_ACTIONS ? ('<button class="rh-iconbtn" title="Download PDF" onclick="downloadPdf()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M29 44H42.1765V42.1176H29V44ZM42.1765 33.6471H38.4118V28H32.7647V33.6471H29L35.5882 40.2353L42.1765 33.6471Z"></path></svg></button><button class="rh-iconbtn" title="Share report" onclick="openShare()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M40.6667 39.3092C40.0756 39.3092 39.5467 39.5502 39.1422 39.9277L33.5967 36.5944C33.6356 36.4096 33.6667 36.2249 33.6667 36.0321C33.6667 35.8394 33.6356 35.6546 33.5967 35.4699L39.08 32.1687C39.5 32.5703 40.0522 32.8193 40.6667 32.8193C41.9578 32.8193 43 31.743 43 30.4096C43 29.0763 41.9578 28 40.6667 28C39.3756 28 38.3333 29.0763 38.3333 30.4096C38.3333 30.6024 38.3644 30.7871 38.4033 30.9719L32.92 34.2731C32.5 33.8715 31.9478 33.6225 31.3333 33.6225C30.0422 33.6225 29 34.6988 29 36.0321C29 37.3655 30.0422 38.4418 31.3333 38.4418C31.9478 38.4418 32.5 38.1928 32.92 37.7912L38.4578 41.1325C38.4189 41.3012 38.3956 41.4779 38.3956 41.6546C38.3956 42.9478 39.4144 44 40.6667 44C41.9189 44 42.9378 42.9478 42.9378 41.6546C42.9378 40.3614 41.9189 39.3092 40.6667 39.3092Z"></path></svg></button>') : '')+
     '</div>'+
   '</div>';
@@ -1051,6 +1072,29 @@ function wlSetSort(s){ setState({wlSort:s, page:1, wlShown:WL_PAGE}); wlSyncUrl(
 /* redesigned worklist: stat cards are the status filter (no tabs); joining-date range narrows the list */
 function setWlView(v){ setState({wlView:v, wlWhen:'all', page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
 function setWlWhen(w){ setState({wlWhen:w, page:1, wlShown:WL_PAGE}); wlSyncUrl(true); }
+/* F1: export the currently-filtered worklist to Excel. Uses the same wlList() the screen shows,
+   so it respects the active status card, the timing/outcome segment, and the search. Dependency-free
+   .xls (an HTML table Excel opens). */
+function wlExportExcel(){
+  var rows = wlList();
+  function esc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  var head = ['Name','RHID','Role','Joining date','Status','Delayed','Outcome'];
+  var body = rows.map(function(c){
+    var st = isCompleted(c) ? 'Completed' : (wlStatus(c)==='inreview' ? 'In progress' : 'Pending');
+    var outcome = isCompleted(c) ? (completedStatus(c)==='notmatch' ? 'Not a match' : 'Match') : '';
+    var cells = [c.name, c.rhid, c.req, (c.joining||fmtDate(c.joiningISO)), st, (isOverdue(c)?'Yes':''), outcome];
+    return '<tr>'+cells.map(function(x){ return '<td>'+esc(x)+'</td>'; }).join('')+'</tr>';
+  }).join('');
+  var table = '<table border="1"><thead><tr>'+head.map(function(hh){ return '<th>'+esc(hh)+'</th>'; }).join('')+'</tr></thead><tbody>'+body+'</tbody></table>';
+  try{
+    var blob = new Blob(['﻿<html><head><meta charset="utf-8"></head><body>'+table+'</body></html>'], {type:'application/vnd.ms-excel'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a'); a.href=url; a.download='identity-candidates.xls';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    toast('Exported '+rows.length+' candidate'+(rows.length===1?'':'s'));
+  }catch(e){ toast('Export failed'); }
+}
 function wlSetDateFrom(v){ setState({dateFrom:v||'', page:1, wlShown:WL_PAGE}); }
 function wlSetDateTo(v){ setState({dateTo:v||'', page:1, wlShown:WL_PAGE}); }
 function wlClearDates(){ setState({dateFrom:'', dateTo:'', page:1, wlShown:WL_PAGE}); }
@@ -1179,6 +1223,7 @@ function worklistView(){
     '</div>'+
     segHtml+
     '<select onchange="wlSetSort(this.value)" aria-label="Sort" style="'+fctrl+';height:44px">'+sopt('overdue','Sort: Oldest first')+sopt('newest','Sort: Newest')+sopt('name','Sort: Name A-Z')+'</select>'+
+    '<button type="button" onclick="wlExportExcel()" title="Export the current list to Excel" style="height:44px;border:1px solid #DCE2EB;border-radius:9px;background:#fff;font-family:inherit;font-size:13px;font-weight:600;color:#185FA5;padding:0 14px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;flex-shrink:0"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>Export to Excel</button>'+
   '</div>';
 
   /* list */
@@ -1732,6 +1777,8 @@ function closeShare(){ setState({showShare:false}); }
 function scrim(e){ if(e.target===e.currentTarget) closeShare(); }
 function togglePick(id){ var on=state.picked.indexOf(id)>=0; setState({picked: on?state.picked.filter(function(x){return x!==id;}):state.picked.concat([id])}); }
 function downloadPdf(){ toast('PDF downloaded'); }
+/* F2: download the completed report - open the browser's print dialog (Save as PDF). Print CSS strips the chrome. */
+function downloadReport(){ try{ window.print(); }catch(e){ toast('Use your browser to print / save as PDF'); } }
 function revoke(id){ var u=state.shared.find(function(x){return x.id===id;}); setState({shared:state.shared.filter(function(x){return x.id!==id;})}); if(u) toast('Access revoked for '+u.name); }
 function verifyAnother(){ reset({roundsConfigured:state.roundsConfigured}); window.scrollTo({top:0,behavior:'smooth'}); }
 function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, attest:!!hh.attest, quality:hh.quality||null, searchOpen:false, running:false, done:true, open:null, openRows:{}, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'' }); if(!noPush) wlSyncUrl(false); }
