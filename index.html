@@ -543,6 +543,8 @@ var ACTIONS = { same:'Same person', notmatch:'Not a match', ignore:'Can\'t confi
 var IGNORE_REASONS = ['The source photo is blurry','Appearance changed (age)','The document photo isn’t clear'];
 /* the submitted report's status chip, keyed by the banner tier */
 var SUBMIT_STATUS = { match:{t:'Verified',c:'#1a8a3a',bg:'#E7F4EC'}, reviewed:{t:'Verified',c:'#1a8a3a',bg:'#E7F4EC'}, review:{t:'Needs review',c:'#B7791F',bg:'#FBF1DE'}, mismatch:{t:'Not verified',c:'#D93025',bg:'#FDECEC'}, inconclusive:{t:'Inconclusive',c:'#5F5E5A',bg:'#F1EFE8'} };
+/* completed report speaks in Match / Not a match, not Verified / Not verified (a finished check is one or the other) */
+function outcomeLabel(status){ return status==='mismatch' ? {t:'Not a match',c:'#B42318',bg:'#FDECEC'} : {t:'Match',c:'#1a8a3a',bg:'#E7F4EC'}; }
 /* pos = human vouches same person, neg = says different, excluded = ignore the photo, open = undecided */
 function codeOutcome(code){ return code==='same'?'pos':(code==='notmatch'?'neg':(code==='ignore'?'excluded':'open')); }
 function rowExcluded(r){ return photoState(r)==='cant' || codeOutcome((r&&r.review)||'')==='excluded'; }
@@ -710,29 +712,37 @@ function overrideCard(i, code, title, sub, col, bg, svg){
     '<span style="width:28px;height:28px;border-radius:50%;background:'+bg+';display:grid;place-items:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="'+col+'" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+svg+'</svg></span>'+
     '<span style="min-width:0"><span style="display:block;font-size:14px;font-weight:600;color:#2A2A2A">'+h(title)+'</span><span style="display:block;font-size:12px;color:#747474;margin-top:2px">'+h(sub)+'</span></span></button>';
 }
+/* green "why this is a match" band; `right` (e.g. a Change link) sits inside the band, right-aligned */
+function matchBand(r, right){
+  return '<div style="display:flex;gap:9px;align-items:flex-start;margin-top:16px;padding:11px 13px;background:#E7F4EC;border:0.5px solid #BFE0C9;border-radius:8px;font-size:13px;color:#1a6b34;line-height:1.5">'+
+    '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1a8a3a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'+
+    '<span style="flex:1;min-width:0"><span style="font-weight:600">Why this is a match:</span> '+h(matchReason(r))+'</span>'+
+    (right||'')+
+  '</div>';
+}
 function matchOverride(i, r){
-  var out = reasonNote('match','Why this is a match:', matchReason(r));
-  if(r.review){   // recruiter already overrode -> show the recorded verdict + Change
+  if(r.review){   // recruiter already overrode -> match band + the recorded verdict
     var o=codeOutcome(r.review), dot=o==='neg'?'#D93025':(o==='excluded'?'#5F5E5A':'#1a8a3a');
     var lead=r.review==='same'?'Confirmed a match':(r.review==='notmatch'?'Marked not a match':'Set aside, couldn’t confirm');
     var tail=r.reasonLabel?(r.review==='notmatch'?(', '+r.reasonLabel):(' · '+r.reasonLabel)):'';
-    out += '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;border-top:1px solid #E0E0E0;padding-top:12px">'+
-      '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#747474"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex-shrink:0"></span><b style="font-weight:600;color:#2A2A2A">'+h(lead)+'</b>'+h(tail)+(r.reviewedAt?(' · '+h(r.reviewedAt)):'')+'</span>'+
-      '<button type="button" onclick="clearRowVerdict('+i+')" style="margin-left:auto;border:0;background:none;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Change</button>'+
-      (r.reasonNote?'<div style="flex-basis:100%;font-size:12px;color:#6E6E6E">“'+h(r.reasonNote)+'”</div>':'')+
-    '</div>';
-    return out;
+    return matchBand(r,'')+
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;border-top:1px solid #E0E0E0;padding-top:12px">'+
+        '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#747474"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex-shrink:0"></span><b style="font-weight:600;color:#2A2A2A">'+h(lead)+'</b>'+h(tail)+(r.reviewedAt?(' · '+h(r.reviewedAt)):'')+'</span>'+
+        '<button type="button" onclick="clearRowVerdict('+i+')" style="margin-left:auto;border:0;background:none;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Change</button>'+
+        (r.reasonNote?'<div style="flex-basis:100%;font-size:12px;color:#6E6E6E">“'+h(r.reasonNote)+'”</div>':'')+
+      '</div>';
   }
-  if(state.overrideOpen && state.overrideOpen[i]){   // Change clicked -> show the override options
-    out += '<div style="font-size:12px;font-weight:700;color:#747474;letter-spacing:.05em;text-transform:uppercase;margin-top:16px">Override the verdict</div>'+
+  if(state.overrideOpen && state.overrideOpen[i]){   // Change clicked -> band + the override options
+    return matchBand(r,'')+
+      '<div style="font-size:12px;font-weight:700;color:#747474;letter-spacing:.05em;text-transform:uppercase;margin-top:16px">Override the verdict</div>'+
       '<div class="rpt-acts" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px">'+
-      overrideCard(i,'same','Match','Same person','#1a8a3a','#E7F4EC','<path d="M5 12l5 5L20 7"/>')+
-      overrideCard(i,'notmatch','Not a match','Different person','#D93025','#FDECEC','<path d="M7 7l10 10M17 7L7 17"/>')+
-    '</div>';
-    return out;
+        overrideCard(i,'same','Match','Same person','#1a8a3a','#E7F4EC','<path d="M5 12l5 5L20 7"/>')+
+        overrideCard(i,'notmatch','Not a match','Different person','#D93025','#FDECEC','<path d="M7 7l10 10M17 7L7 17"/>')+
+      '</div>';
   }
-  out += '<div style="display:flex;margin-top:14px;border-top:1px solid #E0E0E0;padding-top:12px"><button type="button" onclick="toggleOverride('+i+')" style="margin-left:auto;border:0;background:none;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Change</button></div>';
-  return out;
+  // default: the match band with the Change link inside it, on the right
+  var change='<button type="button" onclick="toggleOverride('+i+')" style="border:0;background:none;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;align-self:center;padding:0 0 0 10px;white-space:nowrap">Change</button>';
+  return matchBand(r, change);
 }
 function toggleOverride(i){ var m=Object.assign({}, state.overrideOpen); m[i]=!m[i]; setState({overrideOpen:m}); }
 /* A5: verdict pills for the submit confirmation table */
@@ -885,10 +895,8 @@ function reportFeed(s, c){
   var flagged=[]; rows.forEach(function(r,i){ var st=photoState(r); if(st==='review'||st==='nomatch') flagged.push(i); });
   // C2: completed report leads with the verdict. Only shown once submitted (s.decision).
   if(s.decision){
-    var dsm = SUBMIT_STATUS[s.decision.status] || SUBMIT_STATUS.review;
-    var dico = (s.decision.status==='mismatch') ? '<path d="M7 7l10 10M17 7L7 17"/>'
-      : ((s.decision.status==='match'||s.decision.status==='reviewed') ? '<path d="M5 12.5l4.5 4.5L19 7.5"/>'
-      : '<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.6v.1"/>');
+    var dsm = outcomeLabel(s.decision.status);
+    var dico = (s.decision.status==='mismatch') ? '<path d="M7 7l10 10M17 7L7 17"/>' : '<path d="M5 12.5l4.5 4.5L19 7.5"/>';
     html += '<div class="rh-card rpt-verdict" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 18px;background:'+dsm.bg+';border:1px solid '+dsm.c+'55;margin-bottom:14px">'+
       '<span style="width:44px;height:44px;border-radius:50%;background:'+dsm.c+';display:grid;place-items:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">'+dico+'</svg></span>'+
       '<div style="flex:1 1 180px;min-width:0"><div style="font-size:19px;font-weight:700;color:'+dsm.c+'">'+h(dsm.t)+'</div>'+
@@ -903,7 +911,7 @@ function reportFeed(s, c){
       ((s.attest||(s.entry&&s.entry.attest)) ? '<div style="font-size:12px;color:#1a6b34;margin-top:4px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Attested as a joining-day photo of the person who reported to join</div>':'')+
     '</div>'+
     '<div class="rpt-headacts" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
-      (!s.viewingHistory ? '<button class="rh-btn secondary sm" onclick="askReshoot()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Use a different photo</button>' : '')+
+      (!s.decision ? '<button class="rh-btn secondary sm" onclick="askReshoot()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Use a different photo</button>' : '')+
       (s.decision ? '<button class="rh-btn secondary sm" onclick="downloadReport()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>Download report</button>' : '')+
       (SHOW_REPORT_ACTIONS ? ('<button class="rh-iconbtn" title="Download PDF" onclick="downloadPdf()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M29 44H42.1765V42.1176H29V44ZM42.1765 33.6471H38.4118V28H32.7647V33.6471H29L35.5882 40.2353L42.1765 33.6471Z"></path></svg></button><button class="rh-iconbtn" title="Share report" onclick="openShare()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M40.6667 39.3092C40.0756 39.3092 39.5467 39.5502 39.1422 39.9277L33.5967 36.5944C33.6356 36.4096 33.6667 36.2249 33.6667 36.0321C33.6667 35.8394 33.6356 35.6546 33.5967 35.4699L39.08 32.1687C39.5 32.5703 40.0522 32.8193 40.6667 32.8193C41.9578 32.8193 43 31.743 43 30.4096C43 29.0763 41.9578 28 40.6667 28C39.3756 28 38.3333 29.0763 38.3333 30.4096C38.3333 30.6024 38.3644 30.7871 38.4033 30.9719L32.92 34.2731C32.5 33.8715 31.9478 33.6225 31.3333 33.6225C30.0422 33.6225 29 34.6988 29 36.0321C29 37.3655 30.0422 38.4418 31.3333 38.4418C31.9478 38.4418 32.5 38.1928 32.92 37.7912L38.4578 41.1325C38.4189 41.3012 38.3956 41.4779 38.3956 41.6546C38.3956 42.9478 39.4144 44 40.6667 44C41.9189 44 42.9378 42.9478 42.9378 41.6546C42.9378 40.3614 41.9189 39.3092 40.6667 39.3092Z"></path></svg></button>') : '')+
     '</div>'+
@@ -925,7 +933,7 @@ function reportFeed(s, c){
     idxs.forEach(function(i){ html += reportCard(i, rows[i], c); });
   });
   if(s.decision){
-    var dec=s.decision, sm=SUBMIT_STATUS[dec.status]||SUBMIT_STATUS.review;
+    var dec=s.decision, sm=outcomeLabel(dec.status);
     html += '<div class="rh-card" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;margin-top:12px">'+
       '<span style="width:30px;height:30px;border-radius:50%;background:#EFEFEF;display:grid;place-items:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#5F5E5A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span>'+
       '<div style="flex:1;min-width:180px"><div style="font-size:14px;font-weight:600;color:#2A2A2A">Report submitted</div>'+
@@ -1223,7 +1231,7 @@ function worklistView(){
     '</div>'+
     segHtml+
     '<select onchange="wlSetSort(this.value)" aria-label="Sort" style="'+fctrl+';height:44px">'+sopt('overdue','Sort: Oldest first')+sopt('newest','Sort: Newest')+sopt('name','Sort: Name A-Z')+'</select>'+
-    '<button type="button" onclick="wlExportExcel()" title="Export the current list to Excel" style="height:44px;border:1px solid #DCE2EB;border-radius:9px;background:#fff;font-family:inherit;font-size:13px;font-weight:600;color:#185FA5;padding:0 14px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;flex-shrink:0"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>Export to Excel</button>'+
+    '<button type="button" onclick="wlExportExcel()" title="Export to Excel" aria-label="Export to Excel" style="height:44px;width:44px;border:1px solid #DCE2EB;border-radius:9px;background:#fff;color:#185FA5;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 3v18M4 9h16M4 15h16"/></svg></button>'+
   '</div>';
 
   /* list */
@@ -1412,7 +1420,7 @@ function render(){
           ((s.attest||(s.entry&&s.entry.attest)) ? '<div style="font-size:12px;color:#1a6b34;margin-top:3px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Attested as a joining-day photo of the person who reported to join</div>' : '')+
           '</div>'+
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
-          (!s.viewingHistory ? '<button class="rh-btn secondary sm" onclick="askReshoot()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Use a different photo</button>' : '')+
+          (!s.decision ? '<button class="rh-btn secondary sm" onclick="askReshoot()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Use a different photo</button>' : '')+
           (SHOW_REPORT_ACTIONS ? ('<button class="rh-iconbtn" title="Download PDF" onclick="downloadPdf()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M29 44H42.1765V42.1176H29V44ZM42.1765 33.6471H38.4118V28H32.7647V33.6471H29L35.5882 40.2353L42.1765 33.6471Z"></path></svg></button>'+
           '<button class="rh-iconbtn" title="Share report" onclick="openShare()"><svg viewBox="25 25 22 22" width="16" height="16" fill="#0076FB"><path d="M40.6667 39.3092C40.0756 39.3092 39.5467 39.5502 39.1422 39.9277L33.5967 36.5944C33.6356 36.4096 33.6667 36.2249 33.6667 36.0321C33.6667 35.8394 33.6356 35.6546 33.5967 35.4699L39.08 32.1687C39.5 32.5703 40.0522 32.8193 40.6667 32.8193C41.9578 32.8193 43 31.743 43 30.4096C43 29.0763 41.9578 28 40.6667 28C39.3756 28 38.3333 29.0763 38.3333 30.4096C38.3333 30.6024 38.3644 30.7871 38.4033 30.9719L32.92 34.2731C32.5 33.8715 31.9478 33.6225 31.3333 33.6225C30.0422 33.6225 29 34.6988 29 36.0321C29 37.3655 30.0422 38.4418 31.3333 38.4418C31.9478 38.4418 32.5 38.1928 32.92 37.7912L38.4578 41.1325C38.4189 41.3012 38.3956 41.4779 38.3956 41.6546C38.3956 42.9478 39.4144 44 40.6667 44C41.9189 44 42.9378 42.9478 42.9378 41.6546C42.9378 40.3614 41.9189 39.3092 40.6667 39.3092Z"></path></svg></button>') : '')+
         '</div></div>';
@@ -1596,7 +1604,7 @@ function render(){
   /* SUBMIT REPORT confirmation */
   if(s.submitModal){
     var su = s.submitModal, sdv = reportSummary(s.rows), ssm = SUBMIT_STATUS[sdv.tier] || SUBMIT_STATUS.review;
-    html += '<div class="rh-scrim" onclick="scrimSubmit(event)"><div class="rh-dialog" style="width:440px">'+
+    html += '<div class="rh-scrim" onclick="scrimSubmit(event)"><div class="rh-dialog" style="width:560px;max-width:calc(100vw - 32px)">'+
       '<header><h2>Submit report</h2><button class="x" onclick="cancelSubmit()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
         '<p style="margin:0 0 12px;font-size:13px;color:#747474;line-height:1.55">Submitting the identity check for <b style="color:#333;font-weight:600">'+h(s.cand?s.cand.name:'')+'</b>.</p>'+
