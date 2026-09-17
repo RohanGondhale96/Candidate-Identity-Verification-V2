@@ -921,13 +921,10 @@ function reportFeed(s, c){
     s.shared.forEach(function(u){ html += '<span style="display:inline-flex;align-items:center;gap:6px;background:#F7F8FA;border:1px solid #DDD;border-radius:16px;padding:3px 6px 3px 10px;font-size:12.5px">'+h(u.name)+'<button type="button" onclick="revoke(\''+u.id+'\')" aria-label="Revoke access" style="border:0;background:none;padding:2px;line-height:0;color:#747474;border-radius:50%;cursor:pointer"><svg viewBox="25 25 22 22" width="13" height="13" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></span>'; });
     html += '</div>';
   }
-  html += '<div role="group" aria-label="Filter rounds" style="display:flex;gap:26px;border-bottom:1px solid #E5E7EB;margin:18px 0 14px">'+
-      _seg('all','All rounds',rows.length,view==='all')+_seg('review','Needs review',flagged.length,view==='review')+
-    '</div>';
+  html += '<div style="height:14px"></div>';
   var groups=[{title:'Application &amp; interview photos', test:function(r){return r.src!=='document';}},{title:'Identity documents', test:function(r){return r.src==='document';}}];
   groups.forEach(function(g){
     var idxs=[]; rows.forEach(function(r,i){ if(g.test(r)) idxs.push(i); });
-    if(view==='review') idxs=idxs.filter(function(i){ return flagged.indexOf(i)>=0; });
     if(!idxs.length) return;
     html += '<div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#667085;margin:20px 4px 10px">'+g.title+' ('+idxs.length+')</div>';
     idxs.forEach(function(i){ html += reportCard(i, rows[i], c); });
