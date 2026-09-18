@@ -371,8 +371,12 @@ Each expanded row (`reasonCodes()` + the expanded panel in `render()`) shows:
 - **"Interviewed by &lt;name&gt;"** as context (an "Ask … to confirm" button was prototyped here
   and removed).
 - **Three action cards** under "IS THIS THE SAME PERSON?": **Match** (Same person) / **Not a match**
-  (Different person) / **Can't confirm** (Set aside — leave out of the score). A no-match row drops
-  the redundant "Not a match" card. No "reason required" label.
+  (Different person) / **Can't confirm** (Set aside, leave out of the score). All three show on every
+  flagged row, including AI "Not a match" rows (changed 2026-09-18: previously an AI no-match row
+  hid the redundant "Not a match" card, which meant a recruiter looking at a flagged no-match could
+  only pick Match or Can't confirm and could never actively *confirm* the mismatch; now they can
+  agree it is Not a match, which sets the verdict to `mismatch` and unlocks Submit). No "reason
+  required" label.
 - **Can't confirm** is deliberately dual-purpose (settled 2026-09-03, manager): it covers **both**
   "the recruiter genuinely can't call it match or no-match and wants to keep it out of the score"
   **and** "the reference photo itself is unusable". Either way the photo is **set aside** — the same

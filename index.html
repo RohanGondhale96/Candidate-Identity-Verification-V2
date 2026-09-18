@@ -684,9 +684,9 @@ function reasonCodes(i, r){
     return out;
   }
   out += '<div style="font-size:12px;font-weight:700;color:#747474;letter-spacing:.05em;text-transform:uppercase;margin-top:16px">Is this the same person?</div>';
-  var acts = st==='nomatch'
-    ? [['same','Match','Same person'],['ignore','Can\'t confirm','Set aside, leave out of the score']]
-    : [['same','Match','Same person'],['notmatch','Not a match','Different person'],['ignore','Can\'t confirm','Set aside, leave out of the score']];
+  // all flagged rows (Needs review or Not a match) offer the same three verdicts, so the recruiter
+  // can confirm a Not a match (not just disagree or set aside) - a confirmed Not a match drives the verdict.
+  var acts = [['same','Match','Same person'],['notmatch','Not a match','Different person'],['ignore','Can\'t confirm','Set aside, leave out of the score']];
   var ICONS = {
     same:   {col:'#1a8a3a', bg:'#E7F4EC', svg:'<path d="M5 12l5 5L20 7"/>'},
     notmatch:{col:'#D93025', bg:'#FDECEC', svg:'<path d="M7 7l10 10M17 7L7 17"/>'},
