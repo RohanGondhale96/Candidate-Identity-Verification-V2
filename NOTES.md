@@ -65,7 +65,8 @@ carry the dark theme). What changed:
     all-can't-confirm edge (`Y===0`).
   - **A5 — submit confirmation table** (`submitReviewTable`/`aiVerdictLabel`/`reviewedVerdictLabel`/
     `minipill`): the Submit dialog now lists every comparison with **AI verdict vs Your review** before
-    the "I've reviewed all comparisons" checkbox. Fits desktop and mobile (names truncate).
+    the "I've reviewed all comparisons" checkbox. Dialog width **680px** (widened from 560px on
+    2026-09-21 for more room in the three-column table); clamps to the viewport on mobile. Names truncate.
 - **Reference caption (2026-09-07, manager):** primary line **"Photo taken during {round}"** (e.g.
   "Photo taken during Round 2 — technical", from `r.label`; documents show "Identity document", the
   application photo shows its label) + the photo's own **date & time** (`r.date`, e.g. "02 Jun 2026,
