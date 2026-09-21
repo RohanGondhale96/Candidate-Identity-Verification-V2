@@ -304,6 +304,7 @@ completed report.
   - **In progress:** if a reference photo changes, the **whole in-progress report is invalidated** and restarted.
   - **Submitted:** if a reference photo used in the check is **updated/replaced or removed** after submit, show a banner naming what changed ("Application photo was updated on <date> by <user>. Reverify to refresh this report.") plus a **Reverify** button.
   - **Reverify creates a new report version**; the superseded report is retained in the Activity timeline (submitted at T against photo v1; photo changed at T2; reverified to v2).
+  - **No version chip/label on the report** (decided 2026-09-21). Versions are surfaced only through the **Activity timeline**, so a normal never-reverified report carries no version UI.
   - **Reverify confirm dialog** states that the current version is kept and visible in Activity, and a new version is saved.
 - **Status lifecycle (two-stage), agreed 2026-09-21:**
   - Reverify never changes the candidate's **hiring round**. Verification is bound to the candidate; the round is only the trigger.
