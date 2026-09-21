@@ -147,6 +147,41 @@
   .rh-dialog .dbody{padding:18px 20px;overflow:auto}
   .rh-dialog footer{padding:8px 20px 16px;display:flex;align-items:center;gap:12px}
 
+  /* ===== Activity (audit) icon + drawer, stale banner ===== */
+  .rh-actbtn{position:relative;margin-left:auto;width:40px;height:40px;border-radius:10px;border:1px solid var(--divider);background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#5A6473;flex-shrink:0}
+  .rh-actbtn:hover{background:var(--rh-grey-100);color:#0076FB;border-color:#Cfe0f5}
+  .rh-actbtn svg{width:20px;height:20px}
+  .rh-actbtn .tip{position:absolute;top:47px;right:0;background:#101828;color:#fff;font-size:11.5px;font-weight:600;padding:5px 9px;border-radius:7px;white-space:nowrap;opacity:0;pointer-events:none;transform:translateY(-3px);transition:.15s;box-shadow:0 6px 18px rgba(16,24,40,.25);z-index:9}
+  .rh-actbtn:hover .tip{opacity:1;transform:translateY(0)}
+  .rh-drawer-scrim{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:55}
+  .rh-drawer{position:fixed;top:0;right:0;height:100%;width:min(430px,94vw);background:#fff;box-shadow:-8px 0 30px rgba(16,24,40,.18);z-index:56;display:flex;flex-direction:column;animation:rhSlideIn .24s ease}
+  @keyframes rhSlideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+  .rh-drawer .dh{padding:16px 18px;border-bottom:1px solid var(--divider);display:flex;justify-content:space-between;align-items:center}
+  .rh-drawer .dh h2{margin:0;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .rh-drawer .dh h2 svg{width:17px;height:17px;color:#0076FB}
+  .rh-drawer .dh .x{border:none;background:var(--rh-grey-100);width:30px;height:30px;border-radius:8px;cursor:pointer;color:#5A6473;line-height:0;display:grid;place-items:center}
+  .rh-drawer .dh .x:hover{background:#E7EAF0}
+  .rh-tl{overflow:auto;padding:8px 18px 24px}
+  .rh-tl .dayh{font-size:11px;font-weight:700;color:#8A93A3;letter-spacing:.4px;text-transform:uppercase;margin:14px 0 6px}
+  .rh-ev{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #EEF1F5}
+  .rh-ev:last-child{border-bottom:none}
+  .rh-ev .node{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;background:#EEF1F5;color:#5A6473}
+  .rh-ev.sys .node{background:#EAF3FF;color:#0A5DC2}
+  .rh-ev.human .node{background:#EDE9FF;color:#5B44D6}
+  .rh-ev.ext .node{background:#FBF1DE;color:#8A6414}
+  .rh-ev.flag .node{background:#E7F4EC;color:#1A8A3A}
+  .rh-ev .t{font-size:13px;font-weight:600;color:#2A2A2A}
+  .rh-ev .m{font-size:12px;color:#5A6473}
+  .rh-ev .m .actor{font-weight:600;color:#2A2A2A}
+  .rh-ev .ts{font-size:11.5px;color:#8A93A3;margin-top:2px;font-variant-numeric:tabular-nums}
+  .rh-ev .bext{display:inline-block;font-size:10.5px;font-weight:700;color:#8A6414;background:#FBF1DE;border:1px solid #F0DCA8;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:1px}
+  .rh-stale{background:#FBF1DE;border:1px solid #F0DCA8;border-radius:var(--radius-md);padding:15px 16px;display:flex;gap:13px;align-items:flex-start;margin-bottom:14px}
+  .rh-stale .bud{width:28px;height:28px;flex-shrink:0;border-radius:8px;background:#F6E4BC;display:flex;align-items:center;justify-content:center;color:#8A6414}
+  .rh-stale h3{margin:0 0 3px;font-size:14px;font-weight:700;color:#6E4E0C}
+  .rh-stale p{margin:0;font-size:13px;color:#7A5A12;line-height:1.5}
+  .rh-stale p b{font-weight:700}
+  .rh-reverifying{background:#EAF2FE;border:1px solid #BcdafD;border-radius:var(--radius-md);padding:13px 16px;display:flex;gap:11px;align-items:center;margin-bottom:14px;color:#185FA5;font-size:13px;font-weight:600}
+
   /* ===== photo placeholder ===== */
   .rh-photo{position:absolute;inset:0;display:grid;place-items:center}
   .rh-photo svg{width:60%;height:60%;opacity:.9}
@@ -197,7 +232,7 @@
   }
   /* F2: printing the report (Save as PDF) strips the app chrome and interactive controls */
   @media print{
-    .rh-nav,.rh-accent,.rh-ph,.rpt-headacts,.rpt-subbar{display:none !important}
+    .rh-nav,.rh-accent,.rh-ph,.rpt-headacts,.rpt-subbar,.rh-actbtn,.rh-drawer,.rh-drawer-scrim{display:none !important}
     main{max-width:none;padding:0}
     .rh-card{box-shadow:none;break-inside:avoid}
     body{background:#fff}
@@ -265,7 +300,8 @@ var state = {
   /* worklist */
   filter:'all', dateRange:'all', wlSort:'overdue', mineOnly:true, page:1, perPage:10, wlShown:20, wlTab:'active',
   wlView:'pending', wlWhen:'all', dateFrom:'', dateTo:'',
-  dismissed:{}, wlMenu:null, wlConfirmAll:false, dateModal:null, notJoinModal:null
+  dismissed:{}, wlMenu:null, wlConfirmAll:false, dateModal:null, notJoinModal:null,
+  activityOpen:false, reverifyOpen:false
 };
 
 var _tt=null, _steptimers=[];
@@ -347,7 +383,7 @@ function lightboxImg(p, seed){
 
 /* ---------- logic ---------- */
 function select(c, noPush){
-  setState({ cand:c, searchOpen:false, q:'', photo:null, consent:false, rows:[], open:null, running:false, done:false, shared:[], upErr:'', lightbox:null, viewingHistory:false, decision:null, decisionErr:'', entry:null });
+  setState({ cand:c, searchOpen:false, q:'', photo:null, consent:false, rows:[], open:null, running:false, done:false, shared:[], upErr:'', lightbox:null, viewingHistory:false, decision:null, decisionErr:'', entry:null, activityOpen:false, reverifyOpen:false });
   if(!noPush) wlSyncUrl(false);
 }
 function reset(extra){
@@ -491,9 +527,15 @@ function topnav(){
 function pageheader(){
   // back arrow only when a candidate is selected; it returns to the search step
   var back = state.cand ? '<button type="button" class="rh-back" onclick="changeCandidate()" aria-label="Back to candidate search"><svg viewBox="-5 0 110 100" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="m31.395 20.535c1.9141-1.9922 5.082-2.0547 7.0703-0.14062 1.9922 1.9141 2.0547 5.082 0.14062 7.0703l-16.859 17.535h68.254c2.7617 0 5 2.2383 5 5s-2.2383 5-5 5h-68.254l16.859 17.535c1.9141 1.9883 1.8516 5.1562-0.14062 7.0703-1.9883 1.9141-5.1562 1.8516-7.0703-0.14062l-25-26c-1.8594-1.9336-1.8594-4.9961 0-6.9297z"/></svg></button>' : '';
+  // Activity (audit) icon, top-right, only when a report is open
+  var showActivity = state.cand && (state.done || state.viewingHistory);
+  var act = showActivity ? '<button type="button" class="rh-actbtn" aria-label="Activity" onclick="openActivity()">'+
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>'+
+      '<span class="tip">Activity</span></button>' : '';
   return '<div class="rh-ph">'+
     back+
     '<div><h1>Verify identity</h1><div class="sub">Joining-day identity check</div></div>'+
+    act+
   '</div>';
 }
 
@@ -893,6 +935,22 @@ function reportCard(i, r, c){
 function reportFeed(s, c){
   var rows=s.rows, view=s.reportView||'all', html='';
   var flagged=[]; rows.forEach(function(r,i){ var st=photoState(r); if(st==='review'||st==='nomatch') flagged.push(i); });
+  // Stale-photo banner / reverify (only on a submitted report whose reference photos later changed)
+  if(s.decision && c && c.reverifying){
+    html += '<div class="rh-reverifying">'+
+      '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>'+
+      'Reverify started. This candidate has moved back to In progress while the report is refreshed against the current photos.'+
+    '</div>';
+  } else if(s.decision && c && c.staleInfo){
+    var si=c.staleInfo;
+    html += '<div class="rh-stale">'+
+      '<div class="bud"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>'+
+      '<div style="flex:1;min-width:0"><h3>This report may be out of date</h3>'+
+        '<p>The <b>'+h(si.what)+'</b> was updated on <b>'+h(si.date)+'</b> by <b>'+h(si.by)+'</b>, after this report was submitted. Reverify to check the joining-day photo against the current photos on file.</p>'+
+        '<div style="margin-top:11px"><button class="rh-btn primary sm" onclick="openReverify()" style="display:inline-flex;align-items:center;gap:6px;background:#8A6414;border-color:#8A6414"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Reverify</button></div>'+
+      '</div>'+
+    '</div>';
+  }
   // C2: completed report leads with the verdict. Only shown once submitted (s.decision).
   if(s.decision){
     var dsm = outcomeLabel(s.decision.status);
@@ -1642,6 +1700,28 @@ function render(){
     '</div></div>';
   }
 
+  /* ACTIVITY (audit) drawer */
+  if(s.activityOpen && c){
+    html += '<div class="rh-drawer-scrim" onclick="closeActivity()"></div>'+
+      '<aside class="rh-drawer" aria-label="Activity">'+
+        '<div class="dh"><h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg> Activity</h2>'+
+          '<button class="x" onclick="closeActivity()" aria-label="Close"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></div>'+
+        '<div class="rh-tl">'+activityLog(s, c)+'</div>'+
+      '</aside>';
+  }
+
+  /* REVERIFY confirm */
+  if(s.reverifyOpen && c){
+    html += '<div class="rh-scrim" onclick="scrimReverify(event)"><div class="rh-dialog" style="width:440px">'+
+      '<header><h2>Reverify this candidate?</h2><button class="x" onclick="closeReverify()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
+      '<div class="dbody">'+
+        '<p style="margin:0 0 8px;font-size:13.5px;color:#2A2A2A;line-height:1.55">This runs a fresh check of the joining-day photo against the <b>current</b> photos on file and creates a new report version.</p>'+
+        '<ul style="margin:6px 0 0;padding-left:18px;color:#5A6473;font-size:13px;line-height:1.6"><li>The current report is kept and stays visible in Activity.</li><li>The candidate moves back to In progress until you submit the new version.</li></ul>'+
+      '</div>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn tertiary sm" onclick="closeReverify()">Cancel</button><button class="rh-btn primary sm" onclick="confirmReverify()">Start reverify</button></footer>'+
+    '</div></div>';
+  }
+
   /* TOAST */
   if(s.toast){ html += '<div role="status" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2A2A2A;color:#fff;padding:11px 18px;border-radius:4px;font-size:13.5px;z-index:60;box-shadow:0 3px 6px rgba(0,0,0,.2)">'+h(s.toast)+'</div>'; }
 
@@ -1785,8 +1865,36 @@ function downloadPdf(){ toast('PDF downloaded'); }
 /* F2: download the completed report - open the browser's print dialog (Save as PDF). Print CSS strips the chrome. */
 function downloadReport(){ try{ window.print(); }catch(e){ toast('Use your browser to print / save as PDF'); } }
 function revoke(id){ var u=state.shared.find(function(x){return x.id===id;}); setState({shared:state.shared.filter(function(x){return x.id!==id;})}); if(u) toast('Access revoked for '+u.name); }
+
+/* Activity (audit) drawer + reverify (seeded mock) */
+function openActivity(){ setState({activityOpen:true}); }
+function closeActivity(){ setState({activityOpen:false}); }
+function openReverify(){ setState({reverifyOpen:true}); }
+function closeReverify(){ setState({reverifyOpen:false}); }
+function scrimReverify(e){ if(e.target===e.currentTarget) closeReverify(); }
+function confirmReverify(){ if(state.cand){ state.cand.reverifying=true; } setState({reverifyOpen:false}); toast('Reverify started'); }
+/* build the seeded activity timeline for a completed candidate */
+function activityLog(s, c){
+  var dec=s.decision||{}, by=dec.by||'A. Sharma', vtxt=outcomeLabel(dec.status||'match').t;
+  var atParts=String(dec.at||'').split(', ');
+  var subDay=atParts.length>1?atParts[0]:(c.joining||'Joining day');
+  var subTime=atParts.length>1?atParts[1]:(dec.at||'10:00');
+  var n=(s.rows||[]).length, groups=[];
+  if(c.reverifying){ groups.push({day:'Today', evs:[ {k:'sys', ic:'&#8635;', t:'Reverify started (photo changed)', m:'by <span class="actor">You (Rohan G.)</span>', ts:'just now'} ]}); }
+  if(c.staleInfo){ var si=c.staleInfo; groups.push({day:h(si.date), evs:[ {k:'ext', ic:'&#9998;', t:h(si.what)+' updated <span class="bext">external</span>', m:'by <span class="actor">'+h(si.by)+'</span>', ts:'16:40 IST'} ]}); }
+  groups.push({day:h(subDay), evs:[
+    {k:'human', ic:'&#10003;', t:'Report submitted: '+h(vtxt), m:'by <span class="actor">'+h(by)+'</span> &middot; '+n+' comparison'+(n===1?'':'s'), ts:h(subTime)+' IST'},
+    {k:'sys', ic:'&#9737;', t:'Comparison run: '+n+' photo'+(n===1?'':'s'), m:'system', ts:'09:42 IST'},
+    {k:'sys', ic:'&#9737;', t:'Quality check passed', m:'system', ts:'09:41 IST'},
+    {k:'human', ic:'&#8593;', t:'Joining-day photo uploaded', m:'by <span class="actor">A. Sharma</span>', ts:'09:41 IST'},
+    {k:'human', ic:'&#9873;', t:'Verification enabled (Onboarding round)', m:'by <span class="actor">'+h(by)+'</span>', ts:'09:38 IST'}
+  ]});
+  return groups.map(function(g){ return '<div class="dayh">'+g.day+'</div>'+ g.evs.map(function(e){
+    return '<div class="rh-ev '+e.k+'"><div class="node">'+e.ic+'</div><div><div class="t">'+e.t+'</div><div class="m">'+e.m+'</div><div class="ts">'+e.ts+'</div></div></div>';
+  }).join(''); }).join('');
+}
 function verifyAnother(){ reset({roundsConfigured:state.roundsConfigured}); window.scrollTo({top:0,behavior:'smooth'}); }
-function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, attest:!!hh.attest, quality:hh.quality||null, searchOpen:false, running:false, done:true, open:null, openRows:{}, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'' }); if(!noPush) wlSyncUrl(false); }
+function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, attest:!!hh.attest, quality:hh.quality||null, searchOpen:false, running:false, done:true, open:null, openRows:{}, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'', activityOpen:false, reverifyOpen:false }); if(!noPush) wlSyncUrl(false); }
 
 /* ---------- seeded demo worklist data ---------- */
 function fmtLong(iso){ var d=new Date(Date.parse(iso+'T00:00:00Z')); var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return d.getUTCDate()+' '+mo[d.getUTCMonth()]+' '+d.getUTCFullYear(); }
@@ -1852,6 +1960,9 @@ function synthCompletedEntry(c){
   buildSeeds();
   // completed candidates open to their finished report (not the upload flow): seed a stored check
   CANDIDATES.forEach(function(c){ if(c.wl && c.wl.completed && c.photos && c.photos.length){ state.history.push(synthCompletedEntry(c)); } });
+  // seed ONE completed (match) candidate as "out of date" so the stale banner + reverify + Activity demo
+  var _stale = CANDIDATES.find(function(x){ return x.wl && x.wl.completed==='match'; });
+  if(_stale){ _stale.staleInfo = { what:'Application photo', date:'16 Aug 2026', by:'A. Rao' }; }
   var params = new URLSearchParams(location.search);
   if((params.get('entry')||'')==='norounds') state.roundsConfigured=false;
   // "Take photo" is a mobile-only affordance (desktop shows Choose file only)

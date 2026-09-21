@@ -6,6 +6,29 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Activity (audit) drawer + stale-photo reverify (seeded mock, 2026-09-21)
+
+Front-end mock of the finalized report pieces (see DECISIONS 2026-09-21, stories IV-34 / IV-36).
+There is no real audit backend or report versioning yet; this demonstrates the flows with seeded data.
+
+- **Activity icon** (clock/history) sits top-right of the "Verify identity" page header (`pageheader()`,
+  class `.rh-actbtn`), shown only when a report is open (`state.cand && (state.done||state.viewingHistory)`);
+  hover tooltip "Activity". Opens a right-slide drawer (`.rh-drawer`, `state.activityOpen`).
+- **Activity drawer** = read-only, day-grouped timeline built by `activityLog(s, c)`: verification enabled,
+  joining-day photo uploaded, quality check, comparison run, report submitted, plus the external photo
+  change and any reverify. Each event has an actor + server timestamp and a typed marker
+  (human / system / external / verify). Full-width on mobile; hidden in print.
+- **Stale banner** (`.rh-stale`) renders at the top of `reportFeed` when `s.decision && c.staleInfo`
+  (and not `c.reverifying`): names what changed / who / when + a **Reverify** button (`openReverify`).
+- **Reverify** confirm dialog (`state.reverifyOpen`) -> `confirmReverify()` sets `c.reverifying=true`
+  (keeps `c.staleInfo` so the change stays in Activity) and shows the blue "moved back to In progress"
+  note (`.rh-reverifying`) + a toast. Versioning is conceptual only in the mock; no v-chip on the report
+  (dropped by decision - versions live in Activity).
+- **Seed:** `init()` marks the first completed **match** candidate (Ananya Rao) as out-of-date
+  (`staleInfo = {what:'Application photo', date:'16 Aug 2026', by:'A. Rao'}`, after her 14 Aug submit).
+- Still to wire (separate worklist piece): the "Out of date" row pill on the Completed tab and the actual
+  move to the In progress tab on Start reverify.
+
 ## v2 card-style UI (implemented in source; light mode)
 
 The three screens (worklist → setup → report) were redesigned into a card-style system and
