@@ -1601,7 +1601,7 @@ function render(){
   /* SUBMIT REPORT confirmation */
   if(s.submitModal){
     var su = s.submitModal, sdv = reportSummary(s.rows), ssm = SUBMIT_STATUS[sdv.tier] || SUBMIT_STATUS.review;
-    html += '<div class="rh-scrim" onclick="scrimSubmit(event)"><div class="rh-dialog" style="width:560px;max-width:calc(100vw - 32px)">'+
+    html += '<div class="rh-scrim" onclick="scrimSubmit(event)"><div class="rh-dialog" style="width:680px;max-width:calc(100vw - 32px)">'+
       '<header><h2>Submit report</h2><button class="x" onclick="cancelSubmit()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
         '<p style="margin:0 0 12px;font-size:13px;color:#747474;line-height:1.55">Submitting the identity check for <b style="color:#333;font-weight:600">'+h(s.cand?s.cand.name:'')+'</b>.</p>'+
