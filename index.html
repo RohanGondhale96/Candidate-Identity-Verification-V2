@@ -832,10 +832,14 @@ function _pill(txt,color,bg){ return '<span style="display:inline-flex;align-ite
 function pill2(txt,color,bg){ return '<span style="background:'+bg+';color:'+color+';border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;white-space:nowrap">'+h(txt)+'</span>'; }
 /* the row status pills: base status + a modifier (Delayed) / outcome (Match / Not a match) */
 function rowPills(c){
+  if(c.reverifying){  // moved back to In progress by a reverify (stage 2)
+    return pill2('In progress','#185FA5','#EAF2FE') + pill2('Reverifying','#8A6414','#FBF1DE');
+  }
   if(isCompleted(c)){
     return pill2('Completed','#5A6473','#ECEEF1') + (completedStatus(c)==='notmatch'
       ? pill2('Not a match','#B42318','#FDECEC')
-      : pill2('Match','#1A7A3A','#E7F4EC'));
+      : pill2('Match','#1A7A3A','#E7F4EC'))
+      + (c.staleInfo ? pill2('Out of date','#8A6414','#FBF1DE') : '');  // stage 1: photo changed, not yet reverified
   }
   var base = wlStatus(c)==='inreview' ? pill2('In progress','#185FA5','#EAF2FE') : pill2('Pending','#5A6473','#ECEEF1');
   return base + (isOverdue(c) ? pill2('Delayed','#8A6414','#FBF1DE') : '');
@@ -843,7 +847,10 @@ function rowPills(c){
 /* a candidate matches a sub-filter: timing (today/upcoming/delayed) for open work, outcome (match/notmatch) for completed */
 function inWhen(c,w,v){
   if(w==='all') return true;
-  if(v==='completed') return w==='notmatch' ? completedStatus(c)==='notmatch' : completedStatus(c)!=='notmatch';
+  if(v==='completed'){
+    if(w==='stale') return !!c.staleInfo;                              // "Out of date" sub-filter
+    return w==='notmatch' ? completedStatus(c)==='notmatch' : completedStatus(c)!=='notmatch';
+  }
   if(w==='today')    return dayDiff(c)===0;
   if(w==='upcoming') return isFuture(c);
   if(w==='delayed')  return isOverdue(c);
@@ -1027,7 +1034,7 @@ function wlStatus(c){
   return (c.wl && c.wl.status) || 'toverify';
 }
 /* a check counts as "completed" once a report has been submitted (verified / not verified / needs review) */
-function isCompleted(c){ var st=wlStatus(c); return st==='verified'||st==='notverified'||st==='needsreview'; }
+function isCompleted(c){ if(c.reverifying) return false; var st=wlStatus(c); return st==='verified'||st==='notverified'||st==='needsreview'; }
 /* Completed-tab display status - the outcome of a finished review (submit is hard-gated on a verdict
    for every flagged comparison, so there is no "incomplete" state):
    notmatch = a confirmed different person (mismatch); inconclusive = ≥1 "Can't confirm" (no mismatch);
@@ -1080,7 +1087,7 @@ function wlSortList(l){ var s=state.wlSort;
 function wlStatusRows(v){
   return wlBase().filter(function(c){
     if(v==='completed')  return isCompleted(c);
-    if(v==='inprogress') return !isCompleted(c) && wlStatus(c)==='inreview';
+    if(v==='inprogress') return c.reverifying || (!isCompleted(c) && wlStatus(c)==='inreview');
     return !isCompleted(c) && wlStatus(c)==='toverify';               // pending (default)
   });
 }
@@ -1264,7 +1271,7 @@ function worklistView(){
   /* sub-filter segment group with counts: timing for open work, outcome for completed */
   var statusRows=wlStatusRows(view);
   var SEG = view==='completed'
-    ? [['all','All'],['match','Match'],['notmatch','Not a match']]
+    ? [['all','All'],['match','Match'],['notmatch','Not a match'],['stale','Out of date']]
     : [['all','All'],['today','Today'],['upcoming','Upcoming'],['delayed','Delayed']];
   var segHtml='<div class="wl-seg" role="group" aria-label="Filter list">'+SEG.map(function(t){
     var n=statusRows.filter(function(c){ return inWhen(c,t[0],view); }).length;

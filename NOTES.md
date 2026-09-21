@@ -26,8 +26,14 @@ There is no real audit backend or report versioning yet; this demonstrates the f
   (dropped by decision - versions live in Activity).
 - **Seed:** `init()` marks the first completed **match** candidate (Ananya Rao) as out-of-date
   (`staleInfo = {what:'Application photo', date:'16 Aug 2026', by:'A. Rao'}`, after her 14 Aug submit).
-- Still to wire (separate worklist piece): the "Out of date" row pill on the Completed tab and the actual
-  move to the In progress tab on Start reverify.
+- **Worklist two-stage (built 2026-09-21):** the stale/reverify state now shows on the main list too.
+  - **Stage 1 (Out of date):** a stale completed candidate keeps its Completed row but gains an amber
+    **Out of date** pill (`rowPills` appends it when `c.staleInfo && !c.reverifying`), plus an
+    **"Out of date (N)"** sub-filter chip on the Completed tab (`inWhen` handles `w==='stale'`; SEG adds it).
+  - **Stage 2 (Reverifying):** `c.reverifying` makes `isCompleted(c)` return false and `wlStatusRows('inprogress')`
+    include the candidate, so a reverify moves the row off Completed onto In progress (counts update via the
+    stat cards, which read `wlStatusRows`). The row shows **In progress + Reverifying** pills. Hiring round
+    is never touched. Returns to Completed when the new version is submitted (not wired in the mock).
 
 ## v2 card-style UI (implemented in source; light mode)
 
