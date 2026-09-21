@@ -12,12 +12,15 @@ Front-end mock of the finalized report pieces (see DECISIONS 2026-09-21, stories
 There is no real audit backend or report versioning yet; this demonstrates the flows with seeded data.
 
 - **Activity icon** (clock/history) sits top-right of the "Verify identity" page header (`pageheader()`,
-  class `.rh-actbtn`), shown only when a report is open (`state.cand && (state.done||state.viewingHistory)`);
-  hover tooltip "Activity". Opens a right-slide drawer (`.rh-drawer`, `state.activityOpen`).
-- **Activity drawer** = read-only, day-grouped timeline built by `activityLog(s, c)`: verification enabled,
-  joining-day photo uploaded, quality check, comparison run, report submitted, plus the external photo
-  change and any reverify. Each event has an actor + server timestamp and a typed marker
-  (human / system / external / verify). Full-width on mobile; hidden in print.
+  class `.rh-actbtn`), shown whenever a candidate is open (`!!state.cand`) so it appears on in-progress
+  candidates too, not just completed; hover tooltip "Activity". Opens a right-slide drawer (`.rh-drawer`,
+  `state.activityOpen`).
+- **Activity drawer** = read-only, day-grouped timeline built by `activityLog(s, c)`: it adapts to how far
+  the check has got, verification enabled always, then joining-day photo uploaded / quality check /
+  comparison run once those happen, a "Review in progress" line when rows exist but nothing is submitted,
+  and "Report submitted" only once `s.decision` is set, plus the external photo change and any reverify.
+  Each event has an actor + server timestamp and a typed marker (human / system / external / verify).
+  Full-width on mobile; hidden in print.
 - **Stale banner** (`.rh-stale`) renders at the top of `reportFeed` when `s.decision && c.staleInfo`
   (and not `c.reverifying`): names what changed / who / when + a **Reverify** button (`openReverify`).
 - **Reverify** confirm dialog (`state.reverifyOpen`) -> `confirmReverify()` sets `c.reverifying=true`

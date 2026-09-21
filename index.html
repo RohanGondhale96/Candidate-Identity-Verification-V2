@@ -527,8 +527,8 @@ function topnav(){
 function pageheader(){
   // back arrow only when a candidate is selected; it returns to the search step
   var back = state.cand ? '<button type="button" class="rh-back" onclick="changeCandidate()" aria-label="Back to candidate search"><svg viewBox="-5 0 110 100" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="m31.395 20.535c1.9141-1.9922 5.082-2.0547 7.0703-0.14062 1.9922 1.9141 2.0547 5.082 0.14062 7.0703l-16.859 17.535h68.254c2.7617 0 5 2.2383 5 5s-2.2383 5-5 5h-68.254l16.859 17.535c1.9141 1.9883 1.8516 5.1562-0.14062 7.0703-1.9883 1.9141-5.1562 1.8516-7.0703-0.14062l-25-26c-1.8594-1.9336-1.8594-4.9961 0-6.9297z"/></svg></button>' : '';
-  // Activity (audit) icon, top-right, only when a report is open
-  var showActivity = state.cand && (state.done || state.viewingHistory);
+  // Activity (audit) icon, top-right, whenever a candidate is open (in progress or completed)
+  var showActivity = !!state.cand;
   var act = showActivity ? '<button type="button" class="rh-actbtn" aria-label="Activity" onclick="openActivity()">'+
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>'+
       '<span class="tip">Activity</span></button>' : '';
@@ -1882,20 +1882,23 @@ function scrimReverify(e){ if(e.target===e.currentTarget) closeReverify(); }
 function confirmReverify(){ if(state.cand){ state.cand.reverifying=true; } setState({reverifyOpen:false}); toast('Reverify started'); }
 /* build the seeded activity timeline for a completed candidate */
 function activityLog(s, c){
-  var dec=s.decision||{}, by=dec.by||'A. Sharma', vtxt=outcomeLabel(dec.status||'match').t;
-  var atParts=String(dec.at||'').split(', ');
-  var subDay=atParts.length>1?atParts[0]:(c.joining||'Joining day');
-  var subTime=atParts.length>1?atParts[1]:(dec.at||'10:00');
-  var n=(s.rows||[]).length, groups=[];
+  var dec=s.decision||null, by=(dec&&dec.by)||'A. Sharma', n=(s.rows||[]).length, groups=[];
+  // most-recent events first
   if(c.reverifying){ groups.push({day:'Today', evs:[ {k:'sys', ic:'&#8635;', t:'Reverify started (photo changed)', m:'by <span class="actor">You (Rohan G.)</span>', ts:'just now'} ]}); }
   if(c.staleInfo){ var si=c.staleInfo; groups.push({day:h(si.date), evs:[ {k:'ext', ic:'&#9998;', t:h(si.what)+' updated <span class="bext">external</span>', m:'by <span class="actor">'+h(si.by)+'</span>', ts:'16:40 IST'} ]}); }
-  groups.push({day:h(subDay), evs:[
-    {k:'human', ic:'&#10003;', t:'Report submitted: '+h(vtxt), m:'by <span class="actor">'+h(by)+'</span> &middot; '+n+' comparison'+(n===1?'':'s'), ts:h(subTime)+' IST'},
-    {k:'sys', ic:'&#9737;', t:'Comparison run: '+n+' photo'+(n===1?'':'s'), m:'system', ts:'09:42 IST'},
-    {k:'sys', ic:'&#9737;', t:'Quality check passed', m:'system', ts:'09:41 IST'},
-    {k:'human', ic:'&#8593;', t:'Joining-day photo uploaded', m:'by <span class="actor">A. Sharma</span>', ts:'09:41 IST'},
-    {k:'human', ic:'&#9873;', t:'Verification enabled (Onboarding round)', m:'by <span class="actor">'+h(by)+'</span>', ts:'09:38 IST'}
-  ]});
+  // the working-day group (varies with how far the check has progressed)
+  var evs=[];
+  if(dec){ var atP=String(dec.at||'').split(', '); var subTime=atP.length>1?atP[1]:(dec.at||'10:00');
+    evs.push({k:'human', ic:'&#10003;', t:'Report submitted: '+h(outcomeLabel(dec.status||'match').t), m:'by <span class="actor">'+h(by)+'</span> &middot; '+n+' comparison'+(n===1?'':'s'), ts:h(subTime)+' IST'});
+  } else if(n){
+    evs.push({k:'human', ic:'&#9998;', t:'Review in progress', m:'by <span class="actor">You (Rohan G.)</span> &middot; not yet submitted', ts:'just now'});
+  }
+  if(n){ evs.push({k:'sys', ic:'&#9737;', t:'Comparison run: '+n+' photo'+(n===1?'':'s'), m:'system', ts:'09:42 IST'});
+         evs.push({k:'sys', ic:'&#9737;', t:'Quality check passed', m:'system', ts:'09:41 IST'}); }
+  if(dec||n||s.photo){ evs.push({k:'human', ic:'&#8593;', t:'Joining-day photo uploaded', m:'by <span class="actor">A. Sharma</span>', ts:'09:41 IST'}); }
+  evs.push({k:'human', ic:'&#9873;', t:'Verification enabled (Onboarding round)', m:'by <span class="actor">'+h(by)+'</span>', ts:'09:38 IST'});
+  var day = dec ? (String(dec.at||'').split(', ')[0]||c.joining||'Today') : 'Today';
+  groups.push({day:h(day), evs:evs});
   return groups.map(function(g){ return '<div class="dayh">'+g.day+'</div>'+ g.evs.map(function(e){
     return '<div class="rh-ev '+e.k+'"><div class="node">'+e.ic+'</div><div><div class="t">'+e.t+'</div><div class="m">'+e.m+'</div><div class="ts">'+e.ts+'</div></div></div>';
   }).join(''); }).join('');
