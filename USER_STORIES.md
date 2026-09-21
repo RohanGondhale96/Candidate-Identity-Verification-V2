@@ -29,6 +29,7 @@ completed report.
 6. Product integration and entry points
 7. Admin configuration
 8. Cross-cutting (statuses, mobile, accessibility)
+9. Audit trail, lifecycle, and data integrity
 
 ---
 
@@ -257,6 +258,62 @@ completed report.
 - **As a** compliance stakeholder **I want** actions attributed and keyboard-operable **so that** the tool is auditable and accessible.
 - Acceptance:
   - Verdicts record who and when; rows are keyboard-operable; focus states are visible.
+  - Note: the full compliance audit trail moves to **IV-34**; this story now covers accessibility + basic attribution only.
+
+---
+
+## 9. Audit trail, lifecycle, and data integrity
+
+> Added 2026-09-18 from the manager review. See DECISIONS.md (2026-09-18) for the full rationale.
+> The unifying model: verification is bound to the **candidate/application**, not the round; any
+> change to the inputs voids in-progress work and restarts; a submitted report is never silently
+> voided by a photo change, it is flagged for reverify and versioned. All three stories share one
+> foundation: an append-only event log with the report as a versioned artifact over it.
+
+**IV-34 · Compliance audit trail — Status: To do**
+- **As a** compliance stakeholder / auditor **I want** a complete, tamper-evident record of everything that happened in a verification **so that** it holds up during an audit.
+- Acceptance:
+  - Every event is captured with **actor + server-side timestamp** (never the client clock): verification enabled/configured; which reference photos were on file at check time; joining-day photo captured/uploaded; each automated comparison (similarity score, quality result, AI verdict); each human review action (verdict, reason code, note); any override of an AI verdict (old to new); report submitted (final verdict); report reopened / shared; round changes; photo-changed events; reverify runs.
+  - Stored as a **separate append-only log**: no edits, no deletes.
+  - **Retention:** fixed long window (~7 years; exact figure per legal).
+  - **Access:** the recruiter for their own candidates, plus admin/compliance roles.
+  - **Export:** on-screen timeline for v1; Excel/CSV export is a fast-follow (not in v1).
+  - Supersedes/absorbs the audit half of IV-31.
+- **UI, decided 2026-09-21:**
+  - User-facing label is **"Activity"** (the internal concept is still the audit trail). The drawer title and the icon tooltip both read "Activity".
+  - Surfaced as a **right-slide drawer**, opened from a **clock / history icon button in the top-right of the "Verify identity" report header**. No count badge on the icon; no footer caption in the drawer.
+  - Events are grouped by day, each with a typed marker: human action, system run, external change (e.g. a photo edited outside the check, tagged "external"), and verify milestones.
+  - **Entry points (report-level is decided; the other two are proposed):**
+    - **Decided:** the report header Activity icon (above).
+    - **Proposed, awaiting confirmation:** a "View activity" item in the **Completed-tab worklist row menu**, and a link on the **candidate profile verdict bar**. Same drawer in all cases.
+
+**IV-35 · Round binding and lifecycle — Status: To do**
+- **As a** recruiter / admin **I want** verification tied to the candidate and triggered by a configurable round **so that** moving the candidate around the pipeline never orphans or corrupts the check.
+- Acceptance:
+  - Verification is bound to the **candidate/application**, not the round; the round is only the trigger and a context tag stamped on each event.
+  - **Trigger round is configurable per tenant, limited to onboarding or hired.** Onboarding = a pre-hire **gate**; hired = a post-hire **record** (hired is terminal, so it cannot block anything).
+  - "Run check" is gated on the candidate being in the configured trigger round.
+  - **Move-back (onboarding config):** if the candidate is moved out of the trigger round while verification is in progress or submitted, the verification is **invalidated** (retained in the audit log as void); a fresh check starts if they return. The round change is itself an audit event.
+  - **Fail action (gate config), configurable per tenant:** a final "Not a match" either **warns only** (recruiter still decides) or **hard-blocks** progression to hired until reverified or overridden by an authorised role.
+  - Open: which role can override a hard block (override is an audit event).
+
+**IV-36 · Stale-photo detection and reverify — Status: To do**
+- **As a** recruiter **I want** to be told when a report no longer reflects the current on-file photos **so that** I never act on a stale verdict.
+- Acceptance:
+  - A **fingerprint/version** of each reference photo used is recorded at check time; on report view the current photos are compared against it to detect change. (Scope: on-file reference photos only; the joining-day capture is treated as fixed for that verification.)
+  - **In progress:** if a reference photo changes, the **whole in-progress report is invalidated** and restarted.
+  - **Submitted:** if a reference photo used in the check is **updated/replaced or removed** after submit, show a banner naming what changed ("Application photo was updated on <date> by <user>. Reverify to refresh this report.") plus a **Reverify** button.
+  - **Reverify creates a new report version**; the superseded report is retained in the Activity timeline (submitted at T against photo v1; photo changed at T2; reverified to v2).
+  - **Reverify confirm dialog** states that the current version is kept and visible in Activity, and a new version is saved.
+- **Status lifecycle (two-stage), agreed 2026-09-21:**
+  - Reverify never changes the candidate's **hiring round**. Verification is bound to the candidate; the round is only the trigger.
+  - **Stage 1, stale detected, not yet actioned:** the row **stays on the Completed tab** with an **"Out of date"** flag (surfaced via a filter + count), and the report shows the stale banner. The v1 verdict is still valid as of when it was submitted. An automatic backend photo change never moves the row on its own.
+  - **Stage 2, reviewer clicks Start reverify:** the row **moves back to In progress** (v1 kept and visible in Activity) until the reviewer submits the new version, then returns to **Completed** as v2. The human action is what moves the status, not the photo change.
+  - Onboarding gate config: submitting the new version yields a fresh verdict, so a v2 "Not a match" re-triggers the tenant's warn/hard-block. Hired config: v2 updates the record only.
+- Open:
+  - Whether to proactively notify on a submitted report going stale, or only show the banner/flag on next view.
+  - Whether a **newly added** reference photo (one the report never compared against) also marks the report out of date and offers reverify (lean: yes).
+  - Whether to allow a **manual reverify** on a completed report even when nothing changed (lean: yes, always available, separate from the automatic stale flag).
 
 ---
 
@@ -264,7 +321,8 @@ completed report.
 
 - **Q2** — What happens if every comparison is "Can't confirm"? (Parked — very rare.)
 - **Q5** — Collaboration messages: system events, free-form, or both? **Resolved:** system events only, logged after submit (see IV-23).
-- **Q6** — Admin scope: per-round enable only, or thresholds / consent / reasons too? (Blocks IV-27.)
+- **Q6** — Admin scope: per-round enable only, or thresholds / consent / reasons too? (Blocks IV-27.) Now also covers the new tenant settings: trigger round (onboarding/hired), fail action (warn vs hard-block), retention.
+- **Q8** — Exact audit retention figure (per legal). Which role can override a hard block. Whether a submitted report going stale is proactively notified or banner-only. (Residuals on IV-34/35/36.)
 - Minor: an overall cross-status "Delayed" total (not currently surfaced); how zero-count segments should look.
 
 ---
@@ -274,3 +332,4 @@ completed report.
 1. Completed report redesign (IV-21) — the last core screen.
 2. Candidate verdict bar (IV-24) and entry points (IV-25, IV-26) — integration, buildable as static mocks.
 3. Collaboration (IV-23) and Admin (IV-27) — once Q5 and Q6 are decided.
+4. Audit + lifecycle foundation (IV-34, IV-35, IV-36) — one shared foundation (append-only event log + versioned report); build together, they underpin compliance and the reverify flow.

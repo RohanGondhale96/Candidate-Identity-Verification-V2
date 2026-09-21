@@ -15,6 +15,83 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-21 · Audit UI ("Activity" drawer) and reverify status lifecycle [agreed]
+
+- **Discussion:** working through how the 18 Sep decisions land in the UI, iterated in wireframes
+  (report page, entry-point options, reverify states) before any code.
+- **Decisions (UI, [agreed]):**
+  - **Audit trail is surfaced as a right-slide drawer** labelled **"Activity"** (user-facing; the
+    internal/compliance concept is still the audit trail). Opened from a **clock / history icon
+    button in the top-right of the "Verify identity" report header**. Considered a pulse/activity
+    icon (the user's first pick) but chose the clock/history one, it reads as look-back, not live
+    monitoring. **No count badge** on the icon; **no footer caption** in the drawer; **no
+    candidate/read-only subline** in the drawer header.
+  - **Entry points:** the report header icon is **decided**. A Completed-tab **worklist row-menu**
+    item and a **profile verdict-bar** link are **proposed** (same drawer), awaiting confirmation.
+    Dropped a version-chip link (redundant with the header icon on the same screen).
+  - **Reverify status lifecycle (two-stage):** reverify never changes the candidate's **hiring
+    round** (verification is bound to the candidate; the round is only the trigger). Stage 1, a
+    stale report **stays on the Completed tab** flagged **"Out of date"** (filter + count); an
+    automatic backend photo change never moves the row on its own. Stage 2, when the reviewer
+    clicks **Start reverify** the row **moves to In progress** (v1 kept and visible in Activity)
+    until the new version is submitted, then returns to **Completed** as v2. The human action moves
+    the status, not the photo change. Onboarding gate config: v2 "Not a match" re-triggers
+    warn/hard-block; hired config: v2 updates the record only.
+  - Reverify appears on a **submitted** report when a reference photo it used is **updated/replaced
+    or removed**; open whether a **newly added** reference photo also triggers it (lean yes) and
+    whether a **manual reverify** is always available even with no change (lean yes).
+- **Also shipped (built, not planning):** submit report dialog widened 560px -> 680px (`6baa489`);
+  AI "Not a match" review rows now show all three verdicts (`aa001ab`).
+- **Change:** folded into USER_STORIES.md IV-34 (Activity UI + entry points) and IV-36 (reverify
+  two-stage lifecycle). Wireframes: report page + Activity drawer, entry-point options, reverify
+  states (see artifact links in the session). **No prototype code for the audit/reverify features
+  yet** — still planning/wireframe stage.
+
+## 2026-09-18 · Audit trail, round-binding, and stale-photo reverify [agreed]
+
+- **Discussion (morning, with manager):** three needs surfaced. (1) A compliance-grade **audit
+  trail** an auditor could rely on: who uploaded which photo and when, what each review said, when
+  the report was submitted, everything. (2) A **round-placement** problem: the original plan was to
+  hang verification off the onboarding *or* hired round, but hired is terminal (a candidate can't be
+  moved out of it), and onboarding is not, so a candidate can be moved back mid-check and orphan the
+  verification. (3) A **stale-input** problem: if someone edits an application/document photo on the
+  backend while a check is in progress or after a report is submitted, the report no longer reflects
+  the photos it was computed against.
+- **Key modeling decision:** bind the verification to the **candidate/application**
+  (`emplRefrlSeq`), never to the round. The round is only the trigger and a context tag stamped on
+  each event, so a round move can never orphan the record. A coherent rule emerged: any change to
+  the *inputs* (a round move-out, or a reference photo change while in progress) **voids the work
+  and restarts**; a *submitted* report is never silently voided by a photo change, it is **flagged
+  for reverify and versioned**.
+- **Decisions (all [agreed], answered one-by-one by the PM):**
+  - **Purpose / round:** configurable per tenant — a pre-hire **gate at onboarding** *or* a
+    post-hire **record at hired**. Trigger round is restricted to **onboarding or hired only**.
+  - **Move-back (onboarding config):** moving the candidate out of onboarding **invalidates** the
+    verification (in progress *or* submitted); the old record is retained in the audit log as
+    **void**; a fresh check starts if the candidate returns.
+  - **Fail action (gate config):** **configurable per tenant** — a final "Not a match" either
+    **warns only** (recruiter still decides) or **hard-blocks** progression to hired until
+    reverified or overridden by an authorised role.
+  - **Audit store:** a **separate append-only immutable log** — server-assigned timestamps,
+    authenticated actor, no edits, no deletes. Explicitly *not* the editable collaboration feed
+    (which stays the curated, after-submit, human-readable subset per Q5 / IV-23).
+  - **Retention:** a **fixed long window (~7 years)**; exact figure to confirm with legal.
+  - **Access:** **recruiter (own candidates) + admin/compliance**.
+  - **Export:** **on-screen only for v1**, Excel/CSV as a fast-follow.
+  - **In-progress + reference photo change:** **invalidate the whole in-progress report** and
+    restart (consistent with the move-back rule).
+  - **Submitted + reference photo change:** show a **"details were updated, please reverify"
+    banner + Reverify** button; reverify creates a **new report version** (old one retained in
+    audit). Scope is **reference photos only** — the joining-day capture is treated as fixed for
+    that verification.
+- **Residual / to settle before build:** exact retention number (legal); which role can override a
+  hard block, and confirm the override is itself an audit event (lean: yes); whether anyone is
+  *proactively notified* when a submitted report goes stale vs. only seeing the banner on next view;
+  detection method for "photo changed" (implementation default: a stored per-photo
+  fingerprint/version).
+- **Change:** documented here and drafted as stories IV-34 (audit trail), IV-35 (round-binding +
+  move-back), IV-36 (stale-photo reverify) in USER_STORIES.md. **No code yet** — planning only.
+
 ## 2026-09-15 · A-block built — review overrides + verdict rules [agreed]
 
 - **Context:** the substance of the manager backlog (A1-A5), built straight into the prototype since the
