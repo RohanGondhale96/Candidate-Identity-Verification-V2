@@ -236,8 +236,12 @@ carry the dark theme). What changed:
   bracket/scan-line (`scanOverlay`) during quality, a face-landmark **mesh** (`faceMesh`: 11 dots + 16
   connecting lines) during compare. Helpers: `procStep(state,title,sub)` for a step row; step states are
   derived from `qualityChecking`/`running`. If quality **fails**, the loader is replaced by the red
-  blocking error (stops at step 1). The single-surface photos-on-file list is **suppressed while busy**
-  so the loader is the whole story; it returns for the idle and done states. (The old radar status line
+  blocking error (stops at step 1). The photos-on-file list **stays visible while busy, dimmed and inert**
+  (2026-09-22, Option A): the loader card is the focus, and below it the on-file list keeps its place at
+  ~0.6 opacity with `pointer-events:none`, so context does not disappear and the layout does not collapse.
+  Its header reads "Comparing against N photos on file..." during compare (radar) or "Total N photos on
+  file" during the quality step; each row shows the shimmer badge. (Earlier this list was fully suppressed
+  while busy.) The old radar status line
   "Checking photo…" / "Running verification…" was retired.) The buttons stay hidden during processing;
   on mobile the row wraps (checkboxes/buttons drop below the photo).
 - **Completed candidates open straight to their finished report, not the upload flow (2026-09-09).**

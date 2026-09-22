@@ -1462,12 +1462,16 @@ function render(){
   /* 3b + 4 + 5. PHOTOS-ON-FILE - v2 card feed once done; idle/running keep the single-surface list */
   if(c && c.photos.length && s.done){
     html += reportFeed(s, c);
-  } else if(c && c.photos.length && !s.qualityChecking && !s.running){
-    var _done = s.done, _running = s.running, _idle = !_done && !_running;
-    var tableRows = (_running || _done) ? s.rows : c.photos;
-    html += '<div class="rh-card" style="padding:0"><div style="border-radius:8px;overflow:hidden">';
-    if(_running){
-      html += '<div style="display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid #E0E0E0;font-size:13px;color:#747474"><span class="rh-radar" aria-hidden="true"></span>'+h('Comparing against '+c.photos.length+' photo'+(c.photos.length===1?'':'s')+' on file…')+'</div>';
+  } else if(c && c.photos.length && !s.done){
+    // Option A: keep the on-file list visible during processing, dimmed and inert (context stays, no layout swap).
+    var _done = s.done, _busy = s.qualityChecking || s.running, _idle = !_done && !_busy;
+    var tableRows = _done ? s.rows : c.photos;
+    html += '<div class="rh-card" style="padding:0'+(_busy?';opacity:.6;pointer-events:none':'')+'"'+(_busy?' aria-hidden="true"':'')+'><div style="border-radius:8px;overflow:hidden">';
+    if(_busy){
+      var busyLabel = s.running
+        ? ('Comparing against '+c.photos.length+' photo'+(c.photos.length===1?'':'s')+' on file…')
+        : ('Total '+c.photos.length+' photo'+(c.photos.length===1?'':'s')+' on file');
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:13px 20px;border-bottom:1px solid #E0E0E0;font-size:13px;color:#747474">'+(s.running?'<span class="rh-radar" aria-hidden="true"></span>':'')+h(busyLabel)+'</div>';
     } else if(_idle){
       var idleLabel = isFuture(c)
         ? (c.photos.length+' photo'+(c.photos.length===1?'':'s')+' on file')
