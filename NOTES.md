@@ -38,6 +38,30 @@ There is no real audit backend or report versioning yet; this demonstrates the f
     stat cards, which read `wlStatusRows`). The row shows **In progress + Reverifying** pills. Hiring round
     is never touched. Returns to Completed when the new version is submitted (not wired in the mock).
 
+## Worklist aligned to the Agents page (2026-09-22)
+
+The worklist (`worklistView()`) was restyled to use the same UI building blocks as the product's
+**Agents setup** page, so it reads as the same product (content is ours; the pieces match). Kept at the
+prototype's **compact sizing** (the DS 2.0 spec sizes looked too large). All existing behaviour preserved
+(search, stat-card status filter, sub-filter, sort, Excel export, row kebab actions, infinite scroll).
+
+- **One white content card** (`.wl-content`) wraps the whole worklist (was separate cards on the canvas).
+- **Section header** (`.wl-sec`): "Candidates" title + info line + an **Export to Excel** button on the right
+  (mirrors the Agents "Agents" title + description + Create).
+- **Stat cards** (`.wl-stat`): number + colored status dot + label + sub-line (Pending "Awaiting a check" /
+  In progress "Being reviewed" / Completed "Report submitted"); still the clickable status filter with the
+  blue selected state.
+- **Single unified filter bar** (`.wlf-bar`): search input, then divided segments for a **Timing/Outcome
+  dropdown** and a **Sort dropdown**, then a trailing search icon, all in one bordered bar (was chips + a
+  native select). The status dropdown is contextual: **Timing** (All/Today/Upcoming/Delayed) for open views,
+  **Outcome** (All/Match/Not a match/Out of date) on Completed; its label shows the selected value + count
+  (e.g. "Timing: All (6)").
+- **Dropdown menus** (`.wlf-menu`, `fmenu()`): full-width rows, count in parentheses, grey-highlight
+  selection (Agents style). Opened via `wlToggleMenu('flt-when' | 'flt-sort')` and closed by a fixed
+  `.wlf-backdrop`; `setWlWhen`/`wlSetSort` also clear `wlMenu` on select.
+- **List** (`.wl-list`): the candidate rows unchanged, wrapped in a bordered list container.
+- Page header text left as "Verify identity / Joining-day identity check" (unchanged).
+
 ## v2 card-style UI (implemented in source; light mode)
 
 The three screens (worklist → setup → report) were redesigned into a card-style system and
