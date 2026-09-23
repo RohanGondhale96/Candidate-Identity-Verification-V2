@@ -11,10 +11,19 @@ looks like an accident.
 Front-end mock of the finalized report pieces (see DECISIONS 2026-09-21, stories IV-34 / IV-36).
 There is no real audit backend or report versioning yet; this demonstrates the flows with seeded data.
 
-- **Activity icon** (clock/history) sits top-right of the "Verify identity" page header (`pageheader()`,
-  class `.rh-actbtn`), shown whenever a candidate is open (`!!state.cand`) so it appears on in-progress
-  candidates too, not just completed; hover tooltip "Activity". Opens a right-slide drawer (`.rh-drawer`,
-  `state.activityOpen`).
+- **Activity icon** (clock/history) sits at the **top-right of the candidate card** (moved there
+  2026-09-23 for discoverability; was in the page header), class `.rh-actbtn`, shown whenever a
+  candidate is open so it appears on in-progress and completed views; hover tooltip "Activity". Opens a
+  right-slide drawer (`.rh-drawer`, `state.activityOpen`).
+- **"Not a match" now behaves like "Match" (2026-09-23, per Pravin/Rohan review).** A Not a match is an
+  accepted AI verdict: the row is **collapsed by default** (not the expanded action cards), and expands to
+  show the reason (**"Not a match: <cause>"**, `notMatchBand`) + a **Change** link (`nomatchOverride`) that
+  offers **Match / Can't confirm**. It **does not block Submit** (`rowUnresolved`/`reportSummary.unresolved`
+  count only Needs-review rows now); it still drives the overall **mismatch** tier. Only **Needs review**
+  rows stay expanded and require a decision. The submit-table "Decision" shows an un-overridden Not a match
+  as "Not a match". (Supersedes the earlier "AI Not-a-match rows show all three verdicts" change.)
+- **Upload buttons:** **Submit** (primary) sits next to the photo, **Change photo** to its right (swapped
+  2026-09-23). Reason label wording: **"Not a match:"** (was "Why this may not match:").
 - **Activity drawer** = read-only, day-grouped timeline built by `activityLog(s, c)`: it adapts to how far
   the check has got, verification enabled always, then joining-day photo uploaded / quality check /
   comparison run once those happen, a "Review in progress" line when rows exist but nothing is submitted,

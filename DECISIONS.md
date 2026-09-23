@@ -15,6 +15,28 @@ settled · **[rec]** recommended, awaiting sign-off · **[open]** undecided.
 
 ---
 
+## 2026-09-23 · "Not a match" behaves like Match; small UX moves [agreed] · BUILT
+
+- **Discussion (Pravin Roche / Rohan review):** a **Not a match** should not force the reviewer to open
+  the row and record a verdict. It is already the AI's verdict; treat it like a **Match** row.
+- **Decision & change (built):**
+  - **Not a match = accepted verdict, like Match.** Row **collapsed by default** (no forced action cards),
+    expands to show the reason (`notMatchBand`, **"Not a match: <cause>"**) + a **Change** link
+    (`nomatchOverride`) offering **Match / Can't confirm**. It **does not block Submit** (`rowUnresolved`
+    and `reportSummary.unresolved` now count only Needs-review rows); it still drives the overall
+    **mismatch** tier and the "Not a match" outcome. Only **Needs review** rows stay expanded and require a
+    decision. `reviewedVerdictLabel` shows an un-overridden Not a match as "Not a match" in the submit
+    table. **Supersedes** the 2026-09-18 "AI Not-a-match rows show all three verdicts" change.
+  - **Activity icon** moved from the page header to the **top-right of the candidate card** (more
+    discoverable).
+  - **Upload buttons swapped:** **Submit** (primary) next to the photo, **Change photo** to its right.
+  - **Copy:** reason label **"Not a match:"** (was "Why this may not match:"), removed everywhere.
+- **Also captured for later (not built):** consent copy → "Candidate has given consent to use their photo
+  for photo verification process"; "photo verification" vs "identity verification" naming; report-summary
+  totals with colour dots; rename submit-table columns to "Photo source" / "Decision"; cap AWS
+  CompareFaces parallelism at 3; keep switched candidates in Pending; reverify/cron deprioritised;
+  Aadhaar-update = re-run that doc vs regenerate v2 (open). Status matrix still to add to the tracker.
+
 ## 2026-09-21 · Audit UI ("Activity" drawer) and reverify status lifecycle [agreed]
 
 - **Discussion:** working through how the 18 Sep decisions land in the UI, iterated in wireframes
