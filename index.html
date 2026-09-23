@@ -632,9 +632,11 @@ function rowUnresolved(r){ if(photoState(r)!=='review') return false; return cod
 
 /* single per-row badge: the model finding, replaced by the human answer once acted on */
 function rowBadge(r){
+  // The badge is always the plain status (Match / Not a match / Needs review). A human review just
+  // changes which one it is; the "Marked not a match / Confirmed a match" detail shows at the row bottom.
   var st=photoState(r), o = r.review ? codeOutcome(r.review) : null;
-  if(o==='pos') return _pill('Reviewed · same person','#1a8a3a','#E7F4EC');
-  if(o==='neg') return _pill('Reviewed · different person','#D93025','#FDECEC');
+  if(o==='pos') return _pill('Match','#1a8a3a','#E7F4EC');
+  if(o==='neg') return _pill('Not a match','#D93025','#FDECEC');
   if(o==='excluded') return _pill('Set aside','#5F5E5A','#EFEFEF');
   if(st==='cant')    return _pill("Couldn’t compare",'#5F5E5A','#EFEFEF');
   if(st==='match')   return _pill('Match','#1a8a3a','#E7F4EC');
