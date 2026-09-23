@@ -783,8 +783,8 @@ function reasonCodes(i, r){
   out += '</div>';
   return out;
 }
-/* A1: a matched row can also be overridden. Show "Why this is a match", then a Change link that
-   reveals Match / Not a match (no Can't confirm on a confident match, per A2). */
+/* A matched row can be overridden. Show "Why this is a match", then a Change link that reveals the two
+   alternatives to Match: Not a match / Can't confirm (offering Match again would be redundant). */
 function overrideCard(i, code, title, sub, col, bg, svg){
   var onclick = code==='same' ? ('resolveRow('+i+',\'same\')') : ('openReasonModal('+i+',\''+code+'\')');
   return '<button type="button" onclick="'+onclick+'" style="display:flex;align-items:center;gap:11px;text-align:left;border:1px solid #C6C6C6;background:#fff;border-radius:12px;padding:11px 12px;cursor:pointer;font-family:inherit">'+
@@ -815,8 +815,8 @@ function matchOverride(i, r){
     return matchBand(r,'')+
       '<div style="font-size:12px;font-weight:700;color:#747474;letter-spacing:.05em;text-transform:uppercase;margin-top:16px">Override the verdict</div>'+
       '<div class="rpt-acts" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px">'+
-        overrideCard(i,'same','Match','Same person','#1a8a3a','#E7F4EC','<path d="M5 12l5 5L20 7"/>')+
         overrideCard(i,'notmatch','Not a match','Different person','#D93025','#FDECEC','<path d="M7 7l10 10M17 7L7 17"/>')+
+        overrideCard(i,'ignore','Can\'t confirm','Set aside, leave out of the score','#5F5E5A','#EFEFEF','<circle cx="12" cy="12" r="8.5"/><path d="M8 12h8"/>')+
       '</div>';
   }
   // default: the match band with the Change link inside it, on the right
