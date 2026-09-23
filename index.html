@@ -1182,15 +1182,6 @@ function wlPill(status){
   if(status==='notverified') return _pill('Not verified','#D93025','#FDECEC');
   return '';
 }
-function wlReason(c){
-  var lc = latestCheck(c.id);
-  if(lc){ var d=lc.hh.decision;
-    if(d && d.action==='submitted') return 'Submitted by '+d.by+' · '+d.at;
-    var v=reportSummary(lc.hh.rows); return v.unresolved>0 ? (v.unresolved+' comparison'+(v.unresolved>1?'s':'')+' need review') : 'Reviewed · not submitted';
-  }
-  if(c.wl && c.wl.reason) return c.wl.reason;
-  return (c.photos && c.photos.length) ? '' : 'No photos on file';
-}
 /* kebab on a main-list row - offers "Change joining date". Shown on to-verify / not-verified /
    coming-up rows (where a date change is most likely). Menu key is 'l'+id (distinct from attention). */
 function showListKebab(c){ return isFuture(c) || isOverdue(c) || wlStatus(c)==='toverify' || wlStatus(c)==='notverified'; }
