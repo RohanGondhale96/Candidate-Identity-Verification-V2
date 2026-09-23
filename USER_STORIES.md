@@ -95,16 +95,23 @@ completed report.
   - No image processing happens before consent is given; **Submit** is disabled until both are ticked.
 
 **IV-9 · Quality pre-check the photo — Status: Done**
-- **As a** recruiter **I want** the photo checked for quality before comparison **so that** blurry / no-face / multi-face photos don't produce misleading results.
+- **As a** recruiter **I want** the joining-day photo checked for quality before comparison **so that** blurry / no-face / multi-face photos don't produce misleading results.
 - Acceptance:
-  - On submit, a quality check runs first (sharpness, brightness, facing, single clear face).
-  - On pass, comparison runs automatically; on fail, a blocking message asks for a new photo (hard gate).
+  - On submit, a quality check runs **first**, on the joining-day photo only (`api/quality.js`, AWS Rekognition **DetectFaces**).
+  - It **rejects**: **0 faces** (no face), **more than 1 face** (multiple faces), a **covered/occluded** face, or below the thresholds **sharpness < 20**, **brightness < 25**, or **head pose > +/-33 deg** (not facing the camera).
+  - **Hard gate:** on pass, the comparison runs automatically; on fail, a **blocking message** asks for a new photo and **no comparison runs**.
 
 **IV-10 · Compare against on-file photos — Status: Done**
 - **As a** recruiter **I want** the joining-day photo compared against all on-file photos **so that** each comparison gets a face-match score and verdict.
 - Acceptance:
-  - Compares against application, interview-round, and identity-document photos.
-  - Each comparison returns a score and an AI verdict (Match / Needs review / Not a match / Couldn't compare).
+  - Engine: `api/compare.js`, AWS Rekognition **CompareFaces**, **one call per reference** (application, interview-round, and identity-document photos). Source = the joining-day photo; target = each on-file reference.
+  - AWS returns a **similarity score (0-100)**; the same-person cutoff is **>= 80** (`SAME_PERSON_THRESHOLD`).
+  - **UI verdict bands (source-aware):** application/interview photos, Match **>= 85**, Needs review **50-84**, Not a match **< 50**; identity documents, Match **>= 65**, Needs review **40-64**, Not a match **< 40** (documents are older / lower quality, so more lenient).
+- **"Couldn't compare" (no-face reference), the logic:**
+  - **What AWS gives (raw):** no detectable face in an image, CompareFaces throws **`InvalidParameterException`**; a face is present but does not match, AWS returns **`UnmatchedFaces`** populated with empty `FaceMatches` (low/zero similarity); a match, `FaceMatches[0].Similarity`.
+  - **Our product rule (not an AWS concept):** a reference with **no detectable face** (e.g., the **back of an Aadhaar card**) is caught, `InvalidParameterException`, or **zero faces** in the target (`FaceMatches + UnmatchedFaces === 0`), returned as **HTTP 422**, and the UI marks that row **"Couldn't compare"** and **excludes it from the verdict** (it is not counted as a mismatch and does not block submit).
+  - A reference that **has a face but does not match** is **"Not a match"** (counts toward the verdict), a real difference, not a data problem. Only the no-face case becomes "Couldn't compare".
+  - The joining-day photo is separately required to contain **exactly one clear face** before the check can run (IV-9), so a no-face at compare time is always the on-file reference, never the joining photo.
 
 **IV-11 · See progress while the check runs — Status: Done**
 - **As a** recruiter **I want** to see what's happening during the check **so that** the wait feels credible.
