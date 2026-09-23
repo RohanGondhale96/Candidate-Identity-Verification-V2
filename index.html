@@ -744,7 +744,7 @@ function similarityBar(r){
 /* likely-cause callout + the three action cards (Same person / Not a match / Ignore) + audit line */
 function reasonCodes(i, r){
   var st = photoState(r);
-  var causeLabel = st==='nomatch' ? 'Not a match:' : 'Why this needs a look:';
+  var causeLabel = st==='nomatch' ? 'Not a match:' : 'This needs a look:';
   var out = '<div style="display:flex;gap:9px;margin-top:16px;padding:11px 13px;background:#FBF1DE;border:0.5px solid #EAD9AE;border-radius:8px;font-size:13px;color:#8a6414;line-height:1.5">'+
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>'+
     '<span><span style="font-weight:600">'+causeLabel+'</span> '+h(causeText(r))+'</span></div>';
@@ -1954,12 +1954,12 @@ function submitPhoto(){
 function dragOver(e){ e.preventDefault(); if(!state.drag) setState({drag:true}); }
 function dragLeave(e){ e.preventDefault(); setState({drag:false}); }
 function drop(e){ e.preventDefault(); setState({drag:false}); handleFile(e.dataTransfer.files[0]); }
-/* accordion: unresolved flagged rows are open by default; a user toggle overrides that default.
-   cant rows never open. Once a row is resolved it auto-collapses (see resolveRow/confirmReason). */
+/* accordion: every comparison row is open by default (the reviewer sees them all); the caret still lets
+   a user collapse an individual row. cant rows never expand (their note shows inline instead). */
 function effectiveOpen(i, r){
   if(!r || photoState(r)==='cant') return false;
   if(state.openRows && Object.prototype.hasOwnProperty.call(state.openRows, i)) return !!state.openRows[i];
-  return rowUnresolved(r);
+  return true;
 }
 function toggleRow(i){
   if(!state.done) return;
