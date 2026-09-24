@@ -300,9 +300,9 @@ var CANDIDATES = [
       {label:'Round 2: technical', src:'interview', date:'02 Jun 2026, 15:20', by:'R. Menon', score:61, tone:'dark', cause:'the reference frame catches the candidate mid-turn, so much of the face is out of view.'},
       {label:'Round 3: manager round', src:'interview', date:'18 Jun 2026, 11:05', by:'S. Iyer', score:91, tone:'clear', quality:'poor', qreason:'Not facing the camera', cause:'the candidate is turned away from the camera in this reference, so key facial features are hard to line up.'},
       {label:'Round 4: HR discussion', src:'interview', date:'27 Jun 2026, 16:40', by:'A. Sharma', score:89, tone:'soft'},
-      {label:'Aadhaar card', src:'document', date:'Identity document', by:null, score:71},
-      {label:'PAN card', src:'document', date:'Identity document', by:null, cant:true},
-      {label:'Driving licence', src:'document', date:'Identity document', by:null, score:22, cause:'the face on this document is clearly different from today\'s photo.'}
+      {label:'Aadhaar card', src:'document', date:'Uploaded 20 Jun 2026', by:null, score:71},
+      {label:'PAN card', src:'document', date:'Uploaded 20 Jun 2026', by:null, cant:true},
+      {label:'Driving licence', src:'document', date:'Uploaded 20 Jun 2026', by:null, score:22, cause:'the face on this document is clearly different from today\'s photo.'}
     ]},
   { id:'c2', name:'Arjun Reddy', rhid:'RH47980', email:'arjun.reddy@outlook.com', phone:'+91 99872 08802',
     req:'Product Designer', reqid:'REQ-2244', stage:'Hired', eligible:true, joining:'15 Aug 2026', joiningISO:'2026-08-15', owner:'me',
@@ -310,9 +310,9 @@ var CANDIDATES = [
       {label:'Application photo', src:'application', date:'21 Mar 2026', by:null, score:96, tone:'clear'},
       {label:'Round 1: portfolio review', src:'interview', date:'09 Apr 2026, 12:00', by:'N. Bhatia', score:93, tone:'clear'},
       {label:'Round 2: craft interview', src:'interview', date:'24 Apr 2026, 14:30', by:'T. Rao', score:95, tone:'clear'},
-      {label:'Aadhaar card', src:'document', date:'Identity document', by:null, score:88},
-      {label:'PAN card', src:'document', date:'Identity document', by:null, score:84},
-      {label:'Driving licence', src:'document', date:'Identity document', by:null, score:79}
+      {label:'Aadhaar card', src:'document', date:'Uploaded 28 Apr 2026', by:null, score:88},
+      {label:'PAN card', src:'document', date:'Uploaded 28 Apr 2026', by:null, score:84},
+      {label:'Driving licence', src:'document', date:'Uploaded 28 Apr 2026', by:null, score:79}
     ]},
   { id:'c3', name:'Meera Krishnan', rhid:'RH48466', email:'meera.k@yahoo.in', phone:'+91 91234 51129',
     req:'Data Analyst', reqid:'REQ-2310', stage:'Onboarding', eligible:true, joining:'16 Aug 2026', joiningISO:'2026-08-16', owner:'me', photos:[] }
@@ -797,7 +797,7 @@ function overrideCard(i, code, title, sub, col, bg, svg){
 function matchBand(r, right){
   return '<div style="display:flex;gap:9px;align-items:flex-start;margin-top:16px;padding:11px 13px;background:#E7F4EC;border:0.5px solid #BFE0C9;border-radius:8px;font-size:13px;color:#1a6b34;line-height:1.5">'+
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#1a8a3a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'+
-    '<span style="flex:1;min-width:0"><span style="font-weight:600">Why this is a match:</span> '+h(matchReason(r))+'</span>'+
+    '<span style="flex:1;min-width:0"><span style="font-weight:600">Match:</span> '+h(matchReason(r))+'</span>'+
     (right||'')+
   '</div>';
 }
