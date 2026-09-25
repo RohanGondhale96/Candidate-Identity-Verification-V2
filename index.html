@@ -756,7 +756,7 @@ function reportSummary(rows){
   var reviewedCount = vouchPos + vouchNeg;
   var extras=[]; if(cant) extras.push(cant+" couldn’t be read"); if(ignored) extras.push(ignored+' set aside');
   var extraNote = extras.length ? (' · '+extras.join(' · ')) : '';
-  var base = {matched:matched, total:Y, cant:cant, ignored:ignored, unresolved:unresolved, reviewedCount:reviewedCount, vouchPos:vouchPos};
+  var base = {matched:matched, total:Y, cant:cant, ignored:ignored, unresolved:unresolved, reviewedCount:reviewedCount, vouchPos:vouchPos, notMatch:(vouchNeg+openNoMatch)};
   function out(o){ for(var k in base) o[k]=base[k]; return o; }
   if(Y===0){
     return out({tier:'inconclusive', color:'#5F5E5A', bg:'#F1EFE8', title:"Couldn’t run the check", sub:'No readable photos to compare against.'+extraNote, suggest:"Can’t verify, nothing to compare"});
@@ -1065,6 +1065,27 @@ function jumpToFlagged(){
   var rows=state.rows||[];
   for(var i=0;i<rows.length;i++){ if(rowUnresolved(rows[i])){ smoothScrollToEl('rpt-round-'+i, 12, 520); return; } }
 }
+/* scroll to + expand the next photo that still needs review */
+function reviewNext(){
+  var rows=state.rows||[];
+  for(var i=0;i<rows.length;i++){ if(rowUnresolved(rows[i])){ var m=Object.assign({}, state.openRows); m[i]=true; setState({openRows:m}, function(){ smoothScrollToEl('rpt-round-'+i, 12, 520); }); return; } }
+}
+/* in-progress report footer copy (B2): "{matched} of {total} photos match" + only the non-zero details.
+   total = compared photos (set-aside included, couldn't-compare excluded); matched = system + "Same person". */
+function reportFooterText(v){
+  var total = v.total + v.ignored;               // couldn't-compare already excluded from v.total
+  var matched = v.matched;
+  var noun = (total===1) ? 'photo' : 'photos';
+  var verb = (matched===1) ? 'matches' : 'match';
+  var main = '<span style="font-weight:600;color:#2A2A2A">'+matched+' of '+total+' '+noun+' '+verb+'</span>';
+  var det=[];
+  if(v.unresolved===0 && v.vouchPos>0) det.push(v.vouchPos+' reviewed by you');   // only once nothing is left to review
+  if(v.ignored>0)   det.push(v.ignored+' set aside');
+  if(v.notMatch>0)  det.push(v.notMatch+(v.notMatch===1?' doesn’t match':' don’t match'));
+  if(v.cant>0)      det.push(v.cant+' couldn’t be compared');
+  if(v.unresolved>0) det.push(v.unresolved+' left to review');
+  return main + (det.length ? '<span style="color:#5A6473"> · '+h(det.join(' · '))+'</span>' : '');
+}
 /* underline tab, matching the worklist tabs: active = dark/bold text + blue underline; grey count badge */
 function _seg(v,label,n,on){
   return '<button type="button" onclick="setReportView(\''+v+'\')" aria-pressed="'+(on?'true':'false')+'" style="border:0;background:none;color:'+(on?'#2A2A2A':'#667085')+';font-family:inherit;font-size:13px;font-weight:600;padding:0 2px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;border-bottom:2px solid '+(on?'#0076FB':'transparent')+';margin-bottom:-1px">'+h(label)+'<span style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:#EFF1F5;color:#667085">'+n+'</span></button>';
@@ -1166,18 +1187,18 @@ function reportFeed(s, c){
       (s.viewingHistory?'':'<button type="button" onclick="reopenReport()" style="border:0;background:none;padding:4px 2px;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;flex-shrink:0">Reopen</button>')+
     '</div>';
   } else {
-    var dv=reportSummary(rows), sm=SUBMIT_STATUS[dv.tier]||SUBMIT_STATUS.review;
-    var pending=dv.unresolved>0;
-    var bpC=pending?'#8a6414':sm.c, bpBg=pending?'#FBF1DE':sm.bg, bpT=pending?'Not reviewed':sm.t;
-    var bInfo=pending?(dv.unresolved+' comparison'+(dv.unresolved>1?'s':'')+' still need'+(dv.unresolved>1?'':'s')+' your review'):h(dv.sub);
-    // hard gate: while any flagged comparison is open, the only action is "Review flagged" - no submit.
-    // The recruiter resolves every one (Match / Not a match / Can't confirm); only then does Submit appear.
-    var reviewCta = dv.unresolved>0
-      ? '<button type="button" onclick="jumpToFlagged()" style="border:0;color:#fff;background:#0076FB;border-radius:8px;padding:11px 18px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;white-space:nowrap"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Review flagged ('+dv.unresolved+')</button>'
-      : '<button type="button" onclick="openSubmit()" style="border:0;color:#fff;background:#0076FB;border-radius:8px;padding:11px 22px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;white-space:nowrap"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>Submit report</button>';
+    var dv=reportSummary(rows), left=dv.unresolved;
+    var arrow='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+    var tick='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
+    var btnStyle='border:0;color:#fff;background:#0076FB;border-radius:8px;padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;white-space:nowrap';
+    var reviewCta = left===0
+      ? '<button type="button" onclick="openSubmit()" style="'+btnStyle+'">'+tick+'Submit report</button>'
+      : (left===1
+        ? '<button type="button" onclick="reviewNext()" style="'+btnStyle+'">'+arrow+'Review photo</button>'
+        : '<button type="button" onclick="reviewNext()" style="'+btnStyle+'">'+arrow+'Review next photo</button>');
     html += '<div class="rpt-subbar" style="margin-top:16px;padding:14px 18px;background:#fff;border:1px solid #E5E9F0;border-radius:16px;box-shadow:0 1px 2px rgba(20,30,50,.06),0 8px 22px rgba(20,30,50,.08);display:flex;align-items:center;gap:14px">'+
       '<div class="rpt-subbar-info" style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
-        '<span style="font-size:12.5px;color:#5A6473;line-height:1.35">'+bInfo+'</span>'+
+        '<span style="font-size:13.5px;line-height:1.4">'+reportFooterText(dv)+'</span>'+
       '</div>'+
       '<div class="rpt-subbar-actions" style="display:flex;align-items:center;gap:10px;flex-shrink:0">'+reviewCta+'</div>'+
     '</div>';
