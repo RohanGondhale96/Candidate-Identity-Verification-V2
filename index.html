@@ -1721,7 +1721,7 @@ function render(){
     });
     html += '</div>'+
       '<footer><span style="font-size:12.5px;color:#747474;flex:1;text-align:left">'+(n===0?'No one selected':n+(n===1?' person selected':' people selected'))+'</span>'+
-        '<button class="rh-btn tertiary sm" onclick="closeShare()">Cancel</button>'+
+        '<button class="rh-btn secondary sm" onclick="closeShare()">Cancel</button>'+
         '<button class="rh-btn primary sm" '+(n===0?'disabled':'')+' onclick="doShare()">Share</button></footer>'+
     '</div></div>';
   }
@@ -1741,7 +1741,7 @@ function render(){
     html += '<div class="rh-scrim" onclick="scrimReshoot(event)"><div class="rh-dialog" style="width:420px">'+
       '<header><h2>Use a different photo?</h2><button class="x" onclick="cancelReshoot()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody"><p style="margin:0;font-size:13.5px;color:#2A2A2A;line-height:1.55">This deletes the current joining-day photo and its result. You’ll need to upload a new photo and run the check again.</p></div>'+
-      '<footer><span style="flex:1"></span><button class="rh-btn tertiary sm" onclick="cancelReshoot()">Cancel</button><button class="rh-btn primary sm" onclick="doReshoot()">Use a different photo</button></footer>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="cancelReshoot()">Cancel</button><button class="rh-btn primary sm" onclick="doReshoot()">Use a different photo</button></footer>'+
     '</div></div>';
   }
 
@@ -1758,7 +1758,7 @@ function render(){
         '<textarea id="rh-reason-note" placeholder="'+(rm.reason==='Other'?'Add a note (required)':'Add a note (optional)')+'" style="width:100%;box-sizing:border-box;margin-top:10px;min-height:48px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid '+(rm.err?'#EB4040':'#DDD')+';border-radius:8px">'+h(rm.note||'')+'</textarea>'+
         (rm.err ? '<div style="font-size:12.5px;color:#EB4040;margin-top:6px">'+h(rm.err)+'</div>' : '')+
       '</div>'+
-      '<footer><span style="flex:1"></span><button class="rh-btn tertiary sm" onclick="cancelReason()">Cancel</button><button class="rh-btn primary sm" '+(rm.reason?'':'disabled')+' onclick="confirmReason()">Confirm</button></footer>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="cancelReason()">Cancel</button><button class="rh-btn primary sm" '+(rm.reason?'':'disabled')+' onclick="confirmReason()">Confirm</button></footer>'+
     '</div></div>';
   }
 
@@ -1774,7 +1774,7 @@ function render(){
         '<textarea id="rh-submit-note" placeholder="Add a note (optional)" style="width:100%;box-sizing:border-box;margin-top:10px;min-height:48px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid '+(su.err?'#EB4040':'#DDD')+';border-radius:8px">'+h(su.note||'')+'</textarea>'+
         (su.err ? '<div style="font-size:12.5px;color:#EB4040;margin-top:6px">'+h(su.err)+'</div>' : '')+
       '</div>'+
-      '<footer><span style="flex:1"></span><button class="rh-btn tertiary sm" onclick="cancelSubmit()">Cancel</button><button class="rh-btn primary sm" '+(su.confirmed?'':'disabled')+' onclick="confirmSubmit()">Submit report</button></footer>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="cancelSubmit()">Cancel</button><button class="rh-btn primary sm" '+(su.confirmed?'':'disabled')+' onclick="confirmSubmit()">Submit report</button></footer>'+
     '</div></div>';
   }
 
@@ -1789,7 +1789,7 @@ function render(){
         '<input type="date" id="rh-date-input" value="'+h(dm.date)+'" style="width:100%;box-sizing:border-box;height:38px;border:1px solid #DDD;border-radius:8px;padding:0 11px;font-family:inherit;font-size:14px;color:#2A2A2A">'+
         '<textarea id="rh-date-note" placeholder="Add a comment (optional)" style="width:100%;box-sizing:border-box;margin-top:10px;min-height:52px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid #DDD;border-radius:8px"></textarea>'+
       '</div>'+
-      '<footer><span style="flex:1"></span><button class="rh-btn tertiary sm" onclick="cancelDate()">Cancel</button><button class="rh-btn primary sm" onclick="saveDate()">Save</button></footer>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="cancelDate()">Cancel</button><button class="rh-btn primary sm" onclick="saveDate()">Save</button></footer>'+
     '</div></div>';
   }
 
@@ -1802,7 +1802,7 @@ function render(){
         '<p style="margin:0 0 10px;font-size:13px;color:#747474">Mark <b style="color:#333;font-weight:600">'+h(nj.name)+'</b> as not joining and clear them from Needs your attention.</p>'+
         '<textarea id="rh-notjoin-note" placeholder="Add a comment (optional)" style="width:100%;box-sizing:border-box;min-height:60px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid #DDD;border-radius:8px"></textarea>'+
       '</div>'+
-      '<footer><span style="flex:1"></span><button class="rh-btn tertiary sm" onclick="cancelNotJoin()">Cancel</button><button class="rh-btn primary sm" onclick="confirmNotJoin()">Mark not joining</button></footer>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="cancelNotJoin()">Cancel</button><button class="rh-btn primary sm" onclick="confirmNotJoin()">Mark not joining</button></footer>'+
     '</div></div>';
   }
 
@@ -1824,7 +1824,7 @@ function render(){
         '<p style="margin:0 0 8px;font-size:13.5px;color:#2A2A2A;line-height:1.55">This runs a fresh check of the joining-day photo against the <b>current</b> photos on file and creates a new report version.</p>'+
         '<ul style="margin:6px 0 0;padding-left:18px;color:#5A6473;font-size:13px;line-height:1.6"><li>The current report is kept and stays visible in Activity.</li><li>The candidate moves back to In progress until you submit the new version.</li></ul>'+
       '</div>'+
-      '<footer><span style="flex:1"></span><button class="rh-btn tertiary sm" onclick="closeReverify()">Cancel</button><button class="rh-btn primary sm" onclick="confirmReverify()">Start reverify</button></footer>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeReverify()">Cancel</button><button class="rh-btn primary sm" onclick="confirmReverify()">Start reverify</button></footer>'+
     '</div></div>';
   }
 
