@@ -181,6 +181,56 @@
   .rh-stale p{margin:0;font-size:13px;color:#7A5A12;line-height:1.5}
   .rh-stale p b{font-weight:700}
   .rh-reverifying{background:#EAF2FE;border:1px solid #BcdafD;border-radius:var(--radius-md);padding:13px 16px;display:flex;gap:11px;align-items:center;margin-bottom:14px;color:#185FA5;font-size:13px;font-weight:600}
+  /* completed report (Variant B, summary-first) */
+  .rpt-headrow{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
+  .rpt-name{font-size:18px;font-weight:700;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rpt-meta{font-size:13px;color:#667085;margin-top:2px}
+  .rpt-acts{display:flex;align-items:center;gap:10px;flex-shrink:0}
+  .rpt-reopen{border:0;background:none;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;padding:0 2px}
+  .rpt-reopen:hover{text-decoration:underline}
+  .rpt-acts .rh-actbtn{width:38px;height:38px;margin-left:0}
+  .rpt-vpanel{background:#F7F8FA;border:1px solid #E5E9F0;border-radius:12px;padding:14px 16px}
+  .rpt-vpanel.stale{background:#F4F5F7}
+  .rpt-vhead{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+  .rpt-vico{display:inline-flex;flex-shrink:0}
+  .rpt-vtext{font-size:16px;font-weight:700}
+  .rpt-vsub{margin-left:auto;text-align:right;font-size:12px;color:#747474;line-height:1.4}
+  .rpt-stable{margin-top:12px;border-top:1px solid #E5E9F0}
+  .rpt-srow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;font-family:inherit;padding:9px 2px;border-bottom:1px solid #EEF1F5;cursor:pointer}
+  .rpt-srow:last-child{border-bottom:0}
+  .rpt-srow:hover{background:#EEF1F6}
+  .rpt-srow .s-name{flex:1;min-width:0;font-size:13px;font-weight:600;color:#2A2A2A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rpt-srow .s-date{width:150px;flex-shrink:0;font-size:12px;color:#747474}
+  .rpt-srow .s-badge{display:flex;align-items:center;gap:7px;flex-shrink:0;justify-content:flex-end}
+  .rpt-attest{margin-top:14px;font-size:12px;color:#1a6b34;display:flex;align-items:center;gap:6px}
+  .rpt-seclabel{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#667085;margin:22px 4px 10px}
+  .rpt-card{background:#fff;border:1px solid #E5E9F0;border-radius:16px;box-shadow:0 1px 2px rgba(20,30,50,.06),0 8px 22px rgba(20,30,50,.08);margin-bottom:14px;overflow:hidden;scroll-margin-top:14px}
+  .rpt-cardhead{display:flex;align-items:center;gap:13px;padding:14px 16px}
+  .rpt-cardname{font-size:15px;font-weight:600;line-height:1.35}
+  .rpt-carddate{font-size:12px;color:#667085;margin-top:1px}
+  .rpt-cardright{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .rpt-caret{width:30px;height:30px;border:0;background:none;cursor:pointer;display:grid;place-items:center;border-radius:7px;flex-shrink:0}
+  .rpt-cardbody{padding:0 16px 16px}
+  .rpt-note{margin-top:14px;padding:11px 13px;border-radius:8px;font-size:13px;line-height:1.5}
+  .rpt-note.grey{background:#F1F2F4;border:0.5px solid #E0E3E8;color:#5A6473}
+  .rpt-note.amber{background:#FBF1DE;border:0.5px solid #EAD9AE;color:#8a6414}
+  .rpt-tag{background:#FBF1DE;color:#8A6414;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:600;white-space:nowrap}
+  .rpt-ood{background:#FBF1DE;border-bottom:1px solid #F0DCA8;padding:15px 20px;display:flex;gap:13px;align-items:flex-start}
+  .rpt-ood .ic{width:28px;height:28px;flex-shrink:0;border-radius:8px;background:#F6E4BC;display:flex;align-items:center;justify-content:center;color:#8A6414}
+  .rpt-ood .tx{flex:1;min-width:0}
+  .rpt-ood h3{margin:0 0 3px;font-size:14px;font-weight:700;color:#6E4E0C}
+  .rpt-ood p{margin:0;font-size:13px;color:#7A5A12;line-height:1.5}
+  .rh-btn.primary.rpt-reverify{background:#8A6414;border-color:#8A6414;flex-shrink:0}
+  .rh-btn.primary.rpt-reverify:hover{background:#75530F;border-color:#75530F}
+  @media(max-width:600px){
+    .rpt-headrow{flex-wrap:wrap}
+    .rpt-acts{width:100%;justify-content:flex-start;flex-wrap:wrap}
+    .rpt-vsub{margin-left:0;width:100%;text-align:left}
+    .rpt-srow .s-date{display:none}
+    .rpt-ood{flex-wrap:wrap}
+    .rpt-reverify{width:100%;justify-content:center}
+  }
+  .rpt-print{display:none}
 
   /* ===== photo placeholder ===== */
   .rh-photo{position:absolute;inset:0;display:grid;place-items:center}
@@ -273,10 +323,46 @@
   }
   /* F2: printing the report (Save as PDF) strips the app chrome and interactive controls */
   @media print{
-    .rh-nav,.rh-accent,.rh-ph,.rpt-headacts,.rpt-subbar,.rh-actbtn,.rh-drawer,.rh-drawer-scrim{display:none !important}
-    main{max-width:none;padding:0}
-    .rh-card{box-shadow:none;break-inside:avoid}
-    body{background:#fff}
+    .rh-nav,.rh-accent,.rh-ph,main,.rh-drawer,.rh-drawer-scrim,.rh-scrim,.rpt-headacts,.rpt-subbar,.rh-actbtn{display:none !important}
+    @page{size:A4 portrait;margin:14mm}
+    html,body{background:#fff}
+    .rpt-print{display:block !important;color:#1A1A1A;font-family:'Open Sans',Arial,sans-serif;font-size:11px;line-height:1.45}
+    .pd-head{display:flex;justify-content:space-between;align-items:flex-start}
+    .pd-brand{font-size:17px;font-weight:800}
+    .pd-tag{font-size:11px;color:#555;margin-top:1px}
+    .pd-hr-right{text-align:right;font-size:10px;color:#555;line-height:1.5}
+    .pd-rule{border-bottom:1.5px solid #1A1A1A;margin:8px 0 14px}
+    .pd-cand{display:flex;gap:26px;margin-bottom:16px}
+    .pd-lbl{font-size:8.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#777}
+    .pd-val{font-size:12.5px;font-weight:600;margin-top:3px}
+    .pd-result{display:flex;justify-content:space-between;align-items:center;border:1px solid #1A1A1A;border-radius:6px;padding:14px 16px;margin-bottom:16px}
+    .pd-result.dashed{border-style:dashed}
+    .pd-result-big{font-size:17px;font-weight:800;margin-top:3px}
+    .pd-result-r{text-align:right;font-size:10.5px;color:#333;line-height:1.5}
+    .pd-h3{font-size:13px;font-weight:800;margin:0 0 6px}
+    .pd-cmp-head{display:flex;align-items:center;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#999;padding-bottom:5px;border-bottom:1px solid #E2E2E2}
+    .pd-cmp-head .c-th{width:124px}
+    .pd-cmp-head .c-src{flex:1}
+    .pd-cmp-head .c-res{width:82px;text-align:right}
+    .pd-cmp-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #E2E2E2;break-inside:avoid}
+    .pd-cmp-row .c-th{width:124px;display:flex;gap:8px;flex-shrink:0}
+    .pd-cmp-row .c-src{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+    .pd-cmp-row .c-src .s-name{font-size:12px;font-weight:700}
+    .pd-cmp-row .c-src .s-date{font-size:10px;color:#777}
+    .pd-cmp-row .c-src .s-note{font-size:10px;color:#333;margin-top:2px}
+    .pd-cmp-row .c-res{width:82px;text-align:right;flex-shrink:0}
+    .pd-th-img{width:54px;height:66px;border-radius:4px;overflow:hidden;background:#EDEDED;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+    .pd-th-img img{width:100%;height:100%;object-fit:cover}
+    .pd-th-img.ph svg{width:26px;height:26px}
+    .pd-badge{display:inline-block;border:1px solid #666;border-radius:999px;padding:3px 10px;font-size:10px;font-weight:600}
+    .pd-cmpline{font-size:10px;color:#555;margin:9px 0 18px}
+    .pd-att{font-size:11.5px;margin:0 0 5px}
+    .pd-att-by{font-size:10px;color:#777;margin:9px 0 0}
+    .pd-stamp{border:1.5px solid #1A1A1A;padding:10px 12px;margin-bottom:14px}
+    .pd-stamp-t{font-size:12px;font-weight:800;letter-spacing:.04em}
+    .pd-stamp-b{font-size:10.5px;margin-top:3px;line-height:1.45}
+    .pd-foot{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-between;gap:16px;border-top:1px solid #D5D5D5;padding-top:6px;font-size:9px;color:#777}
+    .pd-pg{white-space:nowrap}
   }
 </style>
 </head>
@@ -906,14 +992,16 @@ function _pill(txt,color,bg){ return '<span style="display:inline-flex;align-ite
 function pill2(txt,color,bg){ return '<span style="background:'+bg+';color:'+color+';border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;white-space:nowrap">'+h(txt)+'</span>'; }
 /* the row status pills: base status + a modifier (Delayed) / outcome (Match / Not a match) */
 function rowPills(c){
-  if(c.reverifying){  // moved back to In progress by a reverify (stage 2)
-    return pill2('In progress','#185FA5','#EAF2FE') + pill2('Reverifying','#8A6414','#FBF1DE');
-  }
   if(isCompleted(c)){
-    return pill2('Completed','#5A6473','#ECEEF1') + (completedStatus(c)==='notmatch'
+    // on the Completed tab we drop the "Completed" pill (the tab already says so)
+    if(c.staleInfo){   // out of date: needs reverifying, with the old result greyed out
+      var lc=latestCheck(c.id), dec=lc&&lc.hh&&lc.hh.decision, when=submitShort(dec)||shortDay(c.joining);
+      var oldOut=completedStatus(c)==='notmatch'?'Not a match':'Match';
+      return pill2('Needs reverifying','#8A6414','#FBF1DE') + pill2(oldOut+' on '+when,'#8A97A8','#ECEEF1');
+    }
+    return completedStatus(c)==='notmatch'
       ? pill2('Not a match','#B42318','#FDECEC')
-      : pill2('Match','#1A7A3A','#E7F4EC'))
-      + (c.staleInfo ? pill2('Out of date','#8A6414','#FBF1DE') : '');  // stage 1: photo changed, not yet reverified
+      : pill2('Match','#1A7A3A','#E7F4EC');
   }
   var base = wlStatus(c)==='inreview' ? pill2('In progress','#185FA5','#EAF2FE') : pill2('Pending','#5A6473','#ECEEF1');
   return base + (isOverdue(c) ? pill2('Delayed','#8A6414','#FBF1DE') : '');
@@ -1097,6 +1185,180 @@ function reportFeed(s, c){
   return html;
 }
 
+/* ================= COMPLETED REPORT (Variant B, summary-first) ================= */
+var _RMON2={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+function cap(s){ s=String(s||''); return s.charAt(0).toUpperCase()+s.slice(1); }
+function shortDay(dstr){ return String(dstr||'').replace(/\s+\d{4}\b.*$/,''); }   // "16 Aug 2026" -> "16 Aug"
+function metaJoinLine(c){ var jd=c.joining||fmtDate(c.joiningISO); var verb=(dayDiff(c)>0)?'Joined':'Joins'; return c.rhid+' · '+c.req+' · '+verb+' '+jd; }
+function reportId(c){ var num=(c.rhid||'').replace(/\D/g,'')||'00000'; var mmdd=(c.joiningISO||'').slice(5).replace('-','')||'0000'; return 'RHS-'+num+'-'+mmdd; }
+function reportVersion(hh){ if(!hh) return 1; var id=hh.cand&&hh.cand.id, n=0; for(var i=0;i<state.history.length;i++){ var e=state.history[i]; if(e.cand&&e.cand.id===id&&e.decision){ n++; if(e===hh) return n; } } return n||1; }
+function submitShort(dec){ var m=/^(\d{1,2}\s+[A-Za-z]{3})/.exec((dec&&dec.at)||''); return m?m[1]:''; }
+function submitDateFull(dec){ return String((dec&&dec.at)||'').split(', ')[0]; }
+function isChangedRow(c, r){ return !!(c&&c.staleInfo&&r&&r.label===c.staleInfo.what); }
+function staleActor(si){ if(!si) return ''; return si.byRole==='recruiter' ? (si.by+' (recruiter)') : si.by; }
+function staleVerb(si){ return (si&&si.verb)||'changed'; }
+function staleSentence(c){ var si=c.staleInfo; if(!si) return ''; return staleActor(si)+' '+staleVerb(si)+' the '+String(si.what||'photo').toLowerCase()+' on '+si.date+', '+si.time+'. Take a fresh joining-day photo to check them again.'; }
+function reportVerdict(rows){ var v=reportSummary(rows); return {confirmed:(v.tier==='match'||v.tier==='reviewed'), tier:v.tier}; }
+/* single source for a row's result label + colours (mirrors rowBadge, but re-usable as a grey variant) */
+function badgeInfo(r){
+  var st=photoState(r), o=r.review?codeOutcome(r.review):null;
+  if(o==='pos'||(o==null&&st==='match')) return {t:'Match',c:'#1a8a3a',bg:'#E7F4EC'};
+  if(o==='neg'||(o==null&&st==='nomatch')) return {t:'Not a match',c:'#D93025',bg:'#FDECEC'};
+  if(o==='excluded') return {t:'Set aside',c:'#5F5E5A',bg:'#EFEFEF'};
+  if(st==='cant') return {t:'Couldn’t compare',c:'#5F5E5A',bg:'#EFEFEF'};
+  if(st==='review') return {t:'Needs review',c:'#B7791F',bg:'#FBF1DE'};
+  return {t:'-',c:'#747474',bg:'#EFEFEF'};
+}
+function resultBadge(r, grey){ var b=badgeInfo(r); return grey ? _pill(b.t,'#8A97A8','#ECEEF1') : _pill(b.t,b.c,b.bg); }
+function changeTag(si){ return '<span class="rpt-tag">'+h(cap(staleVerb(si))+' '+shortDay(si.date))+'</span>'; }
+function greyNoteBox(text){ return '<div class="rpt-note grey">'+h(text)+'</div>'; }
+function amberNoteBox(text){ return '<div class="rpt-note amber">'+h(text)+'</div>'; }
+/* reviewer note under a photo pair - only when a row was set aside or overridden */
+function completedRowNote(r, c){
+  var o=r.review?codeOutcome(r.review):null, by=r.reviewedBy||(c.wl&&c.wl.by)||'A. Sharma';
+  if(o==='excluded') return greyNoteBox('Set aside by '+by+': couldn’t confirm.'+(r.reason?(' Reason: '+r.reason):''));
+  if(o==='neg')      return greyNoteBox('Marked not a match by '+by+(r.reason?(': '+r.reason):'.'));
+  if(o==='pos')      return greyNoteBox('Confirmed a match by '+by+'.');
+  return '';
+}
+/* photo pair for the completed report - captions are just "Reference" / "Joining day" */
+function completedPanes(r, seed){
+  var paneStyle='position:relative;width:100%;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD';
+  var capStyle='position:absolute;left:0;right:0;bottom:0;padding:16px 11px 8px;background:linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,0));color:#fff;font-size:12px;font-weight:600';
+  var ref='<div class="rpt-pane" style="'+paneStyle+'">'+photoTile(r,seed,'contain')+'<div style="'+capStyle+'">Reference</div></div>';
+  var today='<div class="rpt-pane" style="'+paneStyle+'">'+uploadedImg('contain')+'<div style="'+capStyle+'">Joining day</div></div>';
+  return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:2px">'+ref+today+'</div>';
+}
+function completedCard(i, r, c, stale){
+  var open=effectiveOpen(i,r), seed=(c?c.id:'')+r.label, isCant=(photoState(r)==='cant'), changed=isChangedRow(c,r);
+  var caret=isCant?'<span style="width:30px;flex-shrink:0"></span>'
+    :'<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" class="rpt-caret">'+chevron(open?'180deg':'0deg')+'</button>';
+  var head='<div class="rpt-cardhead"'+(isCant?'':(' onclick="toggleRow('+i+')" style="cursor:pointer"'))+'>'+
+    (open?'':reportThumbs(r,seed))+
+    '<div style="flex:1;min-width:0"><div class="rpt-cardname">'+h(r.label)+'</div><div class="rpt-carddate">'+h(r.date)+'</div></div>'+
+    '<div class="rpt-cardright">'+(changed?changeTag(c.staleInfo):'')+resultBadge(r,stale)+caret+'</div>'+
+  '</div>';
+  var body='';
+  if(isCant){ body='<div class="rpt-cardbody">'+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
+  else if(open){
+    var note=changed ? amberNoteBox('This is the photo compared on '+submitShort(state.decision)+'. The new one hasn’t been checked yet.') : completedRowNote(r,c);
+    body='<div class="rpt-cardbody">'+completedPanes(r,seed)+note+'</div>';
+  }
+  return '<article id="rpt-round-'+i+'" class="rpt-card">'+head+body+'</article>';
+}
+function scrollToRow(i){ smoothScrollToEl('rpt-round-'+i, 14, 480); }
+/* the completed report: one header card (identity + verdict + summary), then the photo comparison cards */
+function completedReport(s, c){
+  var dec=s.decision, rows=s.rows||[], hh=s.entry||{};
+  var stale=!!(c&&c.staleInfo);
+  var joinDate=c.joining||fmtDate(c.joiningISO);
+  var uploadStamp=joinDate+', 09:41 IST';
+  var by=(dec&&dec.by)||(c.wl&&c.wl.by)||'A. Sharma';
+  var submittedAt=(dec&&dec.at)||'';
+  var vv=reportVerdict(rows), confirmed=vv.confirmed;
+  var vcol=stale?'#667085':(confirmed?'#1a8a3a':'#D93025');
+  var vico=confirmed?'<path d="M5 12.5l4.5 4.5L19 7.5"/>':'<path d="M7 7l10 10M17 7L7 17"/>';
+  var verdictText=stale
+    ? ((confirmed?'Confirmed':'Not confirmed')+' on '+submitShort(dec)+', before the photo changed')
+    : (confirmed?'Identity confirmed':'Can’t confirm identity');
+
+  var html='<div class="rh-card" style="padding:0;overflow:hidden">';
+  if(stale){
+    html+='<div class="rpt-ood">'+
+      '<span class="ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>'+
+      '<div class="tx"><h3>A photo changed after this check</h3><p>'+h(staleSentence(c))+'</p></div>'+
+      '<button type="button" class="rh-btn primary sm rpt-reverify" onclick="startReverify()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Reverify</button>'+
+    '</div>';
+  }
+  html+='<div style="padding:20px">';
+  html+='<div class="rpt-headrow">'+avatar(c.name,44)+
+    '<div style="min-width:0;flex:1"><div class="rpt-name">'+h(c.name)+'</div><div class="rpt-meta">'+h(metaJoinLine(c))+'</div></div>'+
+    '<div class="rpt-acts">'+
+      (stale?'':'<button type="button" class="rpt-reopen" onclick="reopenReport()">Reopen review</button>')+
+      '<button type="button" class="rh-btn secondary sm" onclick="downloadReport()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>Download report</button>'+
+      '<button type="button" class="rh-actbtn" aria-label="Activity" onclick="openActivity()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span class="tip">Activity</span></button>'+
+    '</div>'+
+  '</div>';
+  html+='<div class="rpt-vpanel'+(stale?' stale':'')+'">'+
+    '<div class="rpt-vhead">'+
+      '<span class="rpt-vico" style="color:'+vcol+'"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'+vico+'</svg></span>'+
+      '<span class="rpt-vtext" style="color:'+vcol+'">'+h(verdictText)+'</span>'+
+      '<span class="rpt-vsub">Submitted by '+h(by)+' · '+h(submittedAt)+'</span>'+
+    '</div>'+
+    '<div class="rpt-stable">'+ rows.map(function(r,i){
+      return '<button type="button" class="rpt-srow" onclick="scrollToRow('+i+')">'+
+        '<span class="s-name">'+h(r.label)+'</span>'+
+        '<span class="s-date">'+h(r.date)+'</span>'+
+        '<span class="s-badge">'+(isChangedRow(c,r)?changeTag(c.staleInfo):'')+resultBadge(r,stale)+'</span>'+
+      '</button>';
+    }).join('')+'</div>'+
+  '</div>';
+  if(hh.attest||s.attest){
+    html+='<div class="rpt-attest"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Joining-day photo taken and attested by '+h(by)+' · '+h(uploadStamp)+'</div>';
+  }
+  html+='</div></div>';
+  html+='<div class="rpt-seclabel">'+(stale?('Photos compared on '+h(submitShort(dec))):'Photo comparisons')+'</div>';
+  rows.forEach(function(r,i){ html+=completedCard(i,r,c,stale); });
+  return html;
+}
+function startReverify(){
+  var c=state.cand; if(!c) return;
+  clearTimers(); _runToken++; _qtoken++;
+  setState({ done:false, running:false, photo:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false });
+  toast('Reverify: upload a fresh joining-day photo');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+/* ---- downloadable report (browser print-to-PDF; A4, black & white) ---- */
+function nowStamp(){ var d=new Date(), mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return d.getDate()+' '+mo[d.getMonth()]+' '+d.getFullYear()+', '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+' IST'; }
+function pdfTile(src){ if(src) return '<span class="pd-th-img"><img src="'+src+'" alt=""></span>'; return '<span class="pd-th-img ph"><svg viewBox="0 0 24 24" fill="#B8BEC8"><circle cx="12" cy="8.5" r="4.2"/><path d="M4 22a8 8 0 0 1 16 0z"/></svg></span>'; }
+function pdCol(label,val){ return '<div><div class="pd-lbl">'+h(label)+'</div><div class="pd-val">'+h(val)+'</div></div>'; }
+function pdfRowNote(r, c, stale){
+  if(stale && isChangedRow(c,r)) return 'Replaced by the candidate on '+shortDay(c.staleInfo.date)+'; new photo not checked';
+  var o=r.review?codeOutcome(r.review):null;
+  if(o==='excluded') return 'Couldn’t confirm'+(r.reason?(': '+r.reason):'');
+  if(o==='neg')      return 'Marked not a match'+(r.reason?(': '+r.reason):'');
+  if(o==='pos')      return 'Confirmed a match';
+  return '';
+}
+function reportPrintDoc(s, c){
+  var dec=s.decision, rows=s.rows||[], hh=s.entry||{};
+  var stale=!!(c&&c.staleInfo);
+  var by=(dec&&dec.by)||(c.wl&&c.wl.by)||'A. Sharma';
+  var joinDate=c.joining||fmtDate(c.joiningISO);
+  var submittedAt=(dec&&dec.at)||'';
+  var vv=reportVerdict(rows), confirmed=vv.confirmed;
+  var resultText=confirmed?'Identity confirmed':'Can’t confirm identity';
+  var resLabel=stale?('Result as of '+submitDateFull(dec)):'Result';
+  var out='<div class="rpt-print">';
+  out+='<div class="pd-head"><div><div class="pd-brand">RippleHire</div><div class="pd-tag">Joining-day identity check</div></div>'+
+       '<div class="pd-hr-right"><div>Report '+h(reportId(c))+'</div><div>Version '+reportVersion(hh)+'</div></div></div>';
+  out+='<div class="pd-rule"></div>';
+  if(stale){
+    out+='<div class="pd-stamp"><div class="pd-stamp-t">OUT OF DATE</div><div class="pd-stamp-b">A photo changed after this check. '+h(staleActor(c.staleInfo))+' '+h(staleVerb(c.staleInfo))+' the '+h(String(c.staleInfo.what||'photo').toLowerCase())+' on '+h(c.staleInfo.date)+', '+h(c.staleInfo.time)+'. This copy shows the check as it stood on '+h(submitDateFull(dec))+' and hasn’t been reverified.</div></div>';
+  }
+  out+='<div class="pd-cand">'+pdCol('Candidate',c.name)+pdCol('RHID',c.rhid)+pdCol('Role',c.req)+pdCol('Joining date',joinDate)+'</div>';
+  out+='<div class="pd-result'+(stale?' dashed':'')+'"><div><div class="pd-lbl">'+h(resLabel)+'</div><div class="pd-result-big">'+h(resultText)+'</div></div>'+
+       '<div class="pd-result-r">Submitted by '+h(by)+'<br>'+h(submittedAt)+' IST</div></div>';
+  out+='<h3 class="pd-h3">Comparisons</h3>';
+  out+='<div class="pd-cmp-head"><span class="c-th">Ref · Joining</span><span class="c-src">Source</span><span class="c-res">Result</span></div>';
+  rows.forEach(function(r){
+    var note=pdfRowNote(r,c,stale);
+    out+='<div class="pd-cmp-row">'+
+      '<span class="c-th">'+pdfTile(r.img)+pdfTile(s.photo)+'</span>'+
+      '<span class="c-src"><span class="s-name">'+h(r.label)+'</span><span class="s-date">'+h(r.date)+'</span>'+(note?'<span class="s-note">'+h(note)+'</span>':'')+'</span>'+
+      '<span class="c-res"><span class="pd-badge">'+h(badgeInfo(r).t)+'</span></span>'+
+    '</div>';
+  });
+  out+='<div class="pd-cmpline">Each photo was compared with the joining-day photo taken on '+h(joinDate)+', 09:41 IST.</div>';
+  out+='<h3 class="pd-h3">Attestation</h3>';
+  out+='<p class="pd-att">Consent was obtained from the candidate to take and compare the joining-day photo.</p>';
+  out+='<p class="pd-att">The photo was taken on the joining date, of the person who reported to join.</p>';
+  out+='<p class="pd-att-by">Attested by '+h(by)+' · '+h(joinDate)+', 09:41 IST</p>';
+  out+='<div class="pd-foot"><span>Confidential. Contains the candidate’s personal data, including face images. Downloaded by '+h(by)+' on '+h(nowStamp())+'.</span><span class="pd-pg">Page 1 of 1</span></div>';
+  out+='</div>';
+  return out;
+}
+
 /* ================= WORKLIST (single list, filters, attention, pagination) ================= */
 function isMine(c){ return c.owner!=='other'; }
 function isDismissed(c){ return !!state.dismissed[c.id]; }
@@ -1108,7 +1370,7 @@ function wlStatus(c){
   return (c.wl && c.wl.status) || 'toverify';
 }
 /* a check counts as "completed" once a report has been submitted (verified / not verified / needs review) */
-function isCompleted(c){ if(c.reverifying) return false; var st=wlStatus(c); return st==='verified'||st==='notverified'||st==='needsreview'; }
+function isCompleted(c){ var st=wlStatus(c); return st==='verified'||st==='notverified'||st==='needsreview'; }
 /* Completed-tab display status - the outcome of a finished review (submit is hard-gated on a verdict
    for every flagged comparison, so there is no "incomplete" state):
    notmatch = a confirmed different person (mismatch); inconclusive = ≥1 "Can't confirm" (no mismatch);
@@ -1161,7 +1423,7 @@ function wlSortList(l){ var s=state.wlSort;
 function wlStatusRows(v){
   return wlBase().filter(function(c){
     if(v==='completed')  return isCompleted(c);
-    if(v==='inprogress') return c.reverifying || (!isCompleted(c) && wlStatus(c)==='inreview');
+    if(v==='inprogress') return !isCompleted(c) && wlStatus(c)==='inreview';
     return !isCompleted(c) && wlStatus(c)==='toverify';               // pending (default)
   });
 }
@@ -1322,18 +1584,19 @@ function worklistView(){
   /* status stat cards (Agents-style: number + dot + label + sub-line); also the status filter */
   var STAT_META={pending:{dot:'#F59E0B',sub:'Awaiting a check'},inprogress:{dot:'#0076FB',sub:'Being reviewed'},completed:{dot:'#12B76A',sub:'Report submitted'}};
   function statCard(key,label,n){
-    var on=view===key, m=STAT_META[key];
+    var on=view===key, m=STAT_META[key], sub=m.sub;
+    if(key==='completed'){ var ns=wlStatusRows('completed').filter(function(c){return c.staleInfo;}).length; if(ns) sub=ns+' need'+(ns===1?'s':'')+' reverifying'; }
     return '<button type="button" class="wl-stat'+(on?' on':'')+'" onclick="setWlView(\''+key+'\')" aria-pressed="'+on+'">'+
       '<span class="num">'+n+'</span>'+
       '<span class="lab"><span class="dot" style="background:'+m.dot+'"></span>'+h(label)+'</span>'+
-      '<span class="sub">'+h(m.sub)+'</span>'+
+      '<span class="sub">'+h(sub)+'</span>'+
     '</button>';
   }
 
   /* sub-filter values (timing for open work, outcome for completed) */
   var statusRows=wlStatusRows(view);
   var SEG = view==='completed'
-    ? [['all','All'],['match','Match'],['notmatch','Not a match'],['stale','Out of date']]
+    ? [['all','All'],['match','Match'],['notmatch','Not a match'],['stale','Needs reverifying']]
     : [['all','All'],['today','Today'],['upcoming','Upcoming'],['delayed','Delayed']];
   var segCount=function(val){ return statusRows.filter(function(c){ return inWhen(c,val,view); }).length; };
   var whenLbl=(function(){ for(var i=0;i<SEG.length;i++){ if(SEG[i][0]===when) return SEG[i][1]; } return 'All'; })();
@@ -1451,8 +1714,11 @@ function render(){
 
   /* (context band removed - back arrow in the page header returns to search) */
 
-  /* 2. CANDIDATE CARD */
-  if(c){
+  /* completed, submitted report -> Variant B (its own consolidated header card) */
+  var completedView = !!(c && s.done && s.decision);
+
+  /* 2. CANDIDATE CARD (upload / review flow only; the completed report has its own header) */
+  if(c && !completedView){
     html += '<div class="rh-card">'+
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">'+avatar(c.name,40)+
         '<div style="min-width:0"><div style="font-size:16px;font-weight:600;line-height:1.4">'+h(c.name)+'</div><div style="font-size:13px;color:#747474;line-height:1.4">'+h(c.rhid+' · '+c.req)+'</div></div>'+
@@ -1556,7 +1822,7 @@ function render(){
 
   /* 3b + 4 + 5. PHOTOS-ON-FILE - v2 card feed once done; idle/running keep the single-surface list */
   if(c && c.photos.length && s.done){
-    html += reportFeed(s, c);
+    html += completedView ? completedReport(s, c) : reportFeed(s, c);
   } else if(c && c.photos.length && !s.done){
     // Option A: keep the on-file list visible during processing, dimmed and inert (context stays, no layout swap).
     var _done = s.done, _busy = s.qualityChecking || s.running, _idle = !_done && !_busy;
@@ -1692,6 +1958,9 @@ function render(){
   }
 
   html += '</main>';
+
+  /* downloadable report (print-to-PDF) - lives outside <main> so print CSS can show only this */
+  if(completedView){ html += reportPrintDoc(s, c); }
 
   /* SHARE dialog */
   if(s.showShare){
@@ -1866,6 +2135,7 @@ function confirmSubmit(){
   var at = new Date().toLocaleString([], {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
   var dec = {action:'submitted', by:'A. Sharma', at:at, note:note, status:v.tier, unreviewed:v.unresolved};
   if(state.entry) state.entry.decision = dec;   // persist onto the saved check record
+  if(state.cand && state.cand.staleInfo){ state.cand.staleInfo=null; }   // a fresh submit clears the out-of-date flag (this becomes the new version)
   setState({decision:dec, submitModal:null});
 }
 function reopenReport(){ if(state.entry) state.entry.decision = null; setState({decision:null}); }
@@ -1983,8 +2253,8 @@ function confirmReverify(){ if(state.cand){ state.cand.reverifying=true; } setSt
 function activityLog(s, c){
   var dec=s.decision||null, by=(dec&&dec.by)||'A. Sharma', n=(s.rows||[]).length, groups=[];
   // most-recent events first
-  if(c.reverifying){ groups.push({day:'Today', evs:[ {k:'sys', ic:'&#8635;', t:'Reverify started (photo changed)', m:'by <span class="actor">You (Rohan G.)</span>', ts:'just now'} ]}); }
-  if(c.staleInfo){ var si=c.staleInfo; groups.push({day:h(si.date), evs:[ {k:'ext', ic:'&#9998;', t:h(si.what)+' updated <span class="bext">external</span>', m:'by <span class="actor">'+h(si.by)+'</span>', ts:'16:40 IST'} ]}); }
+  if(c.staleInfo){ var si=c.staleInfo; var src=si.byRole==='recruiter'?'Recruiter':'Candidate profile';
+    groups.push({day:h(si.date), evs:[ {k:'ext', ic:'&#9998;', t:h(si.what)+' '+h(staleVerb(si))+' <span class="bext">'+h(src)+'</span>', m:'by <span class="actor">'+h(si.by)+'</span>', ts:h((si.time||'16:40')+' IST')} ]}); }
   // the working-day group (varies with how far the check has progressed)
   var evs=[];
   if(dec){ var atP=String(dec.at||'').split(', '); var subTime=atP.length>1?atP[1]:(dec.at||'10:00');
@@ -2018,9 +2288,9 @@ function buildSeeds(){
     {name:'Vikram Nair',  req:'Data Engineer',     st:'toverify',    iso:'2026-08-15', reason:'', score:91, noface:true},
     {name:'Priya Sharma', req:'QA Analyst',        st:'toverify',    iso:'2026-08-12', reason:'', score:88},
     {name:'Imran Shaikh', req:'UX Designer',       st:'inreview',    iso:'2026-08-13', reason:'Checked · not submitted', score:63, cause:'the reference photo is soft and unevenly lit, so it\'s harder to be sure this is the same person.'},
-    {name:'Ananya Rao',   req:'Product Manager',   st:'verified',    completed:'match',        iso:'2026-08-14', reason:'Submitted by A. Sharma · 11:14', score:94},
-    {name:'Rohit Menon',  req:'SDET',              st:'verified',    completed:'inconclusive', iso:'2026-08-15', reason:'Submitted by A. Sharma · 09:32 · 1 couldn’t be confirmed', score:92},
-    {name:'Sana Kapoor',  req:'Frontend Engineer', st:'notverified', completed:'notmatch',     iso:'2026-08-13', reason:'Submitted by A. Sharma · 10:20', score:22},
+    {name:'Ananya Rao',   req:'Product Manager',   st:'verified',    completed:'match',        iso:'2026-08-14', reason:'Submitted by A. Sharma · 14:35', score:94, sub:'14:35'},
+    {name:'Rohit Menon',  req:'SDET',              st:'verified',    completed:'inconclusive', iso:'2026-08-15', reason:'Submitted by A. Sharma · 15:42 · 1 couldn’t be confirmed', score:92, sub:'15:42', setAsideReason:'old photo, low resolution'},
+    {name:'Sana Kapoor',  req:'Frontend Engineer', st:'notverified', completed:'notmatch',     iso:'2026-08-13', reason:'Submitted by A. Sharma · 10:20', score:22, sub:'10:20'},
     {name:'Dev Patel',    req:'Mobile Engineer',   st:'toverify',    iso:'2026-08-18', reason:'', score:90}
   ];
   seeds.forEach(function(x,i){
@@ -2034,7 +2304,7 @@ function buildSeeds(){
     if(x.noface) photos.push({label:'Aadhaar card', src:'document', date:'20 Apr 2026', by:null, score:x.score, img:FACELESS_DOC, cant:true});
     CANDIDATES.push({ id:key, name:x.name, rhid:'RH'+(49001+i), req:x.req, reqid:'REQ-'+(2401+i), stage:'Onboarding', eligible:true, joiningISO:x.iso, joining:fmtLong(x.iso), owner:'me',
       photos:photos,
-      wl:{status:x.st, completed:x.completed||null, by:'A. Sharma', at:hhmm(i+2), reason:x.reason} });
+      wl:{status:x.st, completed:x.completed||null, by:'A. Sharma', at:hhmm(i+2), submitTime:x.sub||null, setAsideReason:x.setAsideReason||null, reason:x.reason} });
   });
 }
 /* A completed candidate must open straight to its final (read-only) report, not the upload flow.
@@ -2053,10 +2323,10 @@ function synthCompletedEntry(c){
     return r;
   });
   if(kind==='inconclusive'){ // recruiter set one comparison aside as "Can't confirm"; the rest matched
-    for(var i=0;i<rows.length;i++){ if(rows[i].status==='done' && rows[i].src!=='document'){ rows[i].review='ignore'; break; } }
+    for(var i=0;i<rows.length;i++){ if(rows[i].status==='done' && rows[i].src!=='document'){ rows[i].review='ignore'; rows[i].reviewedBy=(c.wl&&c.wl.by)||'A. Sharma'; if(c.wl&&c.wl.setAsideReason) rows[i].reason=c.wl.setAsideReason; break; } }
   }
   var v = reportSummary(rows);
-  var at = (c.wl && c.wl.at) || '10:00';
+  var at = (c.wl && c.wl.submitTime) || (c.wl && c.wl.at) || '10:00';
   var when = (c.joining || '') + (c.joining ? ', ' : '') + at;
   var decision = { action:'submitted', by:(c.wl && c.wl.by) || 'A. Sharma', at:when, note:'', status:v.tier, unreviewed:v.unresolved };
   return { cand:c, photo:joining, rows:rows, shared:[], at:at, decision:decision, attest:true, quality:{usable:true, reason:'ok', message:''} };
@@ -2071,7 +2341,7 @@ function synthCompletedEntry(c){
   CANDIDATES.forEach(function(c){ if(c.wl && c.wl.completed && c.photos && c.photos.length){ state.history.push(synthCompletedEntry(c)); } });
   // seed ONE completed (match) candidate as "out of date" so the stale banner + reverify + Activity demo
   var _stale = CANDIDATES.find(function(x){ return x.wl && x.wl.completed==='match'; });
-  if(_stale){ _stale.staleInfo = { what:'Application photo', date:'16 Aug 2026', by:'A. Rao' }; }
+  if(_stale){ _stale.staleInfo = { what:'Application photo', verb:'replaced', date:'16 Aug 2026', time:'16:40', by:_stale.name, byRole:'candidate' }; }
   var params = new URLSearchParams(location.search);
   if((params.get('entry')||'')==='norounds') state.roundsConfigured=false;
   // "Take photo" is a mobile-only affordance (desktop shows Choose file only)

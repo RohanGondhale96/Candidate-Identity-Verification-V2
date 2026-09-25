@@ -6,6 +6,47 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Completed report redesign - Variant B, summary-first (2026-09-25)
+
+The completed (submitted) report was rebuilt as one consolidated view (`completedReport(s,c)`),
+replacing the old candidate card + green Match banner + joining-photo card + "Report submitted" footer.
+
+- **Header card** (one card): avatar + name + one line `RHID · role · Joins/Joined <date>`; right side
+  **Reopen review** link + **Download report** + the **Activity** clock icon. Inside it a neutral-grey
+  **verdict panel** ("Identity confirmed" / "Can't confirm identity") with "Submitted by ... · date" and a
+  **summary table** (one link-row per reference photo: source, capture date, result badge; click scrolls to
+  the card). Below: "Joining-day photo taken and attested by ... · <date>, 09:41 IST". Empty Email/Phone are
+  gone. Per-row "Change" links removed (single Reopen review in the header).
+- **Photo cards** (section "PHOTO COMPARISONS"): source + date left; badge (Match green / Not a match red /
+  Set aside grey) + chevron right; captions are just **Reference** / **Joining day**; the repeated
+  "Match: ..." sentence is gone. A grey reviewer note shows **only** when a row was set aside or overridden.
+- **Out of date** (`c.staleInfo`): amber banner "A photo changed after this check" + a filled amber
+  **Reverify** (opens the upload flow via `startReverify()`); verdict panel + all badges turn grey; the
+  changed row gets an amber **"Replaced 16 Aug"** tag (summary + card) and an amber note "This is the photo
+  compared on 14 Aug ..."; section label becomes "PHOTOS COMPARED ON 14 AUG"; Reopen review is hidden.
+  Triggers = reference photo replaced/deleted/added, new interview screenshots, or moved out of Joined (NOT
+  joining-date / job changes). A fresh submit clears `staleInfo` (becomes the next version).
+- **Worklist:** status name **"Needs reverifying"** everywhere; a stale completed row shows an amber
+  "Needs reverifying" pill + a greyed "Match on 14 Aug" pill; the grey "Completed" pill was dropped from
+  rows; the Completed stat sub-line shows "N needs reverifying" when any report is stale. Out-of-date
+  candidates stay on the **Completed** tab (the old reverify -> In progress two-stage was removed).
+- **Downloaded PDF** (`reportPrintDoc`, browser print-to-PDF, A4 B&W): header (RippleHire / tagline / report
+  id `RHS-<rhid>-<MMDD>` / Version N), candidate, bordered Result box, Comparisons table (ref+joining
+  thumbnails ~54x66, source/date/note, result badge), "Each photo was compared ..." line, Attestation (both
+  statements + attested by), footer ("Confidential ... Downloaded by <user> on <now>" + Page x of y). No
+  activity log. Out-of-date adds a black-bordered **OUT OF DATE** stamp, dashed Result box, "RESULT AS OF
+  <date>", and the changed-row note "Replaced by the candidate on 16 Aug; new photo not checked".
+- **Activity log:** the change event now reads "Application photo replaced · Candidate profile · by
+  <actor>" (the old "external" tag became "Candidate profile").
+- **Date bug fix:** all completed-report timestamps derive from the candidate's joining date (photo taken /
+  run / attested at 09:41 on the joining day; submit time seeded per candidate). Fixes the earlier mismatch
+  where joining/run/caption/activity showed different days. Seeded submit times: Ananya 14 Aug 14:35,
+  Rohit 15 Aug 15:42, Sana 13 Aug 10:20.
+- **Set-aside bug fix:** a set-aside row now shows one state only (Set aside badge + grey note), not a
+  "Match" callout. Rohit's application-photo set-aside reason is seeded "old photo, low resolution".
+- Out of scope (parked): email notification when a report goes out of date; similarity-score pills on the
+  completed tab.
+
 ## Activity (audit) drawer + stale-photo reverify (seeded mock, 2026-09-21)
 
 Front-end mock of the finalized report pieces (see DECISIONS 2026-09-21, stories IV-34 / IV-36).
