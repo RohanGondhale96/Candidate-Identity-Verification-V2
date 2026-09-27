@@ -2222,7 +2222,7 @@ function qualityFallback(reason){ return ({blurry:'This photo looks blurry.', no
    photo. Each line says what is wrong AND what to do, so the recruiter can fix it without guessing. */
 function qualityErrorText(q){
   var r=(q&&q.reason)||'';
-  if(r==='multiple_faces') return 'We found more than one face in this photo. This can happen if the candidate is holding up an ID card, or someone else is in the frame. Retake with just the candidate’s face in view.';
+  if(r==='multiple_faces') return 'We found more than one face in this photo. Retake with just the candidate’s face in view.';
   if(r==='no_face')        return 'We couldn’t find a clear face in this photo. Retake a well-lit, front-facing photo of the candidate.';
   if(r==='not_facing')     return 'The candidate isn’t facing the camera. Retake looking straight at the camera, with both eyes visible.';
   if(r==='face_obscured')  return 'The face is partly covered. Remove anything hiding it (mask, hand, sunglasses, heavy shadow) and retake.';
