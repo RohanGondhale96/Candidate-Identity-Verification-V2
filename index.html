@@ -1451,7 +1451,10 @@ function wlStatusRows(v){
 }
 function wlList(){
   var v=state.wlView||'pending', w=state.wlWhen||'all';
-  return wlSortList(wlStatusRows(v).filter(function(c){ return inWhen(c,w,v); }));
+  var list = wlSortList(wlStatusRows(v).filter(function(c){ return inWhen(c,w,v); }));
+  // On Completed, always float "Needs reverifying" (stale) rows to the top, keeping the chosen sort within each group.
+  if(v==='completed'){ var stale=[], rest=[]; list.forEach(function(c){ (c.staleInfo?stale:rest).push(c); }); list=stale.concat(rest); }
+  return list;
 }
 function fmtDate(iso){
   var d=new Date(Date.parse(iso+'T00:00:00Z'));
