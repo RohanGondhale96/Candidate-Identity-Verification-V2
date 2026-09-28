@@ -46,7 +46,7 @@ module.exports = async (req, res) => {
     if (faces.length === 0) return res.status(200).json({ usable: false, reason: 'no_face', message: 'No clear face was detected. Retake a well-lit, front-facing photo of the candidate.' });
     // >1 face is common when the candidate holds up an ID card (its printed photo counts as a face) or
     // someone else is in frame. The UI (qualityErrorText) shows the full retake guidance for this reason.
-    if (faces.length > 1)   return res.status(200).json({ usable: false, reason: 'multiple_faces', message: 'We found more than one face in this photo. Retake with just the candidate’s face in view.' });
+    if (faces.length > 1)   return res.status(200).json({ usable: false, reason: 'multiple_faces', message: 'We found more than one face in this photo. Crop to just the candidate’s face, or upload a new photo.' });
 
     const f = faces[0];
     const q = f.Quality || {};

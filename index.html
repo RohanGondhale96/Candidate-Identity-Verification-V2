@@ -232,6 +232,13 @@
     .rpt-reverify{width:100%;justify-content:center}
   }
   .rpt-print{display:none}
+  /* in-product crop tool */
+  .rh-crop-box{position:absolute;border:2px solid #fff;box-shadow:0 0 0 9999px rgba(16,24,40,.46);border-radius:2px;cursor:move;touch-action:none}
+  .rh-crop-box .h{position:absolute;width:13px;height:13px;background:#fff;border:1px solid #0076FB;border-radius:2px;touch-action:none}
+  .rh-crop-box .h.tl{left:-6px;top:-6px;cursor:nwse-resize}
+  .rh-crop-box .h.tr{right:-6px;top:-6px;cursor:nesw-resize}
+  .rh-crop-box .h.bl{left:-6px;bottom:-6px;cursor:nesw-resize}
+  .rh-crop-box .h.br{right:-6px;bottom:-6px;cursor:nwse-resize}
 
   /* ===== photo placeholder ===== */
   .rh-photo{position:absolute;inset:0;display:grid;place-items:center}
@@ -511,7 +518,7 @@ function lightboxImg(p, seed){
 
 /* ---------- logic ---------- */
 function select(c, noPush){
-  setState({ cand:c, searchOpen:false, q:'', photo:null, consent:false, rows:[], open:null, running:false, done:false, shared:[], upErr:'', lightbox:null, viewingHistory:false, decision:null, decisionErr:'', entry:null, activityOpen:false, reverifyOpen:false });
+  setState({ cand:c, searchOpen:false, q:'', photo:null, consent:false, rows:[], open:null, running:false, done:false, shared:[], upErr:'', lightbox:null, viewingHistory:false, decision:null, decisionErr:'', entry:null, activityOpen:false, reverifyOpen:false, cropOpen:false });
   if(!noPush) wlSyncUrl(false);
 }
 function reset(extra){
@@ -1828,10 +1835,17 @@ function render(){
           '<label class="rh-cb"><input type="checkbox" '+(s.consent?'checked':'')+' onchange="toggleConsent()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>I have obtained consent from the candidate to use this photo for identity verification.</span></label>'+
           '<label class="rh-cb" style="margin-top:14px"><input type="checkbox" '+(s.attest?'checked':'')+' onchange="toggleAttest()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>This photo was taken on the joining date, of the person who reported to join.</span></label>'+
         '</div>';
-        var buttons = '<div style="display:flex;gap:12px">'+
-          '<button type="button" class="rh-btn primary" style="flex:1" '+(canSubmit?'':'disabled')+' onclick="submitPhoto()">Submit</button>'+
-          '<button type="button" class="rh-btn secondary" style="flex:1" onclick="openPicker()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Change photo</button>'+
-        '</div>';
+        var multiFace = failed && s.quality && s.quality.reason==='multiple_faces';
+        var buttons = multiFace
+          // more than one face -> crop-to-fix in-product, or upload a fresh photo
+          ? '<div style="display:flex;gap:12px">'+
+              '<button type="button" class="rh-btn primary" style="flex:1" onclick="openCrop()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>Crop photo</button>'+
+              '<button type="button" class="rh-btn secondary" style="flex:1" onclick="openPicker()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Upload new photo</button>'+
+            '</div>'
+          : '<div style="display:flex;gap:12px">'+
+              '<button type="button" class="rh-btn primary" style="flex:1" '+(canSubmit?'':'disabled')+' onclick="submitPhoto()">Submit</button>'+
+              '<button type="button" class="rh-btn secondary" style="flex:1" onclick="openPicker()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Change photo</button>'+
+            '</div>';
         right = '<div style="flex:1;min-width:250px;display:flex;flex-direction:column">'+
           '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px">'+fileName+errBlock+checks+'</div>'+
           '<div style="margin-top:16px">'+buttons+'</div>'+
@@ -2122,6 +2136,21 @@ function render(){
     '</div></div>';
   }
 
+  /* CROP photo (in-product, for the multi-face case) */
+  if(s.cropOpen && s.photo){
+    html += '<div class="rh-scrim" onclick="scrimCrop(event)"><div class="rh-dialog" style="width:540px;max-width:calc(100vw - 32px)">'+
+      '<header><h2>Crop photo</h2><button class="x" onclick="closeCrop()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
+      '<div class="dbody">'+
+        '<p style="margin:0 0 12px;font-size:13px;color:#5A6473;line-height:1.5">Drag the box to keep just the candidate’s face, then crop and submit. We’ll re-run the checks on the cropped photo.</p>'+
+        '<div style="display:flex;justify-content:center"><div id="rh-crop-stage" style="position:relative;display:inline-block;line-height:0">'+
+          '<img id="rh-crop-img" src="'+h(s.photo)+'" alt="" draggable="false" style="display:block;max-width:100%;max-height:54vh;width:auto;height:auto;border-radius:8px;user-select:none;-webkit-user-drag:none;background:#EFEFEF">'+
+          '<div id="rh-crop-box" class="rh-crop-box"><span class="h tl"></span><span class="h tr"></span><span class="h bl"></span><span class="h br"></span></div>'+
+        '</div></div>'+
+      '</div>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeCrop()">Cancel</button><button class="rh-btn primary sm" onclick="applyCrop()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>Crop &amp; submit</button></footer>'+
+    '</div></div>';
+  }
+
   /* TOAST */
   if(s.toast){ html += '<div role="status" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2A2A2A;color:#fff;padding:11px 18px;border-radius:4px;font-size:13.5px;z-index:60;box-shadow:0 3px 6px rgba(0,0,0,.2)">'+h(s.toast)+'</div>'; }
 
@@ -2132,6 +2161,8 @@ function render(){
 
   // (re)attach the infinite-scroll observer to the fresh DOM
   wlObserveMore();
+  // (re)initialise the crop tool while its modal is open
+  if(s.cropOpen) initCrop();
 }
 
 /* ---------- handlers (global) ---------- */
@@ -2226,7 +2257,7 @@ function qualityFallback(reason){ return ({blurry:'This photo looks blurry.', no
    photo. Each line says what is wrong AND what to do, so the recruiter can fix it without guessing. */
 function qualityErrorText(q){
   var r=(q&&q.reason)||'';
-  if(r==='multiple_faces') return 'We found more than one face in this photo. Retake with just the candidate’s face in view.';
+  if(r==='multiple_faces') return 'We found more than one face in this photo. Crop to just the candidate’s face, or upload a new photo.';
   if(r==='no_face')        return 'We couldn’t find a clear face in this photo. Retake a well-lit, front-facing photo of the candidate.';
   if(r==='not_facing')     return 'The candidate isn’t facing the camera. Retake looking straight at the camera, with both eyes visible.';
   if(r==='face_obscured')  return 'The face is partly covered. Remove anything hiding it (mask, hand, sunglasses, heavy shadow) and retake.';
@@ -2278,6 +2309,59 @@ function downloadPdf(){ toast('PDF downloaded'); }
 function downloadReport(){ try{ window.print(); }catch(e){ toast('Use your browser to print / save as PDF'); } }
 function revoke(id){ var u=state.shared.find(function(x){return x.id===id;}); setState({shared:state.shared.filter(function(x){return x.id!==id;})}); if(u) toast('Access revoked for '+u.name); }
 
+/* ---- in-product crop tool (lightweight, no dependency) ---- */
+var _crop=null;   // crop rect in displayed px, relative to the crop image
+function openCrop(){ if(!state.photo) return; _crop=null; setState({cropOpen:true}); }
+function closeCrop(){ setState({cropOpen:false}); }
+function scrimCrop(e){ if(e.target===e.currentTarget) closeCrop(); }
+function _clampCrop(sw, sh){ var c=_crop, min=40; c.w=Math.max(min,Math.min(c.w,sw)); c.h=Math.max(min,Math.min(c.h,sh)); c.x=Math.max(0,Math.min(c.x,sw-c.w)); c.y=Math.max(0,Math.min(c.y,sh-c.h)); }
+function _drawCropBox(){ var b=document.getElementById('rh-crop-box'); if(!b||!_crop) return; b.style.left=_crop.x+'px'; b.style.top=_crop.y+'px'; b.style.width=_crop.w+'px'; b.style.height=_crop.h+'px'; }
+/* re-runs on every render while the modal is open, so a repaint never loses the handlers */
+function initCrop(){
+  var img=document.getElementById('rh-crop-img'); if(!img) return;
+  function ready(){
+    var sw=img.clientWidth, sh=img.clientHeight; if(!sw||!sh){ setTimeout(ready,60); return; }
+    if(!_crop){ var w=Math.round(sw*0.58), hh=Math.round(sh*0.74); _crop={x:Math.round((sw-w)/2), y:Math.round((sh-hh)/2), w:w, h:hh}; }
+    _clampCrop(sw,sh); _drawCropBox();
+    var box=document.getElementById('rh-crop-box'); if(!box) return;
+    function startDrag(e, mode){
+      e.preventDefault();
+      var sx=e.clientX, sy=e.clientY, start={x:_crop.x,y:_crop.y,w:_crop.w,h:_crop.h};
+      function mv(ev){
+        var dx=ev.clientX-sx, dy=ev.clientY-sy, w2=img.clientWidth, h2=img.clientHeight;
+        if(mode==='move'){ _crop.x=start.x+dx; _crop.y=start.y+dy; }
+        else {
+          if(mode==='tl'){ _crop.x=start.x+dx; _crop.y=start.y+dy; _crop.w=start.w-dx; _crop.h=start.h-dy; }
+          else if(mode==='tr'){ _crop.y=start.y+dy; _crop.w=start.w+dx; _crop.h=start.h-dy; }
+          else if(mode==='bl'){ _crop.x=start.x+dx; _crop.w=start.w-dx; _crop.h=start.h+dy; }
+          else if(mode==='br'){ _crop.w=start.w+dx; _crop.h=start.h+dy; }
+          if(_crop.w<40){ if(mode==='tl'||mode==='bl') _crop.x=start.x+start.w-40; _crop.w=40; }
+          if(_crop.h<40){ if(mode==='tl'||mode==='tr') _crop.y=start.y+start.h-40; _crop.h=40; }
+        }
+        _clampCrop(w2,h2); _drawCropBox();
+      }
+      function up(){ document.removeEventListener('pointermove',mv); document.removeEventListener('pointerup',up); }
+      document.addEventListener('pointermove',mv); document.addEventListener('pointerup',up);
+    }
+    box.onpointerdown=function(e){ startDrag(e,'move'); };
+    ['tl','tr','bl','br'].forEach(function(k){ var hEl=box.querySelector('.h.'+k); if(hEl) hEl.onpointerdown=function(e){ e.stopPropagation(); startDrag(e,k); }; });
+  }
+  if(img.complete && img.naturalWidth) ready(); else img.onload=ready;
+}
+function applyCrop(){
+  var img=document.getElementById('rh-crop-img');
+  if(!img || !_crop || !img.naturalWidth){ closeCrop(); return; }
+  var rx=img.naturalWidth/img.clientWidth, ry=img.naturalHeight/img.clientHeight;
+  var sx=Math.max(0,Math.round(_crop.x*rx)), sy=Math.max(0,Math.round(_crop.y*ry));
+  var sw=Math.max(1,Math.round(_crop.w*rx)), sh=Math.max(1,Math.round(_crop.h*ry));
+  var uri;
+  try{ var cv=document.createElement('canvas'); cv.width=sw; cv.height=sh; cv.getContext('2d').drawImage(img, sx,sy,sw,sh, 0,0,sw,sh); uri=cv.toDataURL('image/jpeg',0.92); }
+  catch(e){ uri=state.photo; }
+  _crop=null;
+  var nm=(state.photoName||'photo').replace(/ \(cropped\)$/,'')+' (cropped)';
+  setState({ cropOpen:false, photo:uri, photoName:nm, quality:null, qualityChecking:false, upErr:'' }, function(){ submitPhoto(); });
+}
+
 /* Activity (audit) drawer + reverify (seeded mock) */
 function openActivity(){ setState({activityOpen:true}); }
 function closeActivity(){ setState({activityOpen:false}); }
@@ -2309,7 +2393,7 @@ function activityLog(s, c){
   }).join(''); }).join('');
 }
 function verifyAnother(){ reset({roundsConfigured:state.roundsConfigured}); window.scrollTo({top:0,behavior:'smooth'}); }
-function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, attest:!!hh.attest, quality:hh.quality||null, searchOpen:false, running:false, done:true, open:null, openRows:{}, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'', activityOpen:false, reverifyOpen:false }); if(!noPush) wlSyncUrl(false); }
+function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, attest:!!hh.attest, quality:hh.quality||null, searchOpen:false, running:false, done:true, open:null, openRows:{}, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'', activityOpen:false, reverifyOpen:false, cropOpen:false }); if(!noPush) wlSyncUrl(false); }
 
 /* ---------- seeded demo worklist data ---------- */
 function fmtLong(iso){ var d=new Date(Date.parse(iso+'T00:00:00Z')); var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return d.getUTCDate()+' '+mo[d.getUTCMonth()]+' '+d.getUTCFullYear(); }
