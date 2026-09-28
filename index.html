@@ -199,9 +199,10 @@
   .rpt-srow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;font-family:inherit;padding:9px 2px;border-bottom:1px solid #EEF1F5;cursor:pointer}
   .rpt-srow:last-child{border-bottom:0}
   .rpt-srow:hover{background:#EEF1F6}
-  .rpt-srow .s-name{flex:1;min-width:0;font-size:13px;font-weight:600;color:#2A2A2A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rpt-srow .s-name{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+  .rpt-srow .s-lbl{min-width:0;font-size:13px;font-weight:600;color:#2A2A2A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .rpt-srow .s-date{width:150px;flex-shrink:0;font-size:12px;color:#747474;text-align:right;white-space:nowrap}
-  .rpt-srow .s-badge{width:190px;flex-shrink:0;display:flex;align-items:center;gap:7px;justify-content:flex-end}
+  .rpt-srow .s-badge{width:130px;flex-shrink:0;display:flex;align-items:center;gap:7px;justify-content:flex-end}
   .rpt-attest{margin-top:14px;font-size:12px;color:#1a6b34;display:flex;align-items:center;gap:6px}
   .rpt-seclabel{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#667085;margin:22px 4px 10px}
   .rpt-card{background:#fff;border:1px solid #E5E9F0;border-radius:16px;box-shadow:0 1px 2px rgba(20,30,50,.06),0 8px 22px rgba(20,30,50,.08);margin-bottom:14px;overflow:hidden;scroll-margin-top:14px}
@@ -1256,8 +1257,8 @@ function completedCard(i, r, c, stale){
     :'<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" class="rpt-caret">'+chevron(open?'180deg':'0deg')+'</button>';
   var head='<div class="rpt-cardhead"'+(isCant?'':(' onclick="toggleRow('+i+')" style="cursor:pointer"'))+'>'+
     (open?'':reportThumbs(r,seed))+
-    '<div style="flex:1;min-width:0"><div class="rpt-cardname">'+h(r.label)+'</div><div class="rpt-carddate">'+h(r.date)+'</div></div>'+
-    '<div class="rpt-cardright">'+(changed?changeTag(c.staleInfo):'')+resultBadge(r,stale)+caret+'</div>'+
+    '<div style="flex:1;min-width:0"><div class="rpt-cardname" style="display:flex;align-items:center;gap:8px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h(r.label)+'</span>'+(changed?changeTag(c.staleInfo):'')+'</div><div class="rpt-carddate">'+h(r.date)+'</div></div>'+
+    '<div class="rpt-cardright">'+resultBadge(r,stale)+caret+'</div>'+
   '</div>';
   var body='';
   if(isCant){ body='<div class="rpt-cardbody">'+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
@@ -1288,7 +1289,7 @@ function completedReport(s, c){
     html+='<div class="rpt-ood">'+
       '<span class="ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>'+
       '<div class="tx"><h3>A photo changed after this check</h3><p>'+h(staleSentence(c))+'</p></div>'+
-      '<button type="button" class="rh-btn primary sm rpt-reverify" onclick="startReverify()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Reverify</button>'+
+      '<button type="button" class="rh-btn primary sm rpt-reverify" onclick="openReverify()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Reverify</button>'+
     '</div>';
   }
   html+='<div style="padding:20px">';
@@ -1308,9 +1309,9 @@ function completedReport(s, c){
     '</div>'+
     '<div class="rpt-stable">'+ rows.map(function(r,i){
       return '<button type="button" class="rpt-srow" onclick="scrollToRow('+i+')">'+
-        '<span class="s-name">'+h(r.label)+'</span>'+
+        '<span class="s-name"><span class="s-lbl">'+h(r.label)+'</span>'+(isChangedRow(c,r)?changeTag(c.staleInfo):'')+'</span>'+
         '<span class="s-date">'+h(r.date)+'</span>'+
-        '<span class="s-badge">'+(isChangedRow(c,r)?changeTag(c.staleInfo):'')+resultBadge(r,stale)+'</span>'+
+        '<span class="s-badge">'+resultBadge(r,stale)+'</span>'+
       '</button>';
     }).join('')+'</div>'+
   '</div>';
@@ -1325,7 +1326,7 @@ function completedReport(s, c){
 function startReverify(){
   var c=state.cand; if(!c) return;
   clearTimers(); _runToken++; _qtoken++;
-  setState({ done:false, running:false, photo:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false });
+  setState({ done:false, running:false, photo:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false, reverifyOpen:false });
   toast('Reverify: upload a fresh joining-day photo');
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -2111,10 +2112,10 @@ function render(){
     html += '<div class="rh-scrim" onclick="scrimReverify(event)"><div class="rh-dialog" style="width:440px">'+
       '<header><h2>Reverify this candidate?</h2><button class="x" onclick="closeReverify()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<p style="margin:0 0 8px;font-size:13.5px;color:#2A2A2A;line-height:1.55">This runs a fresh check of the joining-day photo against the <b>current</b> photos on file and creates a new report version.</p>'+
-        '<ul style="margin:6px 0 0;padding-left:18px;color:#5A6473;font-size:13px;line-height:1.6"><li>The current report is kept and stays visible in Activity.</li><li>The candidate moves back to In progress until you submit the new version.</li></ul>'+
+        '<p style="margin:0 0 10px;font-size:13.5px;color:#2A2A2A;line-height:1.55">A photo on file changed after this report was submitted. Reverifying starts a fresh check against the <b>current</b> photos on file.</p>'+
+        '<ul style="margin:6px 0 0;padding-left:18px;color:#5A6473;font-size:13px;line-height:1.7"><li>You&#39;ll upload a <b>new joining-day photo</b> and it will be compared against every photo on file again.</li><li>This <b>current report is kept</b> as a previous version, open it any time from Activity.</li><li>The new run <b>becomes the current report</b> once you submit it.</li></ul>'+
       '</div>'+
-      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeReverify()">Cancel</button><button class="rh-btn primary sm" onclick="confirmReverify()">Start reverify</button></footer>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeReverify()">Cancel</button><button class="rh-btn primary sm rpt-reverify" onclick="startReverify()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Start reverify</button></footer>'+
     '</div></div>';
   }
 
