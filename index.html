@@ -1817,13 +1817,11 @@ function render(){
         var nDoc = c.photos.filter(function(p){ return p.src==='document'; }).length;
         var nInt = c.photos.length - nDoc;
         var step2Sub = nInt+' interview photo'+(nInt===1?'':'s')+', '+nDoc+' identity document'+(nDoc===1?'':'s');
-        var caption = s.running ? 'Matching against photos on file' : 'Reading the uploaded photo';
         right = '<div style="flex:1;min-width:250px;display:flex;flex-direction:column;justify-content:center;gap:18px">'+fileName+
           '<div style="display:flex;flex-direction:column;gap:16px">'+
             procStep(st1, 'Checking photo quality', step1Sub)+
             procStep(st2, 'Comparing against photos on file', step2Sub)+
           '</div>'+
-          '<div style="display:flex;align-items:center;gap:7px;font-size:13px;color:#667085">'+h(caption)+'<span class="stp-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>'+
         '</div>';
       } else {
         var errBlock = failed
