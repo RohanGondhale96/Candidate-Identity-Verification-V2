@@ -6,6 +6,47 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Multi-face crop, photo viewer and report polish (2026-09-25 to 2026-09-29)
+
+- **Quality gate copy is reason-specific** (`qualityErrorText(q)`, mirrored in `api/quality.js`). Each
+  failure says what is wrong and what to do (no face, not facing, covered, blurry/dark). The quality gate
+  itself is AWS Rekognition `DetectFaces`; 0 faces = `no_face`, more than 1 = `multiple_faces`.
+- **Multiple faces -> crop-to-fix.** Background: a recruiter uploaded an interview screenshot of the
+  candidate holding a PAN card; the card's printed photo counted as a second face. Agreed with the
+  manager (Pravin): keep the one-face rule (two faces cannot be verified reliably, and "face + ID card"
+  looks the same as a stand-in holding the real candidate's ID), but never leave the user stuck.
+  - The check still runs **on Submit, after consent + attestation** (no ordering change).
+  - On `multiple_faces` the upload card shows: "We found more than one face in this photo. Crop the photo
+    so only the candidate's face is visible, or upload a new photo." with **Crop photo** / **Upload new
+    photo**. Crop is offered **only** for this reason; other failures still ask for a retake.
+  - **Crop tool** (`openCrop` / `initCrop` / `applyCrop`): our own lightweight dialog, no library. Freeform
+    box with four corner handles, dimmed surround; "Crop & submit" draws the crop to a canvas, replaces the
+    photo (filename gets "(cropped)") and re-runs the checks in order: face count, quality, comparison.
+    Consent and attestation carry over. `initCrop` re-runs on every render while the modal is open, and
+    drag updates the DOM directly (no `setState` per move).
+- **Processing state:** removed the "Reading the uploaded photo / Matching against photos on file" caption;
+  the two step indicators already say it.
+- **Completed report:** summary table date and badge columns have fixed widths so they line up; the
+  "Replaced 16 Aug" tag sits next to the source name (summary row and card header). **Reverify** now opens a
+  confirm dialog first (fresh joining-day photo needed, current report kept as a previous version, new run
+  becomes current once submitted); "Start reverify" opens the upload flow.
+- **Completed tab:** "Needs reverifying" rows always sort to the top, keeping the chosen sort within each
+  group. Out-of-date candidates stay on Completed (decided in the Variant B spec; the 2026-09-23 note said
+  "Pending", superseded).
+- **Report header buttons:** Download report is icon-only, styled like the Activity button (tooltip
+  "Download report"); Activity tooltip reads **"View activity"**.
+- **Full-screen photo viewer** (replaces the small white lightbox; matches the RippleHire document
+  preview): dark top bar with back arrow, photo name + date, download icon that saves the photo as
+  `<rhid>-<label>.<ext>`; dimmed page; photo fills the height, tall documents scroll. Closes on back arrow,
+  Esc or clicking the dark area. Opens from the photos-on-file list and from both panes (reference +
+  joining day) of every report comparison card (`openLightbox(i)` / `openLightbox('join')`).
+- **References with 2+ faces** are not gated: `CompareFaces` compares the joining face against every face
+  in the reference and we take the best match. Parked option: flag such rows as Needs review if it shows up
+  in real data.
+- **In-progress footer (B2):** "{matched} of {total} photos match" + only non-zero details (reviewed by you,
+  set aside, doesn't match, couldn't be compared, left to review); button Submit report / Review photo /
+  Review next photo.
+
 ## Completed report redesign - Variant B, summary-first (2026-09-25)
 
 The completed (submitted) report was rebuilt as one consolidated view (`completedReport(s,c)`),
