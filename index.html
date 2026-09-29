@@ -232,6 +232,19 @@
     .rpt-reverify{width:100%;justify-content:center}
   }
   .rpt-print{display:none}
+  /* RippleHire toaster (DS: bottom-right, 420px, radius 12, 2px left accent) */
+  .rh-toaster{position:fixed;right:24px;bottom:24px;z-index:80;width:420px;max-width:calc(100vw - 32px);background:#FFFFFF;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.12);border-left:2px solid #12B76A;display:flex;align-items:flex-start;gap:12px;padding:16px;animation:rhToastIn .2s ease-out}
+  .rh-toaster .ti{width:32px;height:32px;border-radius:50%;background:#D1FAE5;color:#12B76A;display:grid;place-items:center;flex-shrink:0}
+  .rh-toaster .ti svg{width:18px;height:18px}
+  .rh-toaster .tb{flex:1;min-width:0}
+  .rh-toaster .tt{font-size:15px;font-weight:700;color:#2A2A2A;line-height:1.35}
+  .rh-toaster .tm{font-size:13px;color:#5A6473;margin-top:2px;line-height:1.45}
+  .rh-toaster .tx{width:28px;height:28px;border:0;background:none;color:#747474;border-radius:6px;display:grid;place-items:center;cursor:pointer;flex-shrink:0;margin:-4px -4px 0 0}
+  .rh-toaster .tx:hover{background:#F7F8FA;color:#2A2A2A}
+  .rh-toaster .tx:focus-visible{box-shadow:0 0 0 2px #FFFFFF,0 0 0 4px #0076FB;outline:0}
+  @keyframes rhToastIn{from{opacity:0;transform:translate(16px,8px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.rh-toaster{animation:none}}
+  @media(max-width:600px){.rh-toaster{right:16px;left:16px;bottom:16px;width:auto}}
   /* full-screen photo viewer (matches the RippleHire document preview) */
   .rh-viewer{position:fixed;inset:0;z-index:70;background:rgba(20,20,20,.78);display:flex;flex-direction:column}
   .rh-viewer .rv-bar{flex-shrink:0;height:52px;background:#0B0B0C;color:#fff;display:flex;align-items:center;gap:10px;padding:0 10px}
@@ -2170,6 +2183,15 @@ function render(){
     '</div></div>';
   }
 
+  /* RippleHire success toaster */
+  if(s.rhToast){
+    html += '<div class="rh-toaster" role="status" aria-live="polite">'+
+      '<span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>'+
+      '<div class="tb"><div class="tt">'+h(s.rhToast.title)+'</div>'+(s.rhToast.msg?'<div class="tm">'+h(s.rhToast.msg)+'</div>':'')+'</div>'+
+      '<button type="button" class="tx" onclick="closeRhToast()" aria-label="Dismiss"><svg viewBox="25 25 22 22" width="14" height="14" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button>'+
+    '</div>';
+  }
+
   /* TOAST */
   if(s.toast){ html += '<div role="status" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2A2A2A;color:#fff;padding:11px 18px;border-radius:4px;font-size:13.5px;z-index:60;box-shadow:0 3px 6px rgba(0,0,0,.2)">'+h(s.toast)+'</div>'; }
 
@@ -2197,6 +2219,9 @@ function retake(){ clearTimers(); _runToken++; _qtoken++; setState({photo:null, 
 /* The recruiter doesn't personally confirm/deny identity - the system carries the status. They
    review the flagged comparisons, then SUBMIT the report, confirming they've reviewed everything.
    Submitting never auto-executes an adverse action; the hire/no-hire call is downstream. */
+var _rhtt=null;
+function rhSuccess(title, msg){ clearTimeout(_rhtt); setState({rhToast:{title:title, msg:msg||''}}); _rhtt=setTimeout(function(){ setState({rhToast:null}); }, 4500); }
+function closeRhToast(){ clearTimeout(_rhtt); setState({rhToast:null}); }
 function openSubmit(){ setState({submitModal:{confirmed:false, note:'', err:''}}); }
 function toggleSubmitConfirm(){ var m=state.submitModal; if(!m) return; var el=document.getElementById('rh-submit-note'); setState({submitModal:Object.assign({}, m, {confirmed:!m.confirmed, note:el?el.value:m.note, err:''})}); }
 function cancelSubmit(){ setState({submitModal:null}); }
@@ -2207,11 +2232,13 @@ function confirmSubmit(){
   var v=reportSummary(state.rows);
   if(!m.confirmed){ setState({submitModal:Object.assign({}, m, {note:note, err:'Confirm you’ve reviewed all comparisons.'})}); return; }
   if(v.unresolved>0 && !note){ setState({submitModal:Object.assign({}, m, {note:note, err:'Add a note. '+v.unresolved+' comparison'+(v.unresolved>1?'s are':' is')+' still unreviewed.'})}); return; }
-  var at = new Date().toLocaleString([], {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  // same shape as the seeded reports: "15 Aug 2026, 15:42" (24h, day-first)
+  var at = nowStamp().replace(/ IST$/,'');
   var dec = {action:'submitted', by:'A. Sharma', at:at, note:note, status:v.tier, unreviewed:v.unresolved};
   if(state.entry) state.entry.decision = dec;   // persist onto the saved check record
   if(state.cand && state.cand.staleInfo){ state.cand.staleInfo=null; }   // a fresh submit clears the out-of-date flag (this becomes the new version)
   setState({decision:dec, submitModal:null});
+  rhSuccess('Report submitted', (state.cand?state.cand.name+'’s':'The')+' identity check has been submitted.');
 }
 function reopenReport(){ if(state.entry) state.entry.decision = null; setState({decision:null}); }
 /* record a human action on a review / no-match row. Non-binding on the AI score; both the AI
