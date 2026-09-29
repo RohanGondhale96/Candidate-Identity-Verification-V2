@@ -1268,7 +1268,12 @@ function submitDateFull(dec){ return String((dec&&dec.at)||'').split(', ')[0]; }
 function isChangedRow(c, r){ return !!(c&&c.staleInfo&&r&&r.label===c.staleInfo.what); }
 function staleActor(si){ if(!si) return ''; return si.byRole==='recruiter' ? (si.by+' (recruiter)') : si.by; }
 function staleVerb(si){ return (si&&si.verb)||'changed'; }
-function staleSentence(c){ var si=c.staleInfo; if(!si) return ''; return staleActor(si)+' '+staleVerb(si)+' the '+String(si.what||'photo').toLowerCase()+' on '+si.date+', '+si.time+'. Take a fresh joining-day photo to check them again.'; }
+/* banner copy: 'replaced' reads as 'updated' to the recruiter; added/deleted keep their verb */
+function staleBannerVerb(si){ var v=staleVerb(si); return v==='replaced'?'updated':v; }
+function staleTitle(c){ var si=c.staleInfo, list=(si&&(si.changes||[si]))||[]; if(list.length!==1) return 'Photos updated after report was submitted'; return list[0].what+' '+staleBannerVerb(list[0])+' after report was submitted'; }
+function staleSentence(c){ var si=c.staleInfo; if(!si) return ''; var list=si.changes||[si];
+  var parts=list.map(function(ch){ return staleActor(ch)+' '+staleBannerVerb(ch)+' the '+String(ch.what||'photo').toLowerCase()+' on '+ch.date+', '+ch.time+'.'; });
+  return parts.join(' ')+' Rerun the identity check again.'; }
 function reportVerdict(rows){ var v=reportSummary(rows); return {confirmed:(v.tier==='match'||v.tier==='reviewed'), tier:v.tier}; }
 /* single source for a row's result label + colours (mirrors rowBadge, but re-usable as a grey variant) */
 function badgeInfo(r){
@@ -1337,7 +1342,7 @@ function completedReport(s, c){
   if(stale){
     html+='<div class="rpt-ood">'+
       '<span class="ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>'+
-      '<div class="tx"><h3>A photo changed after this check</h3><p>'+h(staleSentence(c))+'</p></div>'+
+      '<div class="tx"><h3>'+h(staleTitle(c))+'</h3><p>'+h(staleSentence(c))+'</p></div>'+
       '<button type="button" class="rh-btn primary sm rpt-reverify rpt-reverify-amber" onclick="openReverify()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Reverify</button>'+
     '</div>';
   }
