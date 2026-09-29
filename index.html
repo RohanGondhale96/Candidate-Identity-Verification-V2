@@ -1265,14 +1265,19 @@ function reportId(c){ var num=(c.rhid||'').replace(/\D/g,'')||'00000'; var mmdd=
 function reportVersion(hh){ if(!hh) return 1; var id=hh.cand&&hh.cand.id, n=0; for(var i=0;i<state.history.length;i++){ var e=state.history[i]; if(e.cand&&e.cand.id===id&&e.decision){ n++; if(e===hh) return n; } } return n||1; }
 function submitShort(dec){ var m=/^(\d{1,2}\s+[A-Za-z]{3})/.exec((dec&&dec.at)||''); return m?m[1]:''; }
 function submitDateFull(dec){ return String((dec&&dec.at)||'').split(', ')[0]; }
-function isChangedRow(c, r){ return !!(c&&c.staleInfo&&r&&r.label===c.staleInfo.what); }
+/* staleInfo is one change, or carries several in `changes` */
+function staleList(c){ var si=c&&c.staleInfo; return si ? (si.changes||[si]) : []; }
+function changeFor(c, r){ var l=staleList(c); for(var i=0;i<l.length;i++){ if(r&&l[i].what===r.label) return l[i]; } return null; }
+function isChangedRow(c, r){ return !!changeFor(c, r); }
+/* how a photo reads mid-sentence: 'the application photo', 'the Round 1: screening photo', 'the Aadhaar card' */
+function photoPhrase(what){ var w=String(what||'photo'); if(w==='Application photo') return 'application photo'; if(/(photo|card|licence|license|passport|document)$/i.test(w)) return w; return w+' photo'; }
 function staleActor(si){ if(!si) return ''; return si.byRole==='recruiter' ? (si.by+' (recruiter)') : si.by; }
 function staleVerb(si){ return (si&&si.verb)||'changed'; }
 /* banner copy: 'replaced' reads as 'updated' to the recruiter; added/deleted keep their verb */
 function staleBannerVerb(si){ var v=staleVerb(si); return v==='replaced'?'updated':v; }
 function staleTitle(c){ var si=c.staleInfo, list=(si&&(si.changes||[si]))||[]; if(list.length!==1) return 'Photos updated after report was submitted'; return list[0].what+' '+staleBannerVerb(list[0])+' after report was submitted'; }
 function staleSentence(c){ var si=c.staleInfo; if(!si) return ''; var list=si.changes||[si];
-  var parts=list.map(function(ch){ return staleActor(ch)+' '+staleBannerVerb(ch)+' the '+String(ch.what||'photo').toLowerCase()+' on '+ch.date+', '+ch.time+'.'; });
+  var parts=list.map(function(ch){ return staleActor(ch)+' '+staleBannerVerb(ch)+' the '+photoPhrase(ch.what)+' on '+ch.date+', '+ch.time+'.'; });
   return parts.join(' ')+' Rerun the identity check again.'; }
 function reportVerdict(rows){ var v=reportSummary(rows); return {confirmed:(v.tier==='match'||v.tier==='reviewed'), tier:v.tier}; }
 /* single source for a row's result label + colours (mirrors rowBadge, but re-usable as a grey variant) */
@@ -1311,7 +1316,7 @@ function completedCard(i, r, c, stale){
     :'<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" class="rpt-caret">'+chevron(open?'180deg':'0deg')+'</button>';
   var head='<div class="rpt-cardhead"'+(isCant?'':(' onclick="toggleRow('+i+')" style="cursor:pointer"'))+'>'+
     (open?'':reportThumbs(r,seed))+
-    '<div style="flex:1;min-width:0"><div class="rpt-cardname" style="display:flex;align-items:center;gap:8px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h(r.label)+'</span>'+(changed?changeTag(c.staleInfo):'')+'</div><div class="rpt-carddate">'+h(r.date)+'</div></div>'+
+    '<div style="flex:1;min-width:0"><div class="rpt-cardname" style="display:flex;align-items:center;gap:8px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h(r.label)+'</span>'+(changed?changeTag(changeFor(c,r)):'')+'</div><div class="rpt-carddate">'+h(r.date)+'</div></div>'+
     '<div class="rpt-cardright">'+resultBadge(r,stale)+caret+'</div>'+
   '</div>';
   var body='';
@@ -1335,7 +1340,7 @@ function completedReport(s, c){
   var vcol=stale?'#667085':(confirmed?'#1a8a3a':'#D93025');
   var vico=confirmed?'<path d="M5 12.5l4.5 4.5L19 7.5"/>':'<path d="M7 7l10 10M17 7L7 17"/>';
   var verdictText=stale
-    ? ((confirmed?'Confirmed':'Not confirmed')+' on '+submitShort(dec)+', before the photo changed')
+    ? ((confirmed?'Confirmed':'Not confirmed')+' on '+submitShort(dec)+', before the '+(staleList(c).length>1?'photos':'photo')+' changed')
     : (confirmed?'Identity confirmed':'Can’t confirm identity');
 
   var html='<div class="rh-card" style="padding:0;overflow:hidden">';
@@ -1363,7 +1368,7 @@ function completedReport(s, c){
     '</div>'+
     '<div class="rpt-stable">'+ rows.map(function(r,i){
       return '<button type="button" class="rpt-srow" onclick="scrollToRow('+i+')">'+
-        '<span class="s-name"><span class="s-lbl">'+h(r.label)+'</span>'+(isChangedRow(c,r)?changeTag(c.staleInfo):'')+'</span>'+
+        '<span class="s-name"><span class="s-lbl">'+h(r.label)+'</span>'+(isChangedRow(c,r)?changeTag(changeFor(c,r)):'')+'</span>'+
         '<span class="s-date">'+h(r.date)+'</span>'+
         '<span class="s-badge">'+resultBadge(r,stale)+'</span>'+
       '</button>';
@@ -1418,7 +1423,7 @@ function nowStamp(){ var d=new Date(), mo=['Jan','Feb','Mar','Apr','May','Jun','
 function pdfTile(src){ if(src) return '<span class="pd-th-img"><img src="'+src+'" alt=""></span>'; return '<span class="pd-th-img ph"><svg viewBox="0 0 24 24" fill="#B8BEC8"><circle cx="12" cy="8.5" r="4.2"/><path d="M4 22a8 8 0 0 1 16 0z"/></svg></span>'; }
 function pdCol(label,val){ return '<div><div class="pd-lbl">'+h(label)+'</div><div class="pd-val">'+h(val)+'</div></div>'; }
 function pdfRowNote(r, c, stale){
-  if(stale && isChangedRow(c,r)) return 'Replaced by the candidate on '+shortDay(c.staleInfo.date)+'; new photo not checked';
+  if(stale && isChangedRow(c,r)){ var ch=changeFor(c,r), v=staleVerb(ch); return cap(v)+' by '+(ch.byRole==='recruiter'?staleActor(ch):'the candidate')+' on '+shortDay(ch.date)+(v==='deleted'?'; photo no longer on file':'; new photo not checked'); }
   var o=r.review?codeOutcome(r.review):null;
   if(o==='excluded') return 'Couldn’t confirm'+(r.reason?(': '+r.reason):'');
   if(o==='neg')      return 'Marked not a match'+(r.reason?(': '+r.reason):'');
@@ -1439,7 +1444,7 @@ function reportPrintDoc(s, c){
        '<div class="pd-hr-right"><div>Report '+h(reportId(c))+'</div><div>Version '+reportVersion(hh)+'</div></div></div>';
   out+='<div class="pd-rule"></div>';
   if(stale){
-    out+='<div class="pd-stamp"><div class="pd-stamp-t">OUT OF DATE</div><div class="pd-stamp-b">A photo changed after this check. '+h(staleActor(c.staleInfo))+' '+h(staleVerb(c.staleInfo))+' the '+h(String(c.staleInfo.what||'photo').toLowerCase())+' on '+h(c.staleInfo.date)+', '+h(c.staleInfo.time)+'. This copy shows the check as it stood on '+h(submitDateFull(dec))+' and hasn’t been reverified.</div></div>';
+    out+='<div class="pd-stamp"><div class="pd-stamp-t">OUT OF DATE</div><div class="pd-stamp-b">'+(staleList(c).length>1?'Photos changed':'A photo changed')+' after this check. '+h(staleList(c).map(function(ch){ return staleActor(ch)+' '+staleVerb(ch)+' the '+photoPhrase(ch.what)+' on '+ch.date+', '+ch.time+'.'; }).join(' '))+' This copy shows the check as it stood on '+h(submitDateFull(dec))+' and hasn’t been reverified.</div></div>';
   }
   out+='<div class="pd-cand">'+pdCol('Candidate',c.name)+pdCol('RHID',c.rhid)+pdCol('Role',c.req)+pdCol('Joining date',joinDate)+'</div>';
   out+='<div class="pd-result'+(stale?' dashed':'')+'"><div><div class="pd-lbl">'+h(resLabel)+'</div><div class="pd-result-big">'+h(resultText)+'</div></div>'+
@@ -2483,8 +2488,8 @@ function confirmReverify(){ if(state.cand){ state.cand.reverifying=true; } setSt
 function activityLog(s, c){
   var dec=s.decision||null, by=(dec&&dec.by)||'A. Sharma', n=(s.rows||[]).length, groups=[];
   // most-recent events first
-  if(c.staleInfo){ var si=c.staleInfo; var src=si.byRole==='recruiter'?'Recruiter':'Candidate profile';
-    groups.push({day:h(si.date), evs:[ {k:'ext', ic:'&#9998;', t:h(si.what)+' '+h(staleVerb(si))+' <span class="bext">'+h(src)+'</span>', m:'by <span class="actor">'+h(si.by)+'</span>', ts:h((si.time||'16:40')+' IST')} ]}); }
+  staleList(c).slice().reverse().forEach(function(si){ var src=si.byRole==='recruiter'?'Recruiter':'Candidate profile';
+    groups.push({day:h(si.date), evs:[ {k:'ext', ic:'&#9998;', t:h(si.what)+' '+h(staleVerb(si))+' <span class="bext">'+h(src)+'</span>', m:'by <span class="actor">'+h(si.by)+'</span>', ts:h((si.time||'16:40')+' IST')} ]}); });
   // the working-day group (varies with how far the check has progressed)
   var evs=[];
   if(dec){ var atP=String(dec.at||'').split(', '); var subTime=atP.length>1?atP[1]:(dec.at||'10:00');
