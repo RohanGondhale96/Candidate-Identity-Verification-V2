@@ -232,6 +232,20 @@
     .rpt-reverify{width:100%;justify-content:center}
   }
   .rpt-print{display:none}
+  /* full-screen photo viewer (matches the RippleHire document preview) */
+  .rh-viewer{position:fixed;inset:0;z-index:70;background:rgba(20,20,20,.78);display:flex;flex-direction:column}
+  .rh-viewer .rv-bar{flex-shrink:0;height:52px;background:#0B0B0C;color:#fff;display:flex;align-items:center;gap:10px;padding:0 10px}
+  .rh-viewer .rv-ic{width:38px;height:38px;border:0;background:none;color:#fff;border-radius:8px;display:grid;place-items:center;cursor:pointer;flex-shrink:0}
+  .rh-viewer .rv-ic:hover{background:rgba(255,255,255,.12)}
+  .rh-viewer .rv-ic svg{width:20px;height:20px}
+  .rh-viewer .rv-title{flex:1;min-width:0;display:flex;align-items:baseline;gap:10px;overflow:hidden}
+  .rh-viewer .rv-title .n{font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rh-viewer .rv-title .d{font-size:12.5px;color:rgba(255,255,255,.62);white-space:nowrap}
+  .rh-viewer .rv-stage{flex:1;min-height:0;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px}
+  .rh-viewer .rv-stage img{display:block;height:calc(100vh - 108px);width:auto;max-width:min(920px,100%);object-fit:contain;box-shadow:0 10px 40px rgba(0,0,0,.45);background:#fff;margin:0 auto}
+  .rh-viewer .rv-ph{position:relative;width:min(420px,90vw);aspect-ratio:4/5;margin:auto}
+  @media(max-width:600px){ .rh-viewer .rv-title{flex-direction:column;gap:0} }
+  .rpt-pane[onclick]{cursor:zoom-in}
   /* in-product crop tool */
   .rh-crop-box{position:absolute;border:2px solid #fff;box-shadow:0 0 0 9999px rgba(16,24,40,.46);border-radius:2px;cursor:move;touch-action:none}
   .rh-crop-box .h{position:absolute;width:13px;height:13px;background:#fff;border:1px solid #0076FB;border-radius:2px;touch-action:none}
@@ -1098,14 +1112,14 @@ function reportFooterText(v){
 function _seg(v,label,n,on){
   return '<button type="button" onclick="setReportView(\''+v+'\')" aria-pressed="'+(on?'true':'false')+'" style="border:0;background:none;color:'+(on?'#2A2A2A':'#667085')+';font-family:inherit;font-size:13px;font-weight:600;padding:0 2px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;border-bottom:2px solid '+(on?'#0076FB':'transparent')+';margin-bottom:-1px">'+h(label)+'<span style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:#EFF1F5;color:#667085">'+n+'</span></button>';
 }
-function comparePanes(r, seed){
+function comparePanes(r, seed, i){
   var capStyle='position:absolute;left:0;right:0;bottom:0;padding:20px 11px 9px;background:linear-gradient(to top,rgba(0,0,0,.68),rgba(0,0,0,0));color:#fff';
   var paneStyle='position:relative;width:100%;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD';
   // caption mirrors the joining-day pane: "Photo taken during <round>" / date+time (per manager)
   var capPrimary = r.by ? ('Photo taken during '+h(r.label)) : (r.src==='document' ? 'Identity document' : h(r.label||'On-file photo'));
-  var refPane='<div class="rpt-pane" style="'+paneStyle+'">'+photoTile(r,seed,'contain')+
+  var refPane='<div class="rpt-pane" onclick="openLightbox('+i+')" style="'+paneStyle+'">'+photoTile(r,seed,'contain')+
     '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+capPrimary+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:2px">'+h(r.date)+'</div></div></div>';
-  var todayPane='<div class="rpt-pane" style="'+paneStyle+'">'+uploadedImg('contain')+
+  var todayPane='<div class="rpt-pane" onclick="openLightbox(\'join\')" style="'+paneStyle+'">'+uploadedImg('contain')+
     '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">Photo taken on joining day</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">15 Aug 2026, 09:41</div></div></div>';
   return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+refPane+todayPane+'</div>';
 }
@@ -1127,7 +1141,7 @@ function reportCard(i, r, c){
   '</div>';
   var body='';
   if(isCant){ body='<div style="padding:0 16px 16px">'+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
-  else if(open){ var panel = st==='review' ? reasonCodes(i,r) : (st==='nomatch' ? nomatchOverride(i,r) : matchOverride(i,r)); body='<div style="padding:0 16px 16px">'+comparePanes(r,seed)+panel+'</div>'; }
+  else if(open){ var panel = st==='review' ? reasonCodes(i,r) : (st==='nomatch' ? nomatchOverride(i,r) : matchOverride(i,r)); body='<div style="padding:0 16px 16px">'+comparePanes(r,seed,i)+panel+'</div>'; }
   return '<article id="rpt-round-'+i+'" style="'+V2CARD+';scroll-margin-top:12px'+(st==='review'?';border-color:#D9DFE8':'')+'">'+head+body+'</article>';
 }
 function reportFeed(s, c){
@@ -1251,11 +1265,11 @@ function completedRowNote(r, c){
   return '';
 }
 /* photo pair for the completed report - captions are just "Reference" / "Joining day" */
-function completedPanes(r, seed){
+function completedPanes(r, seed, i){
   var paneStyle='position:relative;width:100%;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD';
   var capStyle='position:absolute;left:0;right:0;bottom:0;padding:16px 11px 8px;background:linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,0));color:#fff;font-size:12px;font-weight:600';
-  var ref='<div class="rpt-pane" style="'+paneStyle+'">'+photoTile(r,seed,'contain')+'<div style="'+capStyle+'">Reference</div></div>';
-  var today='<div class="rpt-pane" style="'+paneStyle+'">'+uploadedImg('contain')+'<div style="'+capStyle+'">Joining day</div></div>';
+  var ref='<div class="rpt-pane" onclick="openLightbox('+i+')" style="'+paneStyle+'">'+photoTile(r,seed,'contain')+'<div style="'+capStyle+'">Reference</div></div>';
+  var today='<div class="rpt-pane" onclick="openLightbox(\'join\')" style="'+paneStyle+'">'+uploadedImg('contain')+'<div style="'+capStyle+'">Joining day</div></div>';
   return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:2px">'+ref+today+'</div>';
 }
 function completedCard(i, r, c, stale){
@@ -1271,7 +1285,7 @@ function completedCard(i, r, c, stale){
   if(isCant){ body='<div class="rpt-cardbody">'+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
   else if(open){
     var note=changed ? amberNoteBox('This is the photo compared on '+submitShort(state.decision)+'. The new one hasn’t been checked yet.') : completedRowNote(r,c);
-    body='<div class="rpt-cardbody">'+completedPanes(r,seed)+note+'</div>';
+    body='<div class="rpt-cardbody">'+completedPanes(r,seed,i)+note+'</div>';
   }
   return '<article id="rpt-round-'+i+'" class="rpt-card">'+head+body+'</article>';
 }
@@ -1304,8 +1318,8 @@ function completedReport(s, c){
     '<div style="min-width:0;flex:1"><div class="rpt-name">'+h(c.name)+'</div><div class="rpt-meta">'+h(metaJoinLine(c))+'</div></div>'+
     '<div class="rpt-acts">'+
       (stale?'':'<button type="button" class="rpt-reopen" onclick="reopenReport()">Reopen review</button>')+
-      '<button type="button" class="rh-btn secondary sm" onclick="downloadReport()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>Download report</button>'+
-      '<button type="button" class="rh-actbtn" aria-label="Activity" onclick="openActivity()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span class="tip">Activity</span></button>'+
+      '<button type="button" class="rh-actbtn" aria-label="Download report" onclick="downloadReport()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg><span class="tip">Download report</span></button>'+
+      '<button type="button" class="rh-actbtn" aria-label="View activity" onclick="openActivity()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span class="tip">View activity</span></button>'+
     '</div>'+
   '</div>';
   html+='<div class="rpt-vpanel'+(stale?' stale':'')+'">'+
@@ -1756,7 +1770,7 @@ function render(){
         '<div style="min-width:0"><div style="font-size:16px;font-weight:600;line-height:1.4">'+h(c.name)+'</div><div style="font-size:13px;color:#747474;line-height:1.4">'+h(c.rhid+' · '+c.req)+'</div></div>'+
         '<div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0">'+
           (SHOW_STAGE_BADGE ? '<span class="rh-chip chip-stage">'+h(c.stage)+'</span>' : '')+
-          '<button type="button" class="rh-actbtn" aria-label="Activity" onclick="openActivity()" style="margin-left:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span class="tip">Activity</span></button>'+
+          '<button type="button" class="rh-actbtn" aria-label="View activity" onclick="openActivity()" style="margin-left:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span class="tip">View activity</span></button>'+
         '</div>'+
       '</div>'+
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px 20px">'+
@@ -1947,7 +1961,7 @@ function render(){
           var paneStyle='position:relative;width:100%;aspect-ratio:4/5;border-radius:8px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD';
           var refPane='<div style="'+paneStyle+'">'+photoTile(r,(c?c.id:'')+r.label,'contain')+
             '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+h(r.label)+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(r.date)+(rel?(' · '+h(rel)):'')+'</div>'+(r.by?'<div style="font-size:11.5px;color:rgba(255,255,255,.85);margin-top:3px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>Interviewed by '+h(r.by)+'</div>':'')+'</div></div>';
-          var todayPane='<div class="rpt-pane" style="'+paneStyle+'">'+uploadedImg('contain')+
+          var todayPane='<div class="rpt-pane" onclick="openLightbox(\'join\')" style="'+paneStyle+'">'+uploadedImg('contain')+
             '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">Photo taken today</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">15 Aug 2026, 09:41</div></div></div>';
           html += '<div style="padding:0 20px 18px;background:#F7F8FA">'+
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+
@@ -2033,13 +2047,20 @@ function render(){
   }
 
   /* LIGHTBOX */
-  if(s.lightbox!==null && c){
-    var p = c.photos[s.lightbox];
-    html += '<div class="rh-scrim" onclick="scrimLb(event)"><div class="rh-dialog" style="width:480px">'+
-      '<header><h2>'+h(p.label)+'</h2><button class="x" onclick="closeLightbox()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
-      '<div class="dbody"><div style="font-size:12.5px;color:#747474;margin:0 0 12px">'+h(p.date+(p.by?' · '+p.by:''))+'</div>'+
-        '<div style="background:#F7F8FA;display:flex;justify-content:center;padding:12px;border-radius:4px">'+lightboxImg(p,c.id+p.label)+'</div></div>'+
-    '</div></div>';
+  if(s.lightbox!==null && s.lightbox!==undefined && c){
+    var lv = viewerItem(c);
+    if(lv){
+      html += '<div class="rh-viewer" onclick="scrimLb(event)">'+
+        '<div class="rv-bar">'+
+          '<button type="button" class="rv-ic" onclick="closeLightbox()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>'+
+          '<div class="rv-title"><span class="n">'+h(lv.label)+'</span>'+(lv.date?'<span class="d">'+h(lv.date)+'</span>':'')+'</div>'+
+          (lv.src?'<button type="button" class="rv-ic" onclick="downloadViewerPhoto()" aria-label="Download photo" title="Download photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg></button>':'<span style="width:38px"></span>')+
+        '</div>'+
+        '<div class="rv-stage" onclick="scrimLb(event)">'+
+          (lv.src?'<img src="'+lv.src+'" alt="'+h(lv.label)+'">':'<div class="rv-ph">'+photoPlaceholder(c.id+lv.label)+'</div>')+
+        '</div>'+
+      '</div>';
+    }
   }
 
   /* RESHOOT CONFIRM */
@@ -2296,6 +2317,20 @@ function toggleRow(i){
   setState({openRows:m});
 }
 function openLightbox(i){ setState({lightbox:i}); }
+/* full-screen viewer item: a photo on file (index) or the joining-day photo ('join') */
+function viewerItem(c){
+  var k=state.lightbox;
+  if(k==='join') return state.photo ? {label:'Photo taken on joining day', date:(c.joining||''), src:state.photo} : null;
+  var p=c.photos[k]; if(!p) return null;
+  return {label:p.label, date:p.date+(p.by?' · '+p.by:''), src:p.img||null};
+}
+function downloadViewerPhoto(){
+  var c=state.cand; if(!c) return; var v=viewerItem(c); if(!v||!v.src) return;
+  var slug=(c.rhid+'-'+v.label).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  var ext=(/^data:image\/(\w+)/.exec(v.src)||[])[1]||'jpg';
+  try{ var a=document.createElement('a'); a.href=v.src; a.download=slug+'.'+(ext==='jpeg'?'jpg':ext); document.body.appendChild(a); a.click(); document.body.removeChild(a); toast('Photo downloaded'); }
+  catch(e){ toast('Download failed'); }
+}
 function closeLightbox(){ setState({lightbox:null}); }
 function scrimLb(e){ if(e.target===e.currentTarget) closeLightbox(); }
 function openShare(){ setState({showShare:true, picked:[], pickQ:''}); }
@@ -2467,6 +2502,8 @@ function synthCompletedEntry(c){
   state.hasCamera = isMobile();
   window.addEventListener('resize', function(){ var m=isMobile(); if(m!==state.hasCamera) setState({hasCamera:m}); });
   window.addEventListener('popstate', function(){ wlApplyUrl(); });
+  // Esc closes the full-screen photo viewer
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && state.lightbox!==null && state.lightbox!==undefined) closeLightbox(); });
   // a11y: make role="button" divs (candidate rows, pick lists) keyboard-operable
   document.addEventListener('keydown', function(e){
     var t=e.target;
