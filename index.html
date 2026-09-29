@@ -221,8 +221,10 @@
   .rpt-ood .tx{flex:1;min-width:0}
   .rpt-ood h3{margin:0 0 3px;font-size:14px;font-weight:700;color:#6E4E0C}
   .rpt-ood p{margin:0;font-size:13px;color:#7A5A12;line-height:1.5}
-  .rh-btn.primary.rpt-reverify{background:#8A6414;border-color:#8A6414;flex-shrink:0}
-  .rh-btn.primary.rpt-reverify:hover{background:#75530F;border-color:#75530F}
+  .rh-btn.primary.rpt-reverify{flex-shrink:0}
+  /* deliberate exception (product call): the banner's Reverify matches the amber warning banner */
+  .rh-btn.primary.rpt-reverify-amber{background:#8A6414;border-color:#8A6414}
+  .rh-btn.primary.rpt-reverify-amber:hover{background:#75530F;border-color:#75530F}
   @media(max-width:600px){
     .rpt-headrow{flex-wrap:wrap}
     .rpt-acts{width:100%;justify-content:flex-start;flex-wrap:wrap}
@@ -1172,7 +1174,7 @@ function reportFeed(s, c){
       '<div class="bud"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>'+
       '<div style="flex:1;min-width:0"><h3>This report may be out of date</h3>'+
         '<p>The <b>'+h(si.what)+'</b> was updated on <b>'+h(si.date)+'</b> by <b>'+h(si.by)+'</b>, after this report was submitted. Reverify to check the joining-day photo against the current photos on file.</p>'+
-        '<div style="margin-top:11px"><button class="rh-btn primary sm" onclick="openReverify()" style="display:inline-flex;align-items:center;gap:6px;background:#8A6414;border-color:#8A6414"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Reverify</button></div>'+
+        '<div style="margin-top:11px"><button class="rh-btn primary sm" onclick="openReverify()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Reverify</button></div>'+
       '</div>'+
     '</div>';
   }
@@ -1323,7 +1325,7 @@ function completedReport(s, c){
     html+='<div class="rpt-ood">'+
       '<span class="ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>'+
       '<div class="tx"><h3>A photo changed after this check</h3><p>'+h(staleSentence(c))+'</p></div>'+
-      '<button type="button" class="rh-btn primary sm rpt-reverify" onclick="openReverify()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Reverify</button>'+
+      '<button type="button" class="rh-btn primary sm rpt-reverify rpt-reverify-amber" onclick="openReverify()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Reverify</button>'+
     '</div>';
   }
   html+='<div style="padding:20px">';
