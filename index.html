@@ -247,6 +247,19 @@
   @keyframes rhToastIn{from{opacity:0;transform:translate(16px,8px)}to{opacity:1;transform:none}}
   @media(prefers-reduced-motion:reduce){.rh-toaster{animation:none}}
   @media(max-width:600px){.rh-toaster{right:16px;left:16px;bottom:16px;width:auto}}
+  /* reverify dialog: what changed (before vs updated) */
+  .rv-chg{display:flex;flex-direction:column;gap:12px;margin:0 0 14px}
+  .rv-chg-item{border:1px solid #E5E9F0;border-radius:10px;padding:12px;background:#F7F8FA}
+  .rv-chg-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .rv-chg-name{font-size:14px;font-weight:600;color:#2A2A2A}
+  .rv-chg-meta{font-size:12px;color:#667085;margin-top:2px}
+  .rv-chg-pair{display:grid;grid-template-columns:repeat(2,minmax(0,150px));gap:14px;margin-top:10px}
+  .rv-chg-img{position:relative;width:100%;aspect-ratio:4/5;border-radius:8px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;display:grid;place-items:center}
+  .rv-chg-img img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+  .rv-chg-none{font-size:12px;color:#8A97A8}
+  .rv-chg-cap{font-size:12.5px;font-weight:600;color:#2A2A2A;margin-top:6px}
+  .rv-chg-sub{font-size:11.5px;color:#667085}
+  .rv-chg-pane:last-child .rv-chg-img{border-color:#EAD9AE}
   /* full-screen photo viewer (matches the RippleHire document preview) */
   .rh-viewer{position:fixed;inset:0;z-index:70;background:rgba(20,20,20,.78);display:flex;flex-direction:column}
   .rh-viewer .rv-bar{flex-shrink:0;height:52px;background:#0B0B0C;color:#fff;display:flex;align-items:center;gap:10px;padding:0 10px}
@@ -1359,6 +1372,35 @@ function completedReport(s, c){
   rows.forEach(function(r,i){ html+=completedCard(i,r,c,stale); });
   return html;
 }
+/* "What changed" block for the reverify dialog: which photo, who/when, and before vs updated side by side.
+   staleInfo may be a single change or carry a list in `changes`. */
+function reverifyIntro(c){
+  var si=c&&c.staleInfo, list=(si&&(si.changes||[si]))||[];
+  var subj = list.length===1 ? list[0].what : 'Some photos';
+  return subj+(list.length===1?' on the file was changed':' on the file were changed')+', after the report was submitted. Reverifying starts a fresh check against all the current photos on file.';
+}
+function reverifyChanges(c){
+  var si=c&&c.staleInfo; if(!si) return '';
+  var list=si.changes||[si];
+  var pane=function(src,cap,sub,onclick){
+    return '<div class="rv-chg-pane">'+
+      '<div class="rv-chg-img"'+(onclick?(' onclick="'+onclick+'" style="cursor:zoom-in"'):'')+'>'+
+        (src?'<img src="'+src+'" alt="">':'<span class="rv-chg-none">No photo</span>')+'</div>'+
+      '<div class="rv-chg-cap">'+h(cap)+'</div></div>';
+  };
+  return '<div class="rv-chg">'+list.map(function(ch){
+    var idx=-1; c.photos.forEach(function(p,i){ if(p.label===ch.what) idx=i; });
+    var oldSrc=idx>=0?c.photos[idx].img:null;
+    var verb=staleVerb(ch);
+    var before = verb==='added' ? '' : pane(oldSrc,'Before','Compared on '+submitShort(state.decision), idx>=0?('openLightbox('+idx+')'):'');
+    var after  = verb==='deleted' ? pane(null,'Updated','Removed on '+shortDay(ch.date),'') : pane(ch.newImg||null,'Updated',cap(verb)+' '+shortDay(ch.date)+', not checked yet','');
+    return '<div class="rv-chg-item">'+
+      '<div class="rv-chg-head"><span class="rv-chg-name">'+h(ch.what)+'</span></div>'+
+      '<div class="rv-chg-meta">'+h(cap(verb))+' by '+h(staleActor(ch))+' on '+h(ch.date)+', '+h(ch.time)+'</div>'+
+      '<div class="rv-chg-pair">'+before+after+'</div>'+
+    '</div>';
+  }).join('')+'</div>';
+}
 function startReverify(){
   var c=state.cand; if(!c) return;
   clearTimers(); _runToken++; _qtoken++;
@@ -2160,13 +2202,14 @@ function render(){
 
   /* REVERIFY confirm */
   if(s.reverifyOpen && c){
-    html += '<div class="rh-scrim" onclick="scrimReverify(event)"><div class="rh-dialog" style="width:440px">'+
+    html += '<div class="rh-scrim" onclick="scrimReverify(event)"><div class="rh-dialog" style="width:560px;max-width:calc(100vw - 32px)">'+
       '<header><h2>Reverify this candidate?</h2><button class="x" onclick="closeReverify()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<p style="margin:0 0 10px;font-size:13.5px;color:#2A2A2A;line-height:1.55">A photo on file changed after this report was submitted. Reverifying starts a fresh check against the <b>current</b> photos on file.</p>'+
+        '<p style="margin:0 0 12px;font-size:13.5px;color:#2A2A2A;line-height:1.55">'+h(reverifyIntro(c))+'</p>'+
+        reverifyChanges(c)+
         '<ul style="margin:6px 0 0;padding-left:18px;color:#5A6473;font-size:13px;line-height:1.7"><li>You&#39;ll upload a <b>new joining-day photo</b> and it will be compared against every photo on file again.</li><li>This <b>current report is kept</b> as a previous version, open it any time from Activity.</li><li>The new run <b>becomes the current report</b> once you submit it.</li></ul>'+
       '</div>'+
-      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeReverify()">Cancel</button><button class="rh-btn primary sm rpt-reverify" onclick="startReverify()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Start reverify</button></footer>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeReverify()">Cancel</button><button class="rh-btn primary sm rpt-reverify" onclick="startReverify()">Start reverify</button></footer>'+
     '</div></div>';
   }
 
@@ -2523,7 +2566,15 @@ function synthCompletedEntry(c){
   CANDIDATES.forEach(function(c){ if(c.wl && c.wl.completed && c.photos && c.photos.length){ state.history.push(synthCompletedEntry(c)); } });
   // seed ONE completed (match) candidate as "out of date" so the stale banner + reverify + Activity demo
   var _stale = CANDIDATES.find(function(x){ return x.wl && x.wl.completed==='match'; });
-  if(_stale){ _stale.staleInfo = { what:'Application photo', verb:'replaced', date:'16 Aug 2026', time:'16:40', by:_stale.name, byRole:'candidate' }; }
+  if(_stale){ _stale.staleInfo = { what:'Application photo', verb:'replaced', date:'16 Aug 2026', time:'16:40', by:_stale.name, byRole:'candidate',
+    newImg:null };
+    // DEMO: the seed has one image per candidate, so the "updated" application photo is a mirrored,
+    // tighter crop of the candidate's own photo (same person, visibly a different photo)
+    (function(si, src){ if(!src) return; var im=new Image(); im.onload=function(){ try{
+      var cw=Math.round(im.width*0.82), ch=Math.round(im.height*0.82), cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
+      var g=cv.getContext('2d'); g.translate(cw,0); g.scale(-1,1); g.drawImage(im, Math.round(im.width*0.09), Math.round(im.height*0.04), cw, ch, 0, 0, cw, ch);
+      si.newImg=cv.toDataURL('image/jpeg',0.9); }catch(e){ si.newImg=src; } }; im.src=src; })(_stale.staleInfo, _stale.photos[0] && _stale.photos[0].img);
+  }
   var params = new URLSearchParams(location.search);
   if((params.get('entry')||'')==='norounds') state.roundsConfigured=false;
   // "Take photo" is a mobile-only affordance (desktop shows Choose file only)
