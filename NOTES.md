@@ -31,6 +31,18 @@ looks like an accident.
   leave time to click it.
 - Export to Excel: Status is Pending / Completed, plus a new **Stage** column. Tests updated (in-review
   check on Pending, stage labels, no In progress view).
+- **Decided in discussion (2026-09-30):**
+  - A check is **never discarded** when the recruiter leaves before submitting. We considered "one sitting,
+    leaving loses your progress" and rejected it (review work is lost, exits like a crash or timeout cannot
+    be warned about, and there is no pause or hand-off).
+  - A reverify that has run but is not submitted shows on **Pending** as "Check in progress" (the In progress
+    tab no longer exists); it returns to Completed as the next version once submitted.
+- **Open items:**
+  - **Previous report versions can't be opened on screen.** The Reverify dialog says the current report is
+    kept "as a previous version, open it any time from Activity", and it is kept and numbered (Version 2 in
+    the PDF), but the Activity drawer only lists events and has no link to open an older report. Either
+    build a versions list in Activity or reword the dialog.
+  - Manual Reverify still asks for a **new** joining-day photo vs reusing the original (see below).
 
 ## Reverify, re-run, crop-before-submit and toaster (2026-09-29 to 2026-09-30)
 
