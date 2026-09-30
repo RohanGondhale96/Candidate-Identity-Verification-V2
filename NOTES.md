@@ -32,14 +32,17 @@ looks like an accident.
   Activity list each change with its own actor. Photo names read naturally mid-sentence (`photoPhrase`):
   "the application photo", "the Round 1: screening photo", "the Aadhaar card". Verdict says "before the
   photos changed" when more than one.
-- **Run check again** (replaces "Reopen review" on a current completed report). Nothing changed, but
-  someone wants a fresh check later. Opens the Reverify dialog in a no-change mode (`openRerun`,
-  `state.rerunMode`): "Run the check again?", "Nothing has changed since this report was submitted.
-  Running it again starts a fresh check against all the current photos on file.", no Before/Updated
-  block, button "Run check again", then the same upload flow; the old report stays as a previous version.
-  Hidden while out of date (Reverify is the only action). **Open decision:** it currently asks for a
-  **new** joining-day photo (option a). Option b would re-run with the original joining-day photo, which
-  keeps the "taken on the joining date" attestation true weeks later.
+- **Manual Reverify** (replaces "Reopen review" on a current completed report). Nothing changed, but
+  someone wants a fresh check days or weeks later. Briefly named "Run check again", then renamed to
+  **Reverify** so the same flow has one name. It is a **secondary** button (refresh icon) next to
+  Download report and Activity; the out-of-date banner keeps its amber Reverify. It opens the Reverify
+  dialog in a no-change mode (`openRerun`, `state.rerunMode`): same title "Reverify this candidate?" and
+  button "Start reverify", intro "This starts a fresh check against all the current photos on file.",
+  and no Before/Updated block. We dropped an earlier "Nothing has changed since this report was
+  submitted" line: the person who chose to re-run did not need it. Then the same upload flow; the old
+  report stays as a previous version. Hidden while out of date (the banner's Reverify covers that).
+  **Open decision:** it currently asks for a **new** joining-day photo (option a). Option b would re-run
+  with the original joining-day photo, which keeps the "taken on the joining date" attestation true.
 - **Crop before Submit (option A).** Experienced recruiters know multi-face photos are rejected, so they
   should not have to submit and wait for the error to reach Crop. Once a photo is chosen a **"Crop" chip**
   sits on the photo thumbnail (`.rh-cropchip`; hidden while checks run and in the multi-face error state,
@@ -48,6 +51,11 @@ looks like an accident.
   replaces the upload, consent/attestation stay ticked, nothing is submitted. After-error crop is
   unchanged (`'fix'` mode, "Crop & submit", re-runs the checks). Option B (a third button in the row) was
   wireframed and rejected: three equal buttons dilute Submit and squeeze on phone.
+- **Multi-face error, final copy and order.** Message (UI + `api/quality.js`): "We found multiple faces in
+  this photo. Please upload a new photo or crop it so that only the candidate's face is visible."
+  **Upload new photo** is the primary button, **Crop photo** the secondary (swapped on review).
+- **Wireframes** for this prototype are drawn in the real screen's own design (candidate card, upload
+  card, real photo, RH buttons), not grey low-fi boxes; the new element is marked with a dashed blue ring.
 - **Reference: what Rekognition returns.** `DetectFaces` gives per-face Quality.Sharpness/Brightness
   (0-100), Pose (degrees), FaceOccluded and the face count; our rules turn those into blurry / dark /
   not facing / covered / no face / multiple faces. `CompareFaces` gives only a Similarity score per face
