@@ -6,6 +6,54 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Reverify, re-run, crop-before-submit and toaster (2026-09-29 to 2026-09-30)
+
+- **Submit success toaster.** Submit report now shows the RippleHire success toaster (bottom-right,
+  420px, radius 12px, 2px green `#12B76A` left border, check on `#D1FAE5`, close ×, auto-dismiss 4.5s):
+  "Report submitted" / "<candidate>'s identity check has been submitted." (`rhSuccess` / `closeRhToast`).
+  Before this nothing confirmed the submit. Other messages (Photo downloaded, Exported, etc.) still use the
+  old dark pill `toast()`; switching them is open.
+- **Submit timestamp format.** A live submit now stamps "29 Sep 2026, 16:54" (day-first, 24h, via
+  `nowStamp()`), matching the seeded reports; it was the locale format "Sep 29, 2026, 04:11 PM".
+- **Reverify button colours.** The out-of-date banner's Reverify stays **amber** (`.rpt-reverify-amber`,
+  a deliberate exception to the RH button palette, product call: blue looked wrong on the amber banner).
+  "Start reverify" in the dialog is standard RH **Primary** blue, text only (icon removed).
+- **Out-of-date banner copy.** Title "<Photo> updated after report was submitted" (or "Photos updated…"
+  for several); body "<Actor> updated the <photo> on <date>, <time>. Rerun the identity check again."
+  A replaced photo reads as "updated"; added/deleted keep their verb (`staleTitle`, `staleSentence`).
+- **Reverify dialog shows what changed** (`reverifyIntro`, `reverifyChanges`). Intro: "<Photo> on the
+  file was changed, after the report was submitted. Reverifying starts a fresh check against all the
+  current photos on file." Then a block per change: photo name, "Replaced by <actor> on <date>, <time>",
+  and **Before / Updated** thumbnails (Before opens the viewer). Added = Updated only; deleted = "No
+  photo". Dialog 560px. Demo seed: the candidate has one image, so Ananya's "updated" photo is a mirrored,
+  tighter crop of her own photo (`staleInfo.newImg`, built at init).
+- **Any photo / several changes.** `staleInfo` may carry a `changes` list (`staleList`, `changeFor`).
+  Every changed row gets its own tag, amber "compared on" note and PDF note; banner, PDF stamp and
+  Activity list each change with its own actor. Photo names read naturally mid-sentence (`photoPhrase`):
+  "the application photo", "the Round 1: screening photo", "the Aadhaar card". Verdict says "before the
+  photos changed" when more than one.
+- **Run check again** (replaces "Reopen review" on a current completed report). Nothing changed, but
+  someone wants a fresh check later. Opens the Reverify dialog in a no-change mode (`openRerun`,
+  `state.rerunMode`): "Run the check again?", "Nothing has changed since this report was submitted.
+  Running it again starts a fresh check against all the current photos on file.", no Before/Updated
+  block, button "Run check again", then the same upload flow; the old report stays as a previous version.
+  Hidden while out of date (Reverify is the only action). **Open decision:** it currently asks for a
+  **new** joining-day photo (option a). Option b would re-run with the original joining-day photo, which
+  keeps the "taken on the joining date" attestation true weeks later.
+- **Crop before Submit (option A).** Experienced recruiters know multi-face photos are rejected, so they
+  should not have to submit and wait for the error to reach Crop. Once a photo is chosen a **"Crop" chip**
+  sits on the photo thumbnail (`.rh-cropchip`; hidden while checks run and in the multi-face error state,
+  which has its own Crop photo button). It opens the same crop tool in `cropMode:'pre'`: intro "…then
+  apply the crop. You can check the photo before you submit.", button **Apply crop**; the cropped photo
+  replaces the upload, consent/attestation stay ticked, nothing is submitted. After-error crop is
+  unchanged (`'fix'` mode, "Crop & submit", re-runs the checks). Option B (a third button in the row) was
+  wireframed and rejected: three equal buttons dilute Submit and squeeze on phone.
+- **Reference: what Rekognition returns.** `DetectFaces` gives per-face Quality.Sharpness/Brightness
+  (0-100), Pose (degrees), FaceOccluded and the face count; our rules turn those into blurry / dark /
+  not facing / covered / no face / multiple faces. `CompareFaces` gives only a Similarity score per face
+  (no reason); our bands turn it into Match / Needs review / Not a match, and a reference with no face is
+  "Couldn't compare" (HTTP 422).
+
 ## Multi-face crop, photo viewer and report polish (2026-09-25 to 2026-09-29)
 
 - **Quality gate copy is reason-specific** (`qualityErrorText(q)`, mirrored in `api/quality.js`). Each

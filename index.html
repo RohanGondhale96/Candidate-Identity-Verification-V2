@@ -1925,8 +1925,8 @@ function render(){
         var buttons = multiFace
           // more than one face -> crop-to-fix in-product, or upload a fresh photo
           ? '<div style="display:flex;gap:12px">'+
-              '<button type="button" class="rh-btn primary" style="flex:1" onclick="openCrop()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>Crop photo</button>'+
-              '<button type="button" class="rh-btn secondary" style="flex:1" onclick="openPicker()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Upload new photo</button>'+
+              '<button type="button" class="rh-btn primary" style="flex:1" onclick="openPicker()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Upload new photo</button>'+
+              '<button type="button" class="rh-btn secondary" style="flex:1" onclick="openCrop()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>Crop photo</button>'+
             '</div>'
           : '<div style="display:flex;gap:12px">'+
               '<button type="button" class="rh-btn primary" style="flex:1" '+(canSubmit?'':'disabled')+' onclick="submitPhoto()">Submit</button>'+
@@ -2365,7 +2365,7 @@ function qualityFallback(reason){ return ({blurry:'This photo looks blurry.', no
    photo. Each line says what is wrong AND what to do, so the recruiter can fix it without guessing. */
 function qualityErrorText(q){
   var r=(q&&q.reason)||'';
-  if(r==='multiple_faces') return 'We found more than one face in this photo. Crop the photo so only the candidate’s face is visible, or upload a new photo.';
+  if(r==='multiple_faces') return 'We found multiple faces in this photo. Please upload a new photo or crop it so that only the candidate’s face is visible.';
   if(r==='no_face')        return 'We couldn’t find a clear face in this photo. Retake a well-lit, front-facing photo of the candidate.';
   if(r==='not_facing')     return 'The candidate isn’t facing the camera. Retake looking straight at the camera, with both eyes visible.';
   if(r==='face_obscured')  return 'The face is partly covered. Remove anything hiding it (mask, hand, sunglasses, heavy shadow) and retake.';
