@@ -6,6 +6,28 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Worklist: no In progress tab, stage bar per candidate (2026-09-30)
+
+- **Two stat cards: Pending and Completed.** The In progress tab/card is gone. Pending now holds every
+  unfinished check, both not started and in review (`wlStatusRows('pending') = !isCompleted`). Its sub-line
+  reads "N check(s) in review" when any exist, else "Awaiting a check". Progress is never lost: a started,
+  unsubmitted check stays saved and shows on Pending. Old `?v=inprogress` links (and `setWlView('inprogress')`)
+  land on Pending.
+- **Name line:** name, full joining date ("3 Aug 2026", `fmtLong`) and a timing badge, **Delayed** or
+  **Today** only (`timingBadge`); no Upcoming badge, and no badge once a check is complete. The line under
+  the name is just RHID · role (the old "12 days ago, 3 Aug" text is gone). The Timing filter keeps its
+  All / Today / Upcoming / Delayed options (Upcoming is still useful to find future joiners).
+- **Stage bar** (`stageInfo`, `stageBar`), on both tabs: one label over a 3-segment bar (green done, blue
+  current, light blue ready, grey not reached, amber attention):
+  Not joined yet (grey ×3) · Ready to check (green, light blue, grey) · Check in progress (green, blue, grey)
+  · Check completed (green ×3) · Needs reverifying (green, green, amber). Completed rows also keep the result
+  pill (Match / Not a match / greyed "Match on <date>") in its own column. On phone the date + badge wrap
+  under the name and the bar sits below.
+- Chosen from a Claude Design canvas: a full three-step timeline (too heavy), a slim bar (picked) and a
+  label-only version. Stage names replaced the placeholders "Joining / Identity check / Check complete".
+- Export to Excel: Status is Pending / Completed, plus a new **Stage** column. Tests updated (in-review
+  check on Pending, stage labels, no In progress view).
+
 ## Reverify, re-run, crop-before-submit and toaster (2026-09-29 to 2026-09-30)
 
 - **Submit success toaster.** Submit report now shows the RippleHire success toaster (bottom-right,
