@@ -25,6 +25,10 @@ looks like an accident.
   under the name and the bar sits below.
 - Chosen from a Claude Design canvas: a full three-step timeline (too heavy), a slim bar (picked) and a
   label-only version. Stage names replaced the placeholders "Joining / Identity check / Check complete".
+- **Submit toaster links to the result.** After Submit the candidate leaves Pending, which can feel like they
+  vanished, so the success toaster now has a **View in Completed** link (`viewCompleted()`: closes the
+  toaster, returns to the worklist on the Completed tab). Auto-dismiss is 5s (top of the DS 4-5s range) to
+  leave time to click it.
 - Export to Excel: Status is Pending / Completed, plus a new **Stage** column. Tests updated (in-review
   check on Pending, stage labels, no In progress view).
 

@@ -241,6 +241,9 @@
   .rh-toaster .tb{flex:1;min-width:0}
   .rh-toaster .tt{font-size:15px;font-weight:700;color:#2A2A2A;line-height:1.35}
   .rh-toaster .tm{font-size:13px;color:#5A6473;margin-top:2px;line-height:1.45}
+  .rh-toaster .ta{margin-top:6px;padding:0;border:0;background:none;font-family:inherit;font-size:13px;font-weight:600;color:#0076FB;cursor:pointer}
+  .rh-toaster .ta:hover{text-decoration:underline}
+  .rh-toaster .ta:focus-visible{outline:0;box-shadow:0 0 0 2px #FFFFFF,0 0 0 4px #0076FB;border-radius:2px}
   .rh-toaster .tx{width:28px;height:28px;border:0;background:none;color:#747474;border-radius:6px;display:grid;place-items:center;cursor:pointer;flex-shrink:0;margin:-4px -4px 0 0}
   .rh-toaster .tx:hover{background:#F7F8FA;color:#2A2A2A}
   .rh-toaster .tx:focus-visible{box-shadow:0 0 0 2px #FFFFFF,0 0 0 4px #0076FB;outline:0}
@@ -2279,7 +2282,8 @@ function render(){
   if(s.rhToast){
     html += '<div class="rh-toaster" role="status" aria-live="polite">'+
       '<span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>'+
-      '<div class="tb"><div class="tt">'+h(s.rhToast.title)+'</div>'+(s.rhToast.msg?'<div class="tm">'+h(s.rhToast.msg)+'</div>':'')+'</div>'+
+      '<div class="tb"><div class="tt">'+h(s.rhToast.title)+'</div>'+(s.rhToast.msg?'<div class="tm">'+h(s.rhToast.msg)+'</div>':'')+
+        (s.rhToast.action?'<button type="button" class="ta" onclick="'+s.rhToast.action.onclick+'">'+h(s.rhToast.action.label)+'</button>':'')+'</div>'+
       '<button type="button" class="tx" onclick="closeRhToast()" aria-label="Dismiss"><svg viewBox="25 25 22 22" width="14" height="14" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button>'+
     '</div>';
   }
@@ -2312,7 +2316,9 @@ function retake(){ clearTimers(); _runToken++; _qtoken++; setState({photo:null, 
    review the flagged comparisons, then SUBMIT the report, confirming they've reviewed everything.
    Submitting never auto-executes an adverse action; the hire/no-hire call is downstream. */
 var _rhtt=null;
-function rhSuccess(title, msg){ clearTimeout(_rhtt); setState({rhToast:{title:title, msg:msg||''}}); _rhtt=setTimeout(function(){ setState({rhToast:null}); }, 4500); }
+function rhSuccess(title, msg, action){ clearTimeout(_rhtt); setState({rhToast:{title:title, msg:msg||'', action:action||null}}); _rhtt=setTimeout(function(){ setState({rhToast:null}); }, 5000); }
+/* toaster action after a submit: back to the worklist, Completed tab */
+function viewCompleted(){ closeRhToast(); changeCandidate(); setWlView('completed'); }
 function closeRhToast(){ clearTimeout(_rhtt); setState({rhToast:null}); }
 function openSubmit(){ setState({submitModal:{confirmed:false, note:'', err:''}}); }
 function toggleSubmitConfirm(){ var m=state.submitModal; if(!m) return; var el=document.getElementById('rh-submit-note'); setState({submitModal:Object.assign({}, m, {confirmed:!m.confirmed, note:el?el.value:m.note, err:''})}); }
@@ -2330,7 +2336,7 @@ function confirmSubmit(){
   if(state.entry) state.entry.decision = dec;   // persist onto the saved check record
   if(state.cand && state.cand.staleInfo){ state.cand.staleInfo=null; }   // a fresh submit clears the out-of-date flag (this becomes the new version)
   setState({decision:dec, submitModal:null});
-  rhSuccess('Report submitted', (state.cand?state.cand.name+'’s':'The')+' identity check has been submitted.');
+  rhSuccess('Report submitted', (state.cand?state.cand.name+'’s':'The')+' identity check has been submitted.', {label:'View in Completed', onclick:'viewCompleted()'});
 }
 function reopenReport(){ if(state.entry) state.entry.decision = null; setState({decision:null}); }
 /* record a human action on a review / no-match row. Non-binding on the AI score; both the AI
