@@ -274,6 +274,11 @@
   .rh-viewer .rv-ph{position:relative;width:min(420px,90vw);aspect-ratio:4/5;margin:auto}
   @media(max-width:600px){ .rh-viewer .rv-title{flex-direction:column;gap:0} }
   .rpt-pane[onclick]{cursor:zoom-in}
+  /* pre-submit crop entry: chip on the photo thumbnail */
+  .rh-cropchip{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 11px;border-radius:9999px;border:1px solid #DDD;background:rgba(255,255,255,.94);color:#2A2A2A;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.15);white-space:nowrap}
+  .rh-cropchip:hover{background:#fff;color:#0076FB;border-color:#Cfe0f5}
+  .rh-cropchip:focus-visible{outline:0;box-shadow:0 0 0 2px #FFFFFF,0 0 0 4px #0076FB}
+  .rh-cropchip svg{width:13px;height:13px}
   /* in-product crop tool */
   .rh-crop-box{position:absolute;border:2px solid #fff;box-shadow:0 0 0 9999px rgba(16,24,40,.46);border-radius:2px;cursor:move;touch-action:none}
   .rh-crop-box .h{position:absolute;width:13px;height:13px;background:#fff;border:1px solid #0076FB;border-radius:2px;touch-action:none}
@@ -1355,7 +1360,7 @@ function completedReport(s, c){
   html+='<div class="rpt-headrow">'+avatar(c.name,44)+
     '<div style="min-width:0;flex:1"><div class="rpt-name">'+h(c.name)+'</div><div class="rpt-meta">'+h(metaJoinLine(c))+'</div></div>'+
     '<div class="rpt-acts">'+
-      (stale?'':'<button type="button" class="rpt-reopen" onclick="reopenReport()">Reopen review</button>')+
+      (stale?'':'<button type="button" class="rpt-reopen" onclick="openRerun()">Run check again</button>')+
       '<button type="button" class="rh-actbtn" aria-label="Download report" onclick="downloadReport()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg><span class="tip">Download report</span></button>'+
       '<button type="button" class="rh-actbtn" aria-label="View activity" onclick="openActivity()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span class="tip">View activity</span></button>'+
     '</div>'+
@@ -1887,7 +1892,9 @@ function render(){
       var canSubmit = s.photo && s.consent && s.attest && !failed;
       var overlay = busy ? (s.running ? faceMesh() : scanOverlay()) : '';
       var photoBox = '<div style="width:132px;flex-shrink:0;display:flex;min-height:190px">'+
-        '<div style="flex:1;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+uploadedImg('cover')+overlay+'</div></div>';
+        '<div style="flex:1;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+uploadedImg('cover')+overlay+
+          ((!busy && !failed) ? '<button type="button" class="rh-cropchip" onclick="openCrop(\'pre\')" aria-label="Crop photo"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>Crop</button>' : '')+
+        '</div></div>';
       var fileName = s.photoName ? '<div style="font-size:14px;color:#2A2A2A;word-break:break-all">'+h(s.photoName)+'</div>' : '';
       var right;
       if(busy){
@@ -2213,13 +2220,13 @@ function render(){
   /* REVERIFY confirm */
   if(s.reverifyOpen && c){
     html += '<div class="rh-scrim" onclick="scrimReverify(event)"><div class="rh-dialog" style="width:560px;max-width:calc(100vw - 32px)">'+
-      '<header><h2>Reverify this candidate?</h2><button class="x" onclick="closeReverify()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
+      '<header><h2>'+(s.rerunMode?'Run the check again?':'Reverify this candidate?')+'</h2><button class="x" onclick="closeReverify()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<p style="margin:0 0 12px;font-size:13.5px;color:#2A2A2A;line-height:1.55">'+h(reverifyIntro(c))+'</p>'+
-        reverifyChanges(c)+
+        '<p style="margin:0 0 12px;font-size:13.5px;color:#2A2A2A;line-height:1.55">'+h(s.rerunMode?'Nothing has changed since this report was submitted. Running it again starts a fresh check against all the current photos on file.':reverifyIntro(c))+'</p>'+
+        (s.rerunMode?'':reverifyChanges(c))+
         '<ul style="margin:6px 0 0;padding-left:18px;color:#5A6473;font-size:13px;line-height:1.7"><li>You&#39;ll upload a <b>new joining-day photo</b> and it will be compared against every photo on file again.</li><li>This <b>current report is kept</b> as a previous version, open it any time from Activity.</li><li>The new run <b>becomes the current report</b> once you submit it.</li></ul>'+
       '</div>'+
-      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeReverify()">Cancel</button><button class="rh-btn primary sm rpt-reverify" onclick="startReverify()">Start reverify</button></footer>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeReverify()">Cancel</button><button class="rh-btn primary sm rpt-reverify" onclick="startReverify()">'+(s.rerunMode?'Run check again':'Start reverify')+'</button></footer>'+
     '</div></div>';
   }
 
@@ -2228,13 +2235,13 @@ function render(){
     html += '<div class="rh-scrim" onclick="scrimCrop(event)"><div class="rh-dialog" style="width:540px;max-width:calc(100vw - 32px)">'+
       '<header><h2>Crop photo</h2><button class="x" onclick="closeCrop()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<p style="margin:0 0 12px;font-size:13px;color:#5A6473;line-height:1.5">Drag the box to keep just the candidate’s face, then crop and submit. We’ll re-run the checks on the cropped photo.</p>'+
+        '<p style="margin:0 0 12px;font-size:13px;color:#5A6473;line-height:1.5">'+(s.cropMode==='pre'?'Drag the box to keep just the candidate’s face, then apply the crop. You can check the photo before you submit.':'Drag the box to keep just the candidate’s face, then crop and submit. We’ll re-run the checks on the cropped photo.')+'</p>'+
         '<div style="display:flex;justify-content:center"><div id="rh-crop-stage" style="position:relative;display:inline-block;line-height:0">'+
           '<img id="rh-crop-img" src="'+h(s.photo)+'" alt="" draggable="false" style="display:block;max-width:100%;max-height:54vh;width:auto;height:auto;border-radius:8px;user-select:none;-webkit-user-drag:none;background:#EFEFEF">'+
           '<div id="rh-crop-box" class="rh-crop-box"><span class="h tl"></span><span class="h tr"></span><span class="h bl"></span><span class="h br"></span></div>'+
         '</div></div>'+
       '</div>'+
-      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeCrop()">Cancel</button><button class="rh-btn primary sm" onclick="applyCrop()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>Crop &amp; submit</button></footer>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeCrop()">Cancel</button><button class="rh-btn primary sm" onclick="applyCrop()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>'+(s.cropMode==='pre'?'Apply crop':'Crop &amp; submit')+'</button></footer>'+
     '</div></div>';
   }
 
@@ -2426,7 +2433,7 @@ function revoke(id){ var u=state.shared.find(function(x){return x.id===id;}); se
 
 /* ---- in-product crop tool (lightweight, no dependency) ---- */
 var _crop=null;   // crop rect in displayed px, relative to the crop image
-function openCrop(){ if(!state.photo) return; _crop=null; setState({cropOpen:true}); }
+function openCrop(mode){ if(!state.photo) return; _crop=null; setState({cropOpen:true, cropMode:(mode==='pre'?'pre':'fix')}); }
 function closeCrop(){ setState({cropOpen:false}); }
 function scrimCrop(e){ if(e.target===e.currentTarget) closeCrop(); }
 function _clampCrop(sw, sh){ var c=_crop, min=40; c.w=Math.max(min,Math.min(c.w,sw)); c.h=Math.max(min,Math.min(c.h,sh)); c.x=Math.max(0,Math.min(c.x,sw-c.w)); c.y=Math.max(0,Math.min(c.y,sh-c.h)); }
@@ -2474,13 +2481,16 @@ function applyCrop(){
   catch(e){ uri=state.photo; }
   _crop=null;
   var nm=(state.photoName||'photo').replace(/ \(cropped\)$/,'')+' (cropped)';
-  setState({ cropOpen:false, photo:uri, photoName:nm, quality:null, qualityChecking:false, upErr:'' }, function(){ submitPhoto(); });
+  var pre=state.cropMode==='pre';
+  setState({ cropOpen:false, photo:uri, photoName:nm, quality:null, qualityChecking:false, upErr:'' }, function(){ if(!pre) submitPhoto(); });
 }
 
 /* Activity (audit) drawer + reverify (seeded mock) */
 function openActivity(){ setState({activityOpen:true}); }
 function closeActivity(){ setState({activityOpen:false}); }
-function openReverify(){ setState({reverifyOpen:true}); }
+function openReverify(){ setState({reverifyOpen:true, rerunMode:false}); }
+/* manual re-run on a current (not out-of-date) report: same flow as Reverify, no data changed */
+function openRerun(){ setState({reverifyOpen:true, rerunMode:true}); }
 function closeReverify(){ setState({reverifyOpen:false}); }
 function scrimReverify(e){ if(e.target===e.currentTarget) closeReverify(); }
 function confirmReverify(){ if(state.cand){ state.cand.reverifying=true; } setState({reverifyOpen:false}); toast('Reverify started'); }
