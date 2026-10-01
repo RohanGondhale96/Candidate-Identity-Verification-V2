@@ -6,6 +6,21 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Re-crop from the original photo (2026-10-01)
+
+- **Problem found in testing:** "Apply crop" replaced the photo, so after an over-tight crop (only an eye)
+  the tool could only re-crop that small piece; the rest of the face was gone. And the Crop chip was hidden
+  on every failed check, so after a self-inflicted "face partly covered" error only Change photo was left.
+- **Fix:** the first crop keeps the original upload (`state.photoOriginal`) and every crop stores its box in
+  original-image pixels (`state.cropRect`). The crop tool always opens on the **original** with the last box
+  in place, so the box can be widened back out. **Reset to original** (crop tool footer, shown once a crop
+  exists, `resetCrop()`) undoes the crop; nothing is submitted. Change photo / a new upload / leaving the
+  candidate clears both.
+- **Crop chip** now shows whenever a photo is chosen and nothing is running, including after a failed check;
+  the only exception is the multiple-faces error, which keeps its own Crop photo button. The label stays
+  **"Crop"** (we kept "Crop" over "Edit": it says exactly what the tool does, and "edited" photos would raise
+  questions in an identity check; if rotate is ever added, label it "Crop & rotate").
+
 ## Worklist: no In progress tab, stage bar per candidate (2026-09-30)
 
 - **Two stat cards: Pending and Completed.** The In progress tab/card is gone. Pending now holds every

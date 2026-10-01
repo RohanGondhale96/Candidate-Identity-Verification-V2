@@ -580,7 +580,7 @@ function lightboxImg(p, seed){
 
 /* ---------- logic ---------- */
 function select(c, noPush){
-  setState({ cand:c, searchOpen:false, q:'', photo:null, consent:false, rows:[], open:null, running:false, done:false, shared:[], upErr:'', lightbox:null, viewingHistory:false, decision:null, decisionErr:'', entry:null, activityOpen:false, reverifyOpen:false, cropOpen:false });
+  setState({ cand:c, searchOpen:false, q:'', photo:null, photoOriginal:null, cropRect:null, consent:false, rows:[], open:null, running:false, done:false, shared:[], upErr:'', lightbox:null, viewingHistory:false, decision:null, decisionErr:'', entry:null, activityOpen:false, reverifyOpen:false, cropOpen:false });
   if(!noPush) wlSyncUrl(false);
 }
 function reset(extra){
@@ -609,7 +609,7 @@ function handleFile(f){
     img.onload = function(){
       if(img.width<200 || img.height<200) return setState({upErr:'Photo is too small to compare reliably.'});
       // downscale so the request stays well under the serverless body limit (mobile cameras shoot several MB)
-      setState({photo:downscalePhoto(img, 1280, 0.85), photoName:f.name, consent:false, attest:false, quality:null, qualityChecking:false, upErr:''});
+      setState({photo:downscalePhoto(img, 1280, 0.85), photoOriginal:null, cropRect:null, photoName:f.name, consent:false, attest:false, quality:null, qualityChecking:false, upErr:''});
     };
     img.onerror = function(){ setState({upErr:"That image couldn't be read. Try another photo."}); };
     img.src = r.result;
@@ -1455,7 +1455,7 @@ function reverifyChanges(c){
 function startReverify(){
   var c=state.cand; if(!c) return;
   clearTimers(); _runToken++; _qtoken++;
-  setState({ done:false, running:false, photo:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false, reverifyOpen:false });
+  setState({ done:false, running:false, photo:null, photoOriginal:null, cropRect:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false, reverifyOpen:false });
   toast('Reverify: upload a fresh joining-day photo');
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -1926,7 +1926,7 @@ function render(){
       var overlay = busy ? (s.running ? faceMesh() : scanOverlay()) : '';
       var photoBox = '<div style="width:132px;flex-shrink:0;display:flex;min-height:190px">'+
         '<div style="flex:1;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+uploadedImg('cover')+overlay+
-          ((!busy && !failed) ? '<button type="button" class="rh-cropchip" onclick="openCrop(\'pre\')" aria-label="Crop photo"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>Crop</button>' : '')+
+          ((!busy && !(failed && s.quality && s.quality.reason==='multiple_faces')) ? '<button type="button" class="rh-cropchip" onclick="openCrop(\'pre\')" aria-label="Crop photo"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>Crop</button>' : '')+
         '</div></div>';
       var fileName = s.photoName ? '<div style="font-size:14px;color:#2A2A2A;word-break:break-all">'+h(s.photoName)+'</div>' : '';
       var right;
@@ -2270,11 +2270,11 @@ function render(){
       '<div class="dbody">'+
         '<p style="margin:0 0 12px;font-size:13px;color:#5A6473;line-height:1.5">'+(s.cropMode==='pre'?'Drag the box to keep just the candidate’s face, then apply the crop. You can check the photo before you submit.':'Drag the box to keep just the candidate’s face, then crop and submit. We’ll re-run the checks on the cropped photo.')+'</p>'+
         '<div style="display:flex;justify-content:center"><div id="rh-crop-stage" style="position:relative;display:inline-block;line-height:0">'+
-          '<img id="rh-crop-img" src="'+h(s.photo)+'" alt="" draggable="false" style="display:block;max-width:100%;max-height:54vh;width:auto;height:auto;border-radius:8px;user-select:none;-webkit-user-drag:none;background:#EFEFEF">'+
+          '<img id="rh-crop-img" src="'+h(s.photoOriginal||s.photo)+'" alt="" draggable="false" style="display:block;max-width:100%;max-height:54vh;width:auto;height:auto;border-radius:8px;user-select:none;-webkit-user-drag:none;background:#EFEFEF">'+
           '<div id="rh-crop-box" class="rh-crop-box"><span class="h tl"></span><span class="h tr"></span><span class="h bl"></span><span class="h br"></span></div>'+
         '</div></div>'+
       '</div>'+
-      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeCrop()">Cancel</button><button class="rh-btn primary sm" onclick="applyCrop()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>'+(s.cropMode==='pre'?'Apply crop':'Crop &amp; submit')+'</button></footer>'+
+      '<footer>'+(s.photoOriginal?'<button type="button" class="rh-btn tertiary sm" onclick="resetCrop()" style="padding:0 4px">Reset to original</button>':'')+'<span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeCrop()">Cancel</button><button class="rh-btn primary sm" onclick="applyCrop()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>'+(s.cropMode==='pre'?'Apply crop':'Crop &amp; submit')+'</button></footer>'+
     '</div></div>';
   }
 
@@ -2311,7 +2311,7 @@ function changeCandidate(){ setState({cand:null, searchOpen:true, done:false, ru
 function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click(); }
 function openPicker(){ var el=document.getElementById('rh-file'); if(el){ el.value=''; el.click(); } }
 function onFileInput(e){ handleFile(e.target.files[0]); }
-function retake(){ clearTimers(); _runToken++; _qtoken++; setState({photo:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, upErr:'', done:false, running:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null}); }
+function retake(){ clearTimers(); _runToken++; _qtoken++; setState({photo:null, photoOriginal:null, cropRect:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, upErr:'', done:false, running:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null}); }
 /* The recruiter doesn't personally confirm/deny identity - the system carries the status. They
    review the flagged comparisons, then SUBMIT the report, confirming they've reviewed everything.
    Submitting never auto-executes an adverse action; the hire/no-hire call is downstream. */
@@ -2479,6 +2479,8 @@ function initCrop(){
   var img=document.getElementById('rh-crop-img'); if(!img) return;
   function ready(){
     var sw=img.clientWidth, sh=img.clientHeight; if(!sw||!sh){ setTimeout(ready,60); return; }
+    if(!_crop && state.cropRect && img.naturalWidth){ var kx=sw/img.naturalWidth, ky=sh/img.naturalHeight, cr=state.cropRect;
+      _crop={x:Math.round(cr.x*kx), y:Math.round(cr.y*ky), w:Math.round(cr.w*kx), h:Math.round(cr.h*ky)}; }
     if(!_crop){ var w=Math.round(sw*0.58), hh=Math.round(sh*0.74); _crop={x:Math.round((sw-w)/2), y:Math.round((sh-hh)/2), w:w, h:hh}; }
     _clampCrop(sw,sh); _drawCropBox();
     var box=document.getElementById('rh-crop-box'); if(!box) return;
@@ -2518,7 +2520,14 @@ function applyCrop(){
   _crop=null;
   var nm=(state.photoName||'photo').replace(/ \(cropped\)$/,'')+' (cropped)';
   var pre=state.cropMode==='pre';
-  setState({ cropOpen:false, photo:uri, photoName:nm, quality:null, qualityChecking:false, upErr:'' }, function(){ if(!pre) submitPhoto(); });
+  var orig=state.photoOriginal||state.photo;   // the crop tool always shows the original, so keep it
+  setState({ cropOpen:false, photo:uri, photoOriginal:orig, cropRect:{x:sx,y:sy,w:sw,h:sh}, photoName:nm, quality:null, qualityChecking:false, upErr:'' }, function(){ if(!pre) submitPhoto(); });
+}
+/* undo any crop: back to the original upload (nothing is submitted) */
+function resetCrop(){
+  if(!state.photoOriginal){ closeCrop(); return; }
+  _crop=null;
+  setState({ cropOpen:false, photo:state.photoOriginal, photoOriginal:null, cropRect:null, photoName:(state.photoName||'photo').replace(/ \(cropped\)$/,''), quality:null, qualityChecking:false, upErr:'' });
 }
 
 /* Activity (audit) drawer + reverify (seeded mock) */
