@@ -6,6 +6,28 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Walkthrough-video display fixes (2026-10-01)
+
+Found while recording the walkthrough video. Display only; no logic changes.
+
+- **Reviewer record line, no space before the comma.** After Match on a Needs-review row the line read
+  "Same person , confirmed by review · 10:14": the line is an `inline-flex` with `gap:8px`, so the gap
+  also landed between the bold label and the ", confirmed by review" text. The label and the rest of the
+  text now sit in one inner `<span>`, so the gap is only after the coloured dot. Fixed in all three places
+  that draw this line (`reasonCodes`, `matchOverride`, `nomatchOverride`).
+- **Reviewed time is 24-hour.** `nowTime()` used `toLocaleTimeString`, which gave "01:53 PM" on a 12-hour
+  locale. It now builds `HH:MM` by hand, the same way `nowStamp()` does ("13:53").
+- **Joining-day stamps come from the candidate.** The in-progress report (`reportFeed`) said
+  "Run by A. Sharma · 12 Aug 2026, 09:41 IST", and the joining-day pane caption in `comparePanes` said
+  "15 Aug 2026, 09:41", for every candidate. Both now use `joinStamp(c)` (= the candidate's joining date +
+  ", 09:41"), the same rule as the completed report (see "Date bug fix" under Completed report redesign).
+  `comparePanes` now takes the candidate as a 4th argument. The unused legacy "Photo taken today" branch in
+  `render()` had the same two strings and got the same fix.
+- **Data: Rahul's PAN card shows a faceless document.** It is seeded "Couldn't compare: no face detected",
+  but its sample image clearly had a face. Any on-file document seeded `cant:true` now uses `FACELESS_DOC`
+  (the image the seeded joiners already use for this case), set after the real images are attached.
+- Harness (`verify_report.js`) has 5 new checks for these fixes; 80 pass.
+
 ## Re-crop from the original photo, "Matched on" pill (2026-10-01)
 
 - **Out-of-date result pill in the past tense.** On a "Needs reverifying" row the greyed old-result pill
