@@ -36,7 +36,7 @@ looks like an accident.
   current, light blue ready, grey not reached, amber attention):
   Not joined yet (grey ×3) · Ready to check (green, light blue, grey) · Check in progress (green, blue, grey)
   · Check completed (green ×3) · Needs reverifying (green, green, amber). Completed rows also keep the result
-  pill (Match / Not a match / greyed "Match on <date>") in its own column. On phone the date + badge wrap
+  pill (Match / Not a match / greyed "Matched on <date>" / "Not matched on <date>") in its own column. On phone the date + badge wrap
   under the name and the bar sits below.
 - Chosen from a Claude Design canvas: a full three-step timeline (too heavy), a slim bar (picked) and a
   label-only version. Stage names replaced the placeholders "Joining / Identity check / Check complete".
@@ -177,7 +177,7 @@ replacing the old candidate card + green Match banner + joining-photo card + "Re
   Triggers = reference photo replaced/deleted/added, new interview screenshots, or moved out of Joined (NOT
   joining-date / job changes). A fresh submit clears `staleInfo` (becomes the next version).
 - **Worklist:** status name **"Needs reverifying"** everywhere; a stale completed row shows an amber
-  "Needs reverifying" pill + a greyed "Match on 14 Aug" pill; the grey "Completed" pill was dropped from
+  "Needs reverifying" pill + a greyed "Matched on 14 Aug" pill (renamed from "Match on" 2026-10-01); the grey "Completed" pill was dropped from
   rows; the Completed stat sub-line shows "N needs reverifying" when any report is stale. Out-of-date
   candidates stay on the **Completed** tab (the old reverify -> In progress two-stage was removed).
 - **Downloaded PDF** (`reportPrintDoc`, browser print-to-PDF, A4 B&W): header (RippleHire / tagline / report

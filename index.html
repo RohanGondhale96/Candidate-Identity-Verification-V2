@@ -1087,7 +1087,7 @@ function rowPills(c){
     // on the Completed tab we drop the "Completed" pill (the tab already says so)
     if(c.staleInfo){   // out of date: needs reverifying, with the old result greyed out
       var lc=latestCheck(c.id), dec=lc&&lc.hh&&lc.hh.decision, when=submitShort(dec)||shortDay(c.joining);
-      var oldOut=completedStatus(c)==='notmatch'?'Not a match':'Match';
+      var oldOut=completedStatus(c)==='notmatch'?'Not matched':'Matched';
       return pill2(oldOut+' on '+when,'#8A97A8','#ECEEF1');
     }
     return completedStatus(c)==='notmatch'
