@@ -6,7 +6,11 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
-## Re-crop from the original photo (2026-10-01)
+## Re-crop from the original photo, "Matched on" pill (2026-10-01)
+
+- **Out-of-date result pill in the past tense.** On a "Needs reverifying" row the greyed old-result pill
+  reads **"Matched on 14 Aug"** (or "Not matched on <date>"); it was "Match on 14 Aug". Current results on
+  Completed keep "Match" / "Not a match".
 
 - **Problem found in testing:** "Apply crop" replaced the photo, so after an over-tight crop (only an eye)
   the tool could only re-crop that small piece; the rest of the face was gone. And the Crop chip was hidden
