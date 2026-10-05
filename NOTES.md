@@ -6,6 +6,28 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Worklist: "To verify" tab and one Filter dropdown (2026-10-05)
+
+- **"Pending" is now "To verify".** "Pending" sounded like the check was stuck, and "Open" sounded like
+  it had already started. The tab holds Not joined yet, Ready to check and Check in progress, so the
+  label is the recruiter's to-do list. Changed on the stat card, the old pill and the export Status
+  column. The internal key is still `pending` (`?v=pending` links keep working).
+- **Stat card sub-line: "N ready to check".** Was "N checks in review". It counts only joined
+  candidates with no check started, the work a recruiter can pick up now. We chose one line over
+  all three stage counts so the card stays small and doesn't wrap on mobile.
+- **One Filter dropdown on To verify** (replaces Timing). Tick boxes in two groups:
+  Stage (Not joined yet, Ready to check, Check in progress) and Joining (Today, Delayed).
+  Ticks in one group add up (OR); the two groups narrow each other (AND); nothing ticked = everyone.
+  So "Ready to check + Delayed" = late joiners nobody has started, and "Delayed" alone still spans
+  every stage. Each option's count is within the other group's ticks. The menu stays open while
+  ticking; "Clear filters" shows once anything is ticked. Label: "Filter: All (7)", the picked
+  names when 1 or 2 are ticked, "3 selected" beyond that.
+  - **Upcoming is gone.** It was always the same candidates as Not joined yet, so that tick covers it.
+  - We tried a separate Joining + Stage pair first; it felt like two filters doing the same job.
+  - Completed keeps its own Outcome dropdown; stage/joining ticks are ignored there and reset on tab switch.
+  - URL: `st=ready,inprogress&j=delayed`. Old `w=today|delayed|upcoming` links open with the matching tick.
+- Harness: 6 new filter checks; all pass.
+
 ## Walkthrough-video display fixes (2026-10-01)
 
 Found while recording the walkthrough video. Display only; no logic changes.

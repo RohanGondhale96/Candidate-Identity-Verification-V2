@@ -382,6 +382,13 @@
   .wlf-menu .mi:hover{background:#F3F4F6}
   .wlf-menu .mi.sel{background:#F3F4F6;font-weight:600}
   .wlf-backdrop{position:fixed;inset:0;z-index:40}
+  .wlf-seg.set{color:#185FA5}
+  .wlf-menu .mi.ck{display:flex;align-items:center;gap:10px}
+  .wlf-chk{width:16px;height:16px;border:1.5px solid #A5A5A5;border-radius:4px;background:#fff;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .wlf-chk.on{background:#0076FB;border-color:#0076FB}
+  .wlf-chk svg{width:11px;height:11px}
+  .wlf-grp{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8A93A3;padding:8px 12px 4px}
+  .wlf-clear{display:block;width:100%;text-align:left;border:0;border-top:1px solid #EEF1F5;background:none;margin-top:6px;padding:10px 12px 6px;font-family:inherit;font-size:13px;font-weight:600;color:#0076FB;cursor:pointer}
   .wl-list{border:1px solid #E5E7EB;border-radius:8px}
   @media (max-width:680px){
     .wlf-bar{flex-wrap:wrap;height:auto}
@@ -496,7 +503,7 @@ var state = {
   attest:false, qualityChecking:false, quality:null, rmodal:null, submitModal:null, reportView:'all',
   /* worklist */
   filter:'all', dateRange:'all', wlSort:'overdue', mineOnly:true, page:1, perPage:10, wlShown:20, wlTab:'active',
-  wlView:'pending', wlWhen:'all', dateFrom:'', dateTo:'',
+  wlView:'pending', wlWhen:'all', wlStages:[], wlJoin:[], dateFrom:'', dateTo:'',
   dismissed:{}, wlMenu:null, wlConfirmAll:false, dateModal:null, notJoinModal:null,
   activityOpen:false, reverifyOpen:false
 };
@@ -1072,6 +1079,16 @@ function stageInfo(c){
   if(wlStatus(c)==='inreview') return {label:'Check in progress',col:'#0055B5',segs:'gbn'};
   return {label:'Ready to check',col:'#2A2A2A',segs:'gln'};
 }
+/* One Filter on To verify: tick boxes in two groups. Ticks within a group add up (OR),
+   the two groups narrow each other (AND). Nothing ticked = everyone. */
+var WL_STAGES=[['notjoined','Not joined yet'],['ready','Ready to check'],['inprogress','Check in progress']];
+var WL_JOIN=[['today','Today'],['delayed','Delayed']];
+function stageKey(c){ var l=stageInfo(c).label; return l==='Not joined yet'?'notjoined':(l==='Check in progress'?'inprogress':'ready'); }
+function inPendingFilter(c,stages,join){
+  if(stages && stages.length && stages.indexOf(stageKey(c))<0) return false;
+  if(join && join.length && !join.some(function(j){ return inWhen(c,j,'pending'); })) return false;
+  return true;
+}
 function stageBar(c){
   var st=stageInfo(c);
   return '<span class="wl-stage"><span class="wl-stage-l" style="color:'+st.col+'">'+h(st.label)+'</span><span class="wl-stage-bar" aria-hidden="true">'+
@@ -1096,7 +1113,7 @@ function rowPills(c){
       ? pill2('Not a match','#B42318','#FDECEC')
       : pill2('Match','#1A7A3A','#E7F4EC');
   }
-  var base = wlStatus(c)==='inreview' ? pill2('In progress','#185FA5','#EAF2FE') : pill2('Pending','#5A6473','#ECEEF1');
+  var base = wlStatus(c)==='inreview' ? pill2('In progress','#185FA5','#EAF2FE') : pill2('To verify','#5A6473','#ECEEF1');
   return base + (isOverdue(c) ? pill2('Delayed','#8A6414','#FBF1DE') : '');
 }
 /* a candidate matches a sub-filter: timing (today/upcoming/delayed) for open work, outcome (match/notmatch) for completed */
@@ -1581,7 +1598,7 @@ function wlStatusRows(v){
 }
 function wlList(){
   var v=state.wlView||'pending', w=state.wlWhen||'all';
-  var list = wlSortList(wlStatusRows(v).filter(function(c){ return inWhen(c,w,v); }));
+  var list = wlSortList(wlStatusRows(v).filter(function(c){ return inWhen(c,w,v) && (v!=='pending' || inPendingFilter(c,state.wlStages,state.wlJoin)); }));
   // On Completed, always float "Needs reverifying" (stale) rows to the top, keeping the chosen sort within each group.
   if(v==='completed'){ var stale=[], rest=[]; list.forEach(function(c){ (c.staleInfo?stale:rest).push(c); }); list=stale.concat(rest); }
   return list;
@@ -1622,7 +1639,14 @@ function wlSetFilter(f){ setState({filter:f, page:1, wlShown:WL_PAGE, wlMenu:nul
 function wlSetDate(d){ setState({dateRange:d, page:1, wlShown:WL_PAGE}); wlSyncUrl(true); }
 function wlSetSort(s){ setState({wlSort:s, page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
 /* redesigned worklist: stat cards are the status filter (no tabs); joining-date range narrows the list */
-function setWlView(v){ if(v==='inprogress') v='pending'; setState({wlView:v, wlWhen:'all', page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
+function setWlView(v){ if(v==='inprogress') v='pending'; setState({wlView:v, wlWhen:'all', wlStages:[], wlJoin:[], page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
+/* tick / untick one option; the menu stays open so several can be picked */
+function wlToggleF(group,k){
+  var key=group==='stage'?'wlStages':'wlJoin', a=(state[key]||[]).slice(), i=a.indexOf(k);
+  if(i<0) a.push(k); else a.splice(i,1);
+  var p={page:1, wlShown:WL_PAGE}; p[key]=a; setState(p); wlSyncUrl(true);
+}
+function wlClearF(){ setState({wlStages:[], wlJoin:[], page:1, wlShown:WL_PAGE}); wlSyncUrl(true); }
 function setWlWhen(w){ setState({wlWhen:w, page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
 /* F1: export the currently-filtered worklist to Excel. Uses the same wlList() the screen shows,
    so it respects the active status card, the timing/outcome segment, and the search. Dependency-free
@@ -1632,7 +1656,7 @@ function wlExportExcel(){
   function esc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   var head = ['Name','RHID','Role','Joining date','Status','Stage','Delayed','Outcome'];
   var body = rows.map(function(c){
-    var st = isCompleted(c) ? 'Completed' : 'Pending';
+    var st = isCompleted(c) ? 'Completed' : 'To verify';
     var outcome = isCompleted(c) ? (completedStatus(c)==='notmatch' ? 'Not a match' : 'Match') : '';
     var cells = [c.name, c.rhid, c.req, (c.joining||fmtDate(c.joiningISO)), st, stageInfo(c).label, (isOverdue(c)?'Yes':''), outcome];
     return '<tr>'+cells.map(function(x){ return '<td>'+esc(x)+'</td>'; }).join('')+'</tr>';
@@ -1697,6 +1721,8 @@ function wlSyncUrl(replace){
     else {
       if(state.wlView && state.wlView!=='pending') p.set('v', state.wlView);
       if(state.wlWhen && state.wlWhen!=='all') p.set('w', state.wlWhen);
+      if(state.wlView!=='completed' && (state.wlStages||[]).length) p.set('st', state.wlStages.join(','));
+      if(state.wlView!=='completed' && (state.wlJoin||[]).length)   p.set('j', state.wlJoin.join(','));
       if(state.wlSort!=='overdue') p.set('s', state.wlSort);
       if(!state.mineOnly)          p.set('mine','0');
       if(state.page>1)             p.set('p', state.page);
@@ -1705,12 +1731,14 @@ function wlSyncUrl(replace){
     history[replace?'replaceState':'pushState']({wl:1}, '', url);
   }catch(e){}
 }
+/* "a,b" -> ['a','b']; old single-value links (w=today/delayed/upcoming) fall back to the matching tick */
+function wlUrlList(v,fallback){ return v ? v.split(',').filter(Boolean) : fallback; }
 function wlApplyUrl(){
   var p=new URLSearchParams(location.search);
   var cid=p.get('candidateId');
   if(cid){ var c=CANDIDATES.find(function(x){ return x.id===cid || x.rhid===cid; }); if(c){ select(c, true); return; } if(p.get('candidateId')){ setState({deepMiss:cid, searchOpen:true, cand:null}); return; } }
   setState({ cand:null, searchOpen:true, done:false, running:false, rows:[], entry:null, decision:null, viewingHistory:false,
-    wlView:(p.get('v')==='inprogress'?'pending':(p.get('v')||'pending')), wlWhen:p.get('w')||'all', dateFrom:'', dateTo:'', wlSort:p.get('s')||'overdue', mineOnly:p.get('mine')!=='0', page:parseInt(p.get('p')||'1',10)||1 });
+    wlView:(p.get('v')==='inprogress'?'pending':(p.get('v')||'pending')), wlWhen:(p.get('v')==='completed'?(p.get('w')||'all'):'all'), wlStages:wlUrlList(p.get('st'), p.get('w')==='upcoming'?['notjoined']:[]), wlJoin:wlUrlList(p.get('j'), (p.get('w')==='today'||p.get('w')==='delayed')?[p.get('w')]:[]), dateFrom:'', dateTo:'', wlSort:p.get('s')||'overdue', mineOnly:p.get('mine')!=='0', page:parseInt(p.get('p')||'1',10)||1 });
 }
 
 function searchIcon2(){ return '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#6E6E6E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>'; }
@@ -1740,7 +1768,7 @@ function worklistView(){
   var STAT_META={pending:{dot:'#F59E0B',sub:'Awaiting a check'},completed:{dot:'#12B76A',sub:'Report submitted'}};
   function statCard(key,label,n){
     var on=view===key, m=STAT_META[key], sub=m.sub;
-    if(key==='pending'){ var nr=wlStatusRows('pending').filter(function(c){return wlStatus(c)==='inreview';}).length; if(nr) sub=nr+' check'+(nr===1?'':'s')+' in review'; }
+    if(key==='pending'){ var nr=wlStatusRows('pending').filter(function(c){return stageInfo(c).label==='Ready to check';}).length; sub=nr+' ready to check'; }
     if(key==='completed'){ var ns=wlStatusRows('completed').filter(function(c){return c.staleInfo;}).length; if(ns) sub=ns+' need'+(ns===1?'s':'')+' reverifying'; }
     return '<button type="button" class="wl-stat'+(on?' on':'')+'" onclick="setWlView(\''+key+'\')" aria-pressed="'+on+'">'+
       '<span class="num">'+n+'</span>'+
@@ -1755,8 +1783,29 @@ function worklistView(){
     ? [['all','All'],['match','Match'],['notmatch','Not a match'],['stale','Needs reverifying']]
     : [['all','All'],['today','Today'],['upcoming','Upcoming'],['delayed','Delayed']];
   var segCount=function(val){ return statusRows.filter(function(c){ return inWhen(c,val,view); }).length; };
+  /* To verify: one Filter (Stage + Joining tick boxes); each option counts within the other group's ticks */
+  var fSt=s.wlStages||[], fJn=s.wlJoin||[];
+  var fCount=statusRows.filter(function(c){ return inPendingFilter(c,fSt,fJn); }).length;
+  var fPicked=WL_STAGES.concat(WL_JOIN).filter(function(t){ return fSt.indexOf(t[0])>=0 || fJn.indexOf(t[0])>=0; }).map(function(t){ return t[1]; });
+  var fLbl=!fPicked.length ? 'All' : (fPicked.length<=2 ? fPicked.join(' · ') : fPicked.length+' selected');
+  var tick='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  function fItem(group,t,n){
+    var on=(group==='stage'?fSt:fJn).indexOf(t[0])>=0;
+    return '<button type="button" class="mi ck" role="menuitemcheckbox" aria-checked="'+on+'" onclick="event.stopPropagation();wlToggleF(\''+group+'\',\''+t[0]+'\')">'+
+      '<span class="wlf-chk'+(on?' on':'')+'">'+(on?tick:'')+'</span>'+h(t[1])+' ('+n+')</button>';
+  }
+  function fMenu(){
+    if(state.wlMenu!=='flt-pend') return '';
+    return '<div class="wlf-menu" onclick="event.stopPropagation()">'+
+      '<div class="wlf-grp">Stage</div>'+
+      WL_STAGES.map(function(t){ return fItem('stage',t,statusRows.filter(function(c){ return stageKey(c)===t[0] && inPendingFilter(c,[],fJn); }).length); }).join('')+
+      '<div class="wlf-grp">Joining</div>'+
+      WL_JOIN.map(function(t){ return fItem('join',t,statusRows.filter(function(c){ return inWhen(c,t[0],'pending') && inPendingFilter(c,fSt,[]); }).length); }).join('')+
+      (fPicked.length ? '<button type="button" class="wlf-clear" onclick="event.stopPropagation();wlClearF()">Clear filters</button>' : '')+
+    '</div><div class="wlf-backdrop" onclick="event.stopPropagation();wlToggleMenu(\'flt-pend\')"></div>';
+  }
   var whenLbl=(function(){ for(var i=0;i<SEG.length;i++){ if(SEG[i][0]===when) return SEG[i][1]; } return 'All'; })();
-  var whenPrefix=view==='completed'?'Outcome':'Timing';
+  var whenPrefix=view==='completed'?'Outcome':'Joining';
   var SORT=[['overdue','Oldest first'],['newest','Newest'],['name','Name A-Z']];
   var sortLbl=(function(){ for(var i=0;i<SORT.length;i++){ if(SORT[i][0]===s.wlSort) return SORT[i][1]; } return 'Newest'; })();
   var caret='<svg class="cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>';
@@ -1786,17 +1835,19 @@ function worklistView(){
 
   /* stat cards */
   html+='<div class="wl-stats" role="group" aria-label="Filter candidates by status">'+
-    statCard('pending','Pending',nPending)+
+    statCard('pending','To verify',nPending)+
     statCard('completed','Completed',nDone)+
   '</div>';
 
-  /* single unified filter bar: search + Timing/Outcome dropdown + Sort dropdown + search icon */
+  /* single unified filter bar: search + Filter (To verify) or Outcome (Completed) dropdown + Sort dropdown + search icon */
   html+='<div class="wlf-bar">'+
     '<div class="wlf-search">'+searchIcon2()+'<input id="rh-q" type="search" placeholder="Search by name, RHID or email" autocomplete="off" value="'+h(s.q)+'" oninput="onQuery(this.value)">'+dropdown+'</div>'+
     '<div class="wlf-div"></div>'+
-    '<div class="wlf-seg'+(state.wlMenu==='flt-when'?' open':'')+'" onclick="event.stopPropagation();wlToggleMenu(\'flt-when\')">'+whenPrefix+': '+h(whenLbl)+' ('+segCount(when)+') '+caret+
-      fmenu('flt-when', SEG.map(function(t){ return {val:t[0],label:t[1],count:segCount(t[0]),pick:"setWlWhen('"+t[0]+"')"}; }), when)+
-    '</div>'+
+    (view==='pending'
+      ? '<div class="wlf-seg'+(state.wlMenu==='flt-pend'?' open':'')+(fPicked.length?' set':'')+'" onclick="event.stopPropagation();wlToggleMenu(\'flt-pend\')">Filter: '+h(fLbl)+' ('+fCount+') '+caret+fMenu()+'</div>'
+      : '<div class="wlf-seg'+(state.wlMenu==='flt-when'?' open':'')+'" onclick="event.stopPropagation();wlToggleMenu(\'flt-when\')">'+whenPrefix+': '+h(whenLbl)+' ('+segCount(when)+') '+caret+
+          fmenu('flt-when', SEG.map(function(t){ return {val:t[0],label:t[1],count:segCount(t[0]),pick:"setWlWhen('"+t[0]+"')"}; }), when)+
+        '</div>')+
     '<div class="wlf-div"></div>'+
     '<div class="wlf-seg'+(state.wlMenu==='flt-sort'?' open':'')+'" onclick="event.stopPropagation();wlToggleMenu(\'flt-sort\')">Sort: '+h(sortLbl)+' '+caret+
       fmenu('flt-sort', SORT.map(function(o){ return {val:o[0],label:o[1],count:null,pick:"wlSetSort('"+o[0]+"')"}; }), s.wlSort)+
