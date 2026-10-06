@@ -6,6 +6,33 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Reverify: what the recruiter confirms, "confirmed" wording, current photos (2026-10-06)
+
+- **"Attest" is gone from the UI.** Report line "Joining-day photo taken and confirmed by …",
+  PDF heading "Confirmation", upload flow "Confirmed as the joining-day photo of the person who
+  reported to join". (Code names like `attest` / `rpt-attest` are unchanged.)
+- **Reverify still asks for an upload.** Reverify opens the upload section; the recruiter uploads
+  a photo of the candidate. We can't know if it's the joining-day photo or one taken today, so a
+  reverify never claims a date:
+  - second box: "This is a photo of <name>, the person who reported to join on <joining date>."
+    (the consent box is unchanged)
+  - report line: "Photo uploaded and confirmed by A. Sharma · <upload date, time>"
+  - PDF Confirmation: "Consent was obtained from the candidate to use and compare this photo.
+    The photo is of <name>, the person who reported to join on <joining date>."
+  - in-progress card / pane caption / Activity: "Photo uploaded"
+  - First checks keep the joining-day wording and the joining-date stamp.
+  - Mechanics: `startReverify` sets `state.reverifyRun`; the run's entry gets `reverify:true`;
+    `isReverifyCheck(hh)` drives the wording; `photoStamp(c, hh)` gives the time on record.
+- **Reverify compares against the photos on file now.** Bug: after Ananya replaced her
+  application photo, a reverify still compared against the old one. `applyPhotoChanges(c)` now
+  applies replaced / deleted photos to the candidate before the run (old reports keep their own
+  copies of the photos they compared).
+- **Tried and dropped** (so nobody rebuilds them):
+  - reusing the saved joining-day photo with no upload, plus a "Take a new photo instead" link
+  - asking "When was this photo taken? On the joining day / Today"
+- Resolves the "attestation date on reverified reports" open item below.
+- Harness: new checks for each change; all pass.
+
 ## Downloaded report = the report page (2026-10-06)
 
 - **Download prints the report page itself**, not a separate black-and-white layout. The same
@@ -65,8 +92,8 @@ looks like an accident.
 - Harness: new checks for each change above; all pass.
 
 **Open items**
-- Attestation line on a reverified report still uses the joining date ("14 Aug 2026, 09:41")
-  instead of when the new photo was taken. Shows on the page, the preview and the PDF.
+- ~~Attestation line on a reverified report still uses the joining date.~~ Resolved 2026-10-06:
+  a reverified report shows "Photo uploaded and confirmed by … · <upload time>" (see above).
 - The small dark toasts ("Reverify started", "Photo downloaded", "Exported") are still bottom-centre.
 
 ## Worklist: "To verify" tab and one Filter dropdown (2026-10-05)

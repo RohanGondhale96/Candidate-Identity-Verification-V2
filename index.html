@@ -594,7 +594,7 @@ function lightboxImg(p, seed){
 
 /* ---------- logic ---------- */
 function select(c, noPush){
-  setState({ cand:c, searchOpen:false, q:'', photo:null, photoOriginal:null, cropRect:null, consent:false, rows:[], open:null, running:false, done:false, shared:[], upErr:'', lightbox:null, viewingHistory:false, decision:null, decisionErr:'', entry:null, activityOpen:false, reverifyOpen:false, cropOpen:false });
+  setState({ cand:c, searchOpen:false, q:'', photo:null, photoOriginal:null, cropRect:null, reverifyRun:false, consent:false, rows:[], open:null, running:false, done:false, shared:[], upErr:'', lightbox:null, viewingHistory:false, decision:null, decisionErr:'', entry:null, activityOpen:false, reverifyOpen:false, cropOpen:false });
   if(!noPush) wlSyncUrl(false);
 }
 function reset(extra){
@@ -695,7 +695,7 @@ function settleRow(i, token, res, err){
     var allSettled = rows.every(function(r){ return r.status==='done' || r.status==='error'; });
     if(!allSettled) return {rows:rows};
     var at = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-    var entry = {cand:prev.cand, photo:prev.photo, rows:rows, shared:prev.shared, at:at, ranAt:nowStamp().replace(/ IST$/,''), decision:null, attest:prev.attest, quality:prev.quality};
+    var entry = {cand:prev.cand, photo:prev.photo, rows:rows, shared:prev.shared, at:at, ranAt:nowStamp().replace(/ IST$/,''), reverify:!!prev.reverifyRun, decision:null, attest:prev.attest, quality:prev.quality};
     return {rows:rows, running:false, done:true, history:prev.history.concat([entry]), entry:entry, decision:null, decisionErr:''};
   }, function(){
     // run just finished - glide up to the top of the results instead of snapping mid-report
@@ -869,6 +869,17 @@ function bannerIcon(tier, color){
 function nowTime(){ var d=new Date(); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
 /* joining-day photo stamp, derived from the candidate (same 09:41 seed time the completed report uses) */
 function joinStamp(c){ return c ? (c.joining||fmtLong(c.joiningISO))+', 09:41' : ''; }
+/* when THIS check's joining-day photo was taken: a live run stamps ranAt; a reverify not yet
+   compared is happening now; seeded reports were taken on the joining day */
+/* a check started from Reverify (its photo could be from the joining day or later, so we don't claim a date) */
+function isReverifyCheck(hh){ return !!((hh && hh.reverify) || (state.reverifyRun && (!hh || hh===state.entry))); }
+function photoStamp(c, hh){
+  // reverify: we only know when the photo was uploaded, so that is the time on record
+  if(isReverifyCheck(hh)) return (hh && hh.ranAt) || nowStamp().replace(/ IST$/,'');
+  if(hh && hh.ranAt) return hh.ranAt;
+  if(c && c.reverifyLog && c.reverifyLog.length && !(hh && hh.decision)) return nowStamp().replace(/ IST$/,'');
+  return joinStamp(c);
+}
 var NOTMATCH_REASONS = ['Clearly a different person','Facial features don\'t match','Other'];
 /* full-sentence "likely cause" - seeded per flagged photo for the demo; live version comes from the model */
 function causeText(r){ return (r && r.cause) || aiReason(r); }
@@ -1230,7 +1241,7 @@ function comparePanes(r, seed, i, c){
   var refPane='<div class="rpt-pane" onclick="openLightbox('+i+')" style="'+paneStyle+'">'+photoTile(r,seed,'contain')+
     '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+capPrimary+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:2px">'+h(r.date)+'</div></div></div>';
   var todayPane='<div class="rpt-pane" onclick="openLightbox(\'join\')" style="'+paneStyle+'">'+uploadedImg('contain')+
-    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">Photo taken on joining day</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(joinStamp(c))+'</div></div></div>';
+    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+(isReverifyCheck(state.entry)?'Photo uploaded':'Photo taken on joining day')+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(photoStamp(c, state.entry))+'</div></div></div>';
   return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+refPane+todayPane+'</div>';
 }
 function reportThumbs(r, seed){
@@ -1286,9 +1297,9 @@ function reportFeed(s, c){
   }
   html += '<div id="rpt-top" class="rh-card" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 18px;scroll-margin-top:16px">'+
     '<div style="width:48px;height:60px;border-radius:8px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;flex-shrink:0;position:relative">'+uploadedImg('cover')+'</div>'+
-    '<div style="flex:1 1 180px;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.4">Photo taken on joining day</div>'+
-      '<div style="font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · '+h(joinStamp(c))+' IST</div>'+
-      ((s.attest||(s.entry&&s.entry.attest)) ? '<div style="font-size:12px;color:#1a6b34;margin-top:4px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Attested as a joining-day photo of the person who reported to join</div>':'')+
+    '<div style="flex:1 1 180px;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.4">'+(isReverifyCheck(s.entry)?'Photo uploaded':'Photo taken on joining day')+'</div>'+
+      '<div style="font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · '+h(photoStamp(c, s.entry))+' IST</div>'+
+      ((s.attest||(s.entry&&s.entry.attest)) ? '<div style="font-size:12px;color:#1a6b34;margin-top:4px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'+(isReverifyCheck(s.entry)?'Confirmed as a photo of the person who reported to join':'Confirmed as the joining-day photo of the person who reported to join')+'</div>':'')+
     '</div>'+
     '<div class="rpt-headacts" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
       (!s.decision ? '<button class="rh-btn secondary sm" onclick="askReshoot()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Use a different photo</button>' : '')+
@@ -1435,7 +1446,7 @@ function completedReport(s, c){
   var dec=s.decision, rows=s.rows||[], hh=s.entry||{};
   var stale=!!(c&&c.staleInfo) && !state._noStale;
   var joinDate=c.joining||fmtDate(c.joiningISO);
-  var uploadStamp=joinDate+', 09:41 IST';
+  var uploadStamp=photoStamp(c, hh)+' IST';
   var by=(dec&&dec.by)||(c.wl&&c.wl.by)||'A. Sharma';
   var submittedAt=(dec&&dec.at)||'';
   var vv=reportVerdict(rows), confirmed=vv.confirmed;
@@ -1477,7 +1488,7 @@ function completedReport(s, c){
     }).join('')+'</div>'+
   '</div>';
   if(hh.attest||s.attest){
-    html+='<div class="rpt-attest"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Joining-day photo taken and attested by '+h(by)+' · '+h(uploadStamp)+'</div>';
+    html+='<div class="rpt-attest"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'+(isReverifyCheck(hh)?'Photo uploaded and confirmed by ':'Joining-day photo taken and confirmed by ')+''+h(by)+' · '+h(uploadStamp)+'</div>';
   }
   html+='</div></div>';
   html+='<div class="rpt-seclabel">'+(stale?('Photos compared on '+h(submitShort(dec))):'Photo comparisons')+'</div>';
@@ -1513,13 +1524,24 @@ function reverifyChanges(c){
     '</div>';
   }).join('')+'</div>';
 }
+/* the photos on file now: apply the changes that made the report out of date (replaced / deleted) */
+function applyPhotoChanges(c){
+  staleList(c).forEach(function(ch){
+    var i=-1; for(var k=0;k<c.photos.length;k++){ if(c.photos[k].label===ch.what){ i=k; break; } }
+    if(i<0) return;
+    if(staleVerb(ch)==='deleted') c.photos.splice(i,1);
+    else if(ch.newImg) c.photos[i]=Object.assign({}, c.photos[i], {img:ch.newImg, date:ch.date||c.photos[i].date});
+  });
+}
+/* Reverify: the recruiter uploads a photo of the candidate again; it is compared with the photos on file now */
 function startReverify(){
   var c=state.cand; if(!c) return;
-  var lc=latestCheck(c.id), nowP=nowStamp().replace(/ IST$/,'').split(', ');
-  (c.reverifyLog=c.reverifyLog||[]).push({day:nowP[0], time:nowP[1], by:'A. Sharma', fromVersion:lc&&lc.hh&&lc.hh.decision?reportVersion(lc.hh):null, changed:!!c.staleInfo});
+  var lc=latestCheck(c.id), last=lc&&lc.hh, nowP=nowStamp().replace(/ IST$/,'').split(', ');
+  (c.reverifyLog=c.reverifyLog||[]).push({day:nowP[0], time:nowP[1], by:'A. Sharma', fromVersion:last&&last.decision?reportVersion(last):null, changed:!!c.staleInfo});
+  applyPhotoChanges(c);
   clearTimers(); _runToken++; _qtoken++;
-  setState({ done:false, running:false, photo:null, photoOriginal:null, cropRect:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false, reverifyOpen:false });
-  toast('Reverify: upload a fresh joining-day photo');
+  setState({ done:false, running:false, photo:null, photoOriginal:null, cropRect:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false, reverifyOpen:false, repPreview:null, reverifyRun:true });
+  toast('Reverify: upload a photo of the candidate');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 /* ---- downloadable report (browser print-to-PDF; A4, black & white) ---- */
@@ -1541,9 +1563,10 @@ function reportPrintDoc(s, c){
        '<div class="pd-hr-right"><div>Report '+h(reportId(c))+'</div><div>Version '+reportVersion(hh)+(old?' of '+submittedReports(c.id).length+' (superseded)':'')+'</div></div></div>';
   out+='<div class="pd-rule"></div>';
   out+='<div class="rpt-pp">'+page+'</div>';
-  out+='<div class="pp-att"><div class="pp-att-h">Attestation</div>'+
-       '<p>Consent was obtained from the candidate to take and compare the joining-day photo.</p>'+
-       '<p>The photo was taken on the joining date, of the person who reported to join.</p></div>';
+  out+='<div class="pp-att"><div class="pp-att-h">Confirmation</div>'+
+       (isReverifyCheck(hh)
+         ? '<p>Consent was obtained from the candidate to use and compare this photo.</p><p>The photo is of '+h(c.name)+', the person who reported to join on '+h(c.joining||'')+'.</p></div>'
+         : '<p>Consent was obtained from the candidate to take and compare the joining-day photo.</p><p>The photo was taken on the joining date, of the person who reported to join.</p></div>');
   out+='<div class="pp-foot">Confidential. Contains the candidate’s personal data, including face images. Downloaded by '+h(by)+' on '+h(nowStamp())+'.</div>';
   out+='</div>';
   return out;
@@ -2023,9 +2046,10 @@ function render(){
               '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#D93025" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>'+
               '<span style="flex:1">'+h(qualityErrorText(s.quality))+'</span></div>'
           : '';
+        var rv = !!s.reverifyRun, jd = s.cand ? (s.cand.joining||fmtLong(s.cand.joiningISO)) : '';
         var checks = '<div style="display:flex;flex-direction:column">'+
           '<label class="rh-cb"><input type="checkbox" '+(s.consent?'checked':'')+' onchange="toggleConsent()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>I have obtained consent from the candidate to use this photo for identity verification.</span></label>'+
-          '<label class="rh-cb" style="margin-top:14px"><input type="checkbox" '+(s.attest?'checked':'')+' onchange="toggleAttest()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>This photo was taken on the joining date, of the person who reported to join.</span></label>'+
+          '<label class="rh-cb" style="margin-top:14px"><input type="checkbox" '+(s.attest?'checked':'')+' onchange="toggleAttest()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>'+(rv?h('This is a photo of '+s.cand.name+', the person who reported to join on '+jd+'.'):'This photo was taken on the joining date, of the person who reported to join.')+'</span></label>'+
         '</div>';
         var multiFace = failed && s.quality && s.quality.reason==='multiple_faces';
         var buttons = multiFace
@@ -2074,8 +2098,8 @@ function render(){
       html += '<div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid #E0E0E0">'+
         '<div style="width:48px;height:60px;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;flex-shrink:0;position:relative">'+uploadedImg()+'</div>'+
         '<div style="flex:1 1 180px;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.4">Photo taken today</div>'+
-          '<div style="font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · '+h(joinStamp(c))+' IST</div>'+
-          ((s.attest||(s.entry&&s.entry.attest)) ? '<div style="font-size:12px;color:#1a6b34;margin-top:3px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Attested as a joining-day photo of the person who reported to join</div>' : '')+
+          '<div style="font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · '+h(photoStamp(c, s.entry))+' IST</div>'+
+          ((s.attest||(s.entry&&s.entry.attest)) ? '<div style="font-size:12px;color:#1a6b34;margin-top:3px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Confirmed as the joining-day photo of the person who reported to join</div>' : '')+
           '</div>'+
         '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
           (!s.decision ? '<button class="rh-btn secondary sm" onclick="askReshoot()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Use a different photo</button>' : '')+
@@ -2142,7 +2166,7 @@ function render(){
           var refPane='<div style="'+paneStyle+'">'+photoTile(r,(c?c.id:'')+r.label,'contain')+
             '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+h(r.label)+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(r.date)+(rel?(' · '+h(rel)):'')+'</div>'+(r.by?'<div style="font-size:11.5px;color:rgba(255,255,255,.85);margin-top:3px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>Interviewed by '+h(r.by)+'</div>':'')+'</div></div>';
           var todayPane='<div class="rpt-pane" onclick="openLightbox(\'join\')" style="'+paneStyle+'">'+uploadedImg('contain')+
-            '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">Photo taken today</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(joinStamp(c))+'</div></div></div>';
+            '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">Photo taken today</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(photoStamp(c, state.entry))+'</div></div></div>';
           html += '<div style="padding:0 20px 18px;background:#F7F8FA">'+
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+
               '<div>'+refPane+'</div>'+
@@ -2639,7 +2663,7 @@ function activityLog(s, c){
     var ran = e.ranAt ? alSplit(e.ranAt) : {day:(dec?alSplit(dec.at,c.joining).day:c.joining), time:'09:42'};
     var up  = e.ranAt ? ran : {day:ran.day, time:'09:41'};
     if(i===0) add(ran.day, '09:38', {k:'human', ic:'&#9873;', t:'Verification enabled (Onboarding round)', m:actor((dec&&dec.by)||'A. Sharma'), ts:'09:38 IST'});
-    add(up.day, up.time, {k:'human', ic:'&#8593;', t:'Joining-day photo uploaded', m:actor('A. Sharma'), ts:h(up.time)+' IST'});
+    add(up.day, up.time, {k:'human', ic:'&#8593;', t:(e.reverify?'Photo uploaded':'Joining-day photo uploaded'), m:actor('A. Sharma'), ts:h(up.time)+' IST'});
     add(up.day, up.time, {k:'sys', ic:'&#9737;', t:'Quality check passed', m:'system', ts:h(up.time)+' IST'});
     add(ran.day, ran.time, {k:'sys', ic:'&#9737;', t:'Comparison run: '+n+' photo'+(n===1?'':'s'), m:'system', ts:h(ran.time)+' IST'});
     if(dec){
@@ -2678,7 +2702,7 @@ function activityLog(s, c){
   }).join(''); }).join('');
 }
 function verifyAnother(){ reset({roundsConfigured:state.roundsConfigured}); window.scrollTo({top:0,behavior:'smooth'}); }
-function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ repPreview:null, cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, attest:!!hh.attest, quality:hh.quality||null, searchOpen:false, running:false, done:true, open:null, openRows:{}, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'', activityOpen:false, reverifyOpen:false, cropOpen:false }); if(!noPush) wlSyncUrl(false); }
+function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ repPreview:null, reverifyRun:false, cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, attest:!!hh.attest, quality:hh.quality||null, searchOpen:false, running:false, done:true, open:null, openRows:{}, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'', activityOpen:false, reverifyOpen:false, cropOpen:false }); if(!noPush) wlSyncUrl(false); }
 
 /* ---------- seeded demo worklist data ---------- */
 function fmtLong(iso){ var d=new Date(Date.parse(iso+'T00:00:00Z')); var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return d.getUTCDate()+' '+mo[d.getUTCMonth()]+' '+d.getUTCFullYear(); }
