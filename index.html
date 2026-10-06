@@ -2704,7 +2704,10 @@ function alKey(day, time){
 function alSplit(at, fallbackDay){ var p=String(at||'').split(', '); return p.length>1 ? {day:p[0], time:p[1]} : {day:fallbackDay, time:p[0]||'10:00'}; }
 function activityLog(s, c){
   var evs=[], seq=0;
-  function add(day, time, e){ e.day=day; e.time=time; e.key=alKey(day,time); e.seq=seq++; evs.push(e); }
+  // step: where an event sits in the flow, so events in the same minute keep their real order
+  var STEP=[['Verification enabled',0],['Reverify started',2],['Joining-day photo uploaded',3],['Quality check',4],['Comparison run',5],['Review ',6],['Report submitted',7]];
+  function stepOf(e){ if(e.k==='ext') return 1; for(var i=0;i<STEP.length;i++){ if(e.t.indexOf(STEP[i][0])===0) return STEP[i][1]; } return 6; }
+  function add(day, time, e){ e.day=day; e.time=time; e.key=alKey(day,time); e.step=stepOf(e); e.seq=seq++; evs.push(e); }
   var actor=function(n){ return 'by <span class="actor">'+h(n)+'</span>'; };
   var entries=state.history.filter(function(e){ return e.cand && e.cand.id===c.id; });
   entries.forEach(function(e, i){
@@ -2744,7 +2747,7 @@ function activityLog(s, c){
     add(r.day, r.time, {k:'human', ic:'&#8635;', t:'Reverify started', m:actor(r.by)+(r.fromVersion?' &middot; version '+r.fromVersion+' report kept':''), ts:h(r.time)+' IST'});
   });
   // newest first; same minute keeps the order things happened in (later step first)
-  evs.sort(function(x,y){ return (y.key-x.key) || (y.seq-x.seq); });
+  evs.sort(function(x,y){ return (y.key-x.key) || (y.step-x.step) || (y.seq-x.seq); });
   var today=alSplit(nowStamp().replace(/ IST$/,'')).day, groups=[];
   evs.forEach(function(e){ var g=groups[groups.length-1]; if(!g || g.day!==e.day){ g={day:e.day, evs:[]}; groups.push(g); } g.evs.push(e); });
   return groups.map(function(g){ return '<div class="dayh">'+(g.day===today?'Today':h(g.day))+'</div>'+ g.evs.map(function(e){

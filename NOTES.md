@@ -18,6 +18,8 @@ looks like an accident.
   - "Reverify started" says which version was kept ("version 1 report kept").
   - Once a candidate has 2+ reports, each "Report submitted" carries a Version N tag.
   - A review started and left unsubmitted shows "Review not submitted" with **Continue review**.
+  - Events in the same minute keep the order of the flow (reverify, photo upload, quality check,
+    comparison, submit). Before this fix, "Reverify started" sorted above the new report.
 - **View report from Activity.** Every "Report submitted" event has a **View report** link. It opens
   that version as the A4 report document (the same layout as the PDF) in a full-screen preview
   with **Download** and **Close** (Esc or clicking outside also closes). The page underneath and
