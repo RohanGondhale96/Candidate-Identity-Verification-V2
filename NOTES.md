@@ -6,6 +6,43 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Activity keeps every report, report preview, outcome on Completed rows, top toaster (2026-10-06)
+
+- **Activity is append-only.** Bug: starting a reverify wiped Activity (the 14 Aug report and
+  everything before it vanished, and "Verification enabled" moved under Today), because the
+  timeline was rebuilt from the open check only. `activityLog` now builds from every check on file
+  for the candidate (`state.history` never dropped old reports), every photo change (current
+  `staleInfo` plus `c.pastChanges`, which `confirmSubmit` keeps when it clears the flag) and every
+  reverify (`c.reverifyLog`, written by `startReverify`). Events sort newest first and group by day.
+  A new run stamps `entry.ranAt` with the full date and time.
+  - "Reverify started" says which version was kept ("version 1 report kept").
+  - Once a candidate has 2+ reports, each "Report submitted" carries a Version N tag.
+  - A review started and left unsubmitted shows "Review not submitted" with **Continue review**.
+- **View report from Activity.** Every "Report submitted" event has a **View report** link. It opens
+  that version as the A4 report document (the same layout as the PDF) in a full-screen preview
+  with **Download** and **Close** (Esc or clicking outside also closes). The page underneath and
+  the drawer stay as they were. Download prints the previewed version, not the page's report.
+  An older version's PDF header reads "Version 1 of 2 (superseded)".
+  - We tried opening old versions as the report page with an "Older report" banner; dropped it.
+    The report page UI is not changed for versions.
+  - The preview reuses the print styles: they are copied, scoped under `.rh-repview`, at screen
+    size. State key is `repPreview` (`reportView` was already the report's row filter).
+- **Completed rows: outcome after the stage**, no separate pill on the right.
+  "Check completed · Match", "Check completed · Not a match",
+  "Needs reverifying · Application photo replaced" (or "... deleted", "2 photos replaced",
+  "1 photo replaced, 1 deleted"). The old "Matched on 14 Aug" pill is gone; the old result is
+  still on the report page and in the export. The stage column is 340px on Completed rows.
+- **Outcome filter:** out-of-date reports sit only under "Needs reverifying", not under Match /
+  Not a match (their rows no longer show the old result). Counts add up to All.
+- **Success toaster is top-centre.** The real product shows toasters top-centre (the RH UI skill
+  says bottom-right; that is wrong for us). Mobile: full width, 16px gutters, top.
+- Harness: new checks for each change above; all pass.
+
+**Open items**
+- Attestation line on a reverified report still uses the joining date ("14 Aug 2026, 09:41")
+  instead of when the new photo was taken. Shows on the page, the preview and the PDF.
+- The small dark toasts ("Reverify started", "Photo downloaded", "Exported") are still bottom-centre.
+
 ## Worklist: "To verify" tab and one Filter dropdown (2026-10-05)
 
 - **"Pending" is now "To verify".** "Pending" sounded like the check was stuck, and "Open" sounded like

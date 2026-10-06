@@ -216,6 +216,9 @@
   .rpt-note.grey{background:#F1F2F4;border:0.5px solid #E0E3E8;color:#5A6473}
   .rpt-note.amber{background:#FBF1DE;border:0.5px solid #EAD9AE;color:#8a6414}
   .rpt-tag{background:#FBF1DE;color:#8A6414;border-radius:999px;padding:3px 9px;font-size:11px;font-weight:600;white-space:nowrap}
+  .rh-ev .lnk{display:inline-block;margin-top:4px;padding:0;border:0;background:none;font-family:inherit;font-size:13px;font-weight:600;color:#0076FB;cursor:pointer}
+  .rh-ev .lnk:hover{text-decoration:underline}
+  .rh-ev .lnk:focus-visible{outline:0;box-shadow:0 0 0 2px #FFFFFF,0 0 0 4px #0076FB;border-radius:2px}
   .rpt-ood{background:#FBF1DE;border-bottom:1px solid #F0DCA8;padding:15px 20px;display:flex;gap:13px;align-items:flex-start}
   .rpt-ood .ic{width:28px;height:28px;flex-shrink:0;border-radius:8px;background:#F6E4BC;display:flex;align-items:center;justify-content:center;color:#8A6414}
   .rpt-ood .tx{flex:1;min-width:0}
@@ -235,7 +238,7 @@
   }
   .rpt-print{display:none}
   /* RippleHire toaster (DS: bottom-right, 420px, radius 12, 2px left accent) */
-  .rh-toaster{position:fixed;right:24px;bottom:24px;z-index:80;width:420px;max-width:calc(100vw - 32px);background:#FFFFFF;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.12);border-left:2px solid #12B76A;display:flex;align-items:flex-start;gap:12px;padding:16px;animation:rhToastIn .2s ease-out}
+  .rh-toaster{position:fixed;top:24px;left:0;right:0;margin:0 auto;z-index:80;width:420px;max-width:calc(100vw - 32px);background:#FFFFFF;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.12);border-left:2px solid #12B76A;display:flex;align-items:flex-start;gap:12px;padding:16px;animation:rhToastIn .2s ease-out}
   .rh-toaster .ti{width:32px;height:32px;border-radius:50%;background:#D1FAE5;color:#12B76A;display:grid;place-items:center;flex-shrink:0}
   .rh-toaster .ti svg{width:18px;height:18px}
   .rh-toaster .tb{flex:1;min-width:0}
@@ -247,9 +250,9 @@
   .rh-toaster .tx{width:28px;height:28px;border:0;background:none;color:#747474;border-radius:6px;display:grid;place-items:center;cursor:pointer;flex-shrink:0;margin:-4px -4px 0 0}
   .rh-toaster .tx:hover{background:#F7F8FA;color:#2A2A2A}
   .rh-toaster .tx:focus-visible{box-shadow:0 0 0 2px #FFFFFF,0 0 0 4px #0076FB;outline:0}
-  @keyframes rhToastIn{from{opacity:0;transform:translate(16px,8px)}to{opacity:1;transform:none}}
+  @keyframes rhToastIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
   @media(prefers-reduced-motion:reduce){.rh-toaster{animation:none}}
-  @media(max-width:600px){.rh-toaster{right:16px;left:16px;bottom:16px;width:auto}}
+  @media(max-width:600px){.rh-toaster{right:16px;left:16px;top:16px;width:auto;margin:0}}
   /* reverify dialog: what changed (before vs updated) */
   .rv-chg{display:flex;flex-direction:column;gap:12px;margin:0 0 14px}
   .rv-chg-item{border:1px solid #E5E9F0;border-radius:10px;padding:12px;background:#F7F8FA}
@@ -334,12 +337,14 @@
   .wl-when{font-size:12.5px;color:#5A6473;white-space:nowrap;flex-shrink:0}
   .wl-stage{width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:6px}
   .wl-stage-l{font-size:12.5px;font-weight:600;white-space:nowrap}
+  .wl-stage.wide{width:340px}
+  .wl-stage-dot{color:#A0A7B2;font-weight:400;margin:0 6px}
   .wl-stage-bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
   .wl-stage-bar i{display:block;height:4px;border-radius:2px}
-  .wl-result{width:150px;flex-shrink:0;display:flex;justify-content:flex-end}
   @media(max-width:600px){
     .wl-stage{order:3;width:auto;flex-basis:calc(100% - 55px);margin-left:55px}
-    .wl-result{order:4;width:auto;flex-basis:calc(100% - 55px);margin-left:55px;justify-content:flex-start}
+    .wl-stage.wide{width:auto}
+    .wl-stage-l{white-space:normal}
     .wl-nameline{flex-wrap:wrap;row-gap:4px}
     .wl-nameline .wl-name{flex-basis:100%;white-space:normal !important}
   }
@@ -398,9 +403,63 @@
     .wlf-btn{height:42px}
     .wlf-menu{left:0;right:auto}
   }
+  /* Report preview (opened from Activity): any version, shown as the A4 report itself */
+  .rh-repview{position:fixed;inset:0;z-index:90;background:rgba(17,24,39,.62);display:flex;flex-direction:column}
+  .rh-repview .rv-bar{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:12px 20px;background:#0B0D12;color:#fff}
+  .rh-repview .rv-bar .rv-t{flex:1;min-width:0;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rh-repview .rv-bar .rv-t span{font-weight:400;color:#B8BEC8;margin-left:8px}
+  .rh-repview .rv-bar button{height:34px;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;padding:0 12px}
+  .rh-repview .rv-dl{background:#fff;color:#2A2A2A;border:1px solid #fff}
+  .rh-repview .rv-x{width:34px;justify-content:center;padding:0 !important;background:none;border:1px solid #4A5160;color:#fff}
+  .rh-repview .rv-bar button:focus-visible{outline:0;box-shadow:0 0 0 2px #0B0D12,0 0 0 4px #4DA3FF}
+  .rh-repview .rv-scroll{flex:1;overflow:auto;padding:28px 16px 48px}
+  .rh-repview .rv-page{background:#fff;max-width:794px;margin:0 auto;padding:48px 52px;box-shadow:0 10px 30px rgba(0,0,0,.25);border-radius:4px}
+  .rh-repview .rpt-print{display:block !important;color:#1A1A1A;font-family:'Open Sans',Arial,sans-serif;font-size:11px;line-height:1.45}
+  .rh-repview .pd-head{display:flex;justify-content:space-between;align-items:flex-start}
+  .rh-repview .pd-brand{font-size:17px;font-weight:800}
+  .rh-repview .pd-tag{font-size:11px;color:#555;margin-top:1px}
+  .rh-repview .pd-hr-right{text-align:right;font-size:10px;color:#555;line-height:1.5}
+  .rh-repview .pd-rule{border-bottom:1.5px solid #1A1A1A;margin:8px 0 14px}
+  .rh-repview .pd-cand{display:flex;gap:26px;margin-bottom:16px}
+  .rh-repview .pd-lbl{font-size:8.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#777}
+  .rh-repview .pd-val{font-size:12.5px;font-weight:600;margin-top:3px}
+  .rh-repview .pd-result{display:flex;justify-content:space-between;align-items:center;border:1px solid #1A1A1A;border-radius:6px;padding:14px 16px;margin-bottom:16px}
+  .rh-repview .pd-result.dashed{border-style:dashed}
+  .rh-repview .pd-result-big{font-size:17px;font-weight:800;margin-top:3px}
+  .rh-repview .pd-result-r{text-align:right;font-size:10.5px;color:#333;line-height:1.5}
+  .rh-repview .pd-h3{font-size:13px;font-weight:800;margin:0 0 6px}
+  .rh-repview .pd-cmp-head{display:flex;align-items:center;font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#999;padding-bottom:5px;border-bottom:1px solid #E2E2E2}
+  .rh-repview .pd-cmp-head .c-th{width:124px}
+  .rh-repview .pd-cmp-head .c-src{flex:1}
+  .rh-repview .pd-cmp-head .c-res{width:82px;text-align:right}
+  .rh-repview .pd-cmp-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #E2E2E2;break-inside:avoid}
+  .rh-repview .pd-cmp-row .c-th{width:124px;display:flex;gap:8px;flex-shrink:0}
+  .rh-repview .pd-cmp-row .c-src{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .rh-repview .pd-cmp-row .c-src .s-name{font-size:12px;font-weight:700}
+  .rh-repview .pd-cmp-row .c-src .s-date{font-size:10px;color:#777}
+  .rh-repview .pd-cmp-row .c-src .s-note{font-size:10px;color:#333;margin-top:2px}
+  .rh-repview .pd-cmp-row .c-res{width:82px;text-align:right;flex-shrink:0}
+  .rh-repview .pd-th-img{width:54px;height:66px;border-radius:4px;overflow:hidden;background:#EDEDED;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .rh-repview .pd-th-img img{width:100%;height:100%;object-fit:cover}
+  .rh-repview .pd-th-img.ph svg{width:26px;height:26px}
+  .rh-repview .pd-badge{display:inline-block;border:1px solid #666;border-radius:999px;padding:3px 10px;font-size:10px;font-weight:600}
+  .rh-repview .pd-cmpline{font-size:10px;color:#555;margin:9px 0 18px}
+  .rh-repview .pd-att{font-size:11.5px;margin:0 0 5px}
+  .rh-repview .pd-att-by{font-size:10px;color:#777;margin:9px 0 0}
+  .rh-repview .pd-stamp{border:1.5px solid #1A1A1A;padding:10px 12px;margin-bottom:14px}
+  .rh-repview .pd-stamp-t{font-size:12px;font-weight:800;letter-spacing:.04em}
+  .rh-repview .pd-stamp-b{font-size:10.5px;margin-top:3px;line-height:1.45}
+  .rh-repview .pd-foot{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-between;gap:16px;border-top:1px solid #D5D5D5;padding-top:6px;font-size:9px;color:#777}
+  .rh-repview .pd-pg{white-space:nowrap}
+  .rh-repview .pd-foot{position:static;margin-top:28px}
+  @media(max-width:600px){.rh-repview .rv-page{padding:24px 18px}.rh-repview .rv-bar{padding:10px 14px}.rh-repview .rv-dl .lbl{display:none}}
   /* F2: printing the report (Save as PDF) strips the app chrome and interactive controls */
   @media print{
     .rh-nav,.rh-accent,.rh-ph,main,.rh-drawer,.rh-drawer-scrim,.rh-scrim,.rpt-headacts,.rpt-subbar,.rh-actbtn{display:none !important}
+    .rh-repview{position:static;background:none;display:block}
+    .rh-repview .rv-bar{display:none !important}
+    .rh-repview .rv-scroll{padding:0;overflow:visible}
+    .rh-repview .rv-page{padding:0;box-shadow:none;max-width:none}
     @page{size:A4 portrait;margin:14mm}
     html,body{background:#fff}
     .rpt-print{display:block !important;color:#1A1A1A;font-family:'Open Sans',Arial,sans-serif;font-size:11px;line-height:1.45}
@@ -688,7 +747,7 @@ function settleRow(i, token, res, err){
     var allSettled = rows.every(function(r){ return r.status==='done' || r.status==='error'; });
     if(!allSettled) return {rows:rows};
     var at = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-    var entry = {cand:prev.cand, photo:prev.photo, rows:rows, shared:prev.shared, at:at, decision:null, attest:prev.attest, quality:prev.quality};
+    var entry = {cand:prev.cand, photo:prev.photo, rows:rows, shared:prev.shared, at:at, ranAt:nowStamp().replace(/ IST$/,''), decision:null, attest:prev.attest, quality:prev.quality};
     return {rows:rows, running:false, done:true, history:prev.history.concat([entry]), entry:entry, decision:null, decisionErr:''};
   }, function(){
     // run just finished - glide up to the top of the results instead of snapping mid-report
@@ -1089,9 +1148,23 @@ function inPendingFilter(c,stages,join){
   if(join && join.length && !join.some(function(j){ return inWhen(c,j,'pending'); })) return false;
   return true;
 }
+/* Completed rows: the outcome sits after the stage ("Check completed · Match"); an out-of-date
+   report says what changed instead ("Needs reverifying · Application photo changed") */
+function stageOutcome(c){
+  if(!isCompleted(c)) return '';
+  if(c.staleInfo){ var l=staleList(c), txt;
+    if(l.length>1){ // "2 photos replaced", or per action when mixed: "1 photo replaced, 1 deleted"
+      var cnt={}, order=[]; l.forEach(function(x){ var v=staleVerb(x); if(!cnt[v]){ cnt[v]=0; order.push(v); } cnt[v]++; });
+      txt=order.map(function(v,i){ return cnt[v]+(i===0?(' photo'+(cnt[v]===1?'':'s')):'')+' '+v; }).join(', '); }
+    else { var w=String((l[0]&&l[0].what)||'Photo'); txt=w.charAt(0).toUpperCase()+w.slice(1)+' '+staleVerb(l[0]); }
+    return '<span class="wl-stage-o" style="color:#5A6473;font-weight:400">'+h(txt)+'</span>'; }
+  return completedStatus(c)==='notmatch'
+    ? '<span class="wl-stage-o" style="color:#B42318">Not a match</span>'
+    : '<span class="wl-stage-o" style="color:#1A7A3A">Match</span>';
+}
 function stageBar(c){
-  var st=stageInfo(c);
-  return '<span class="wl-stage"><span class="wl-stage-l" style="color:'+st.col+'">'+h(st.label)+'</span><span class="wl-stage-bar" aria-hidden="true">'+
+  var st=stageInfo(c), out=stageOutcome(c);
+  return '<span class="wl-stage'+(out?' wide':'')+'"><span class="wl-stage-l" style="color:'+st.col+'">'+h(st.label)+(out?'<span class="wl-stage-dot" aria-hidden="true">&middot;</span>'+out:'')+'</span><span class="wl-stage-bar" aria-hidden="true">'+
     st.segs.split('').map(function(k){ return '<i style="background:'+WL_SEG[k]+'"></i>'; }).join('')+'</span></span>';
 }
 /* timing badge next to the name: only Today and Delayed (no Upcoming); none once the check is done */
@@ -1121,6 +1194,7 @@ function inWhen(c,w,v){
   if(w==='all') return true;
   if(v==='completed'){
     if(w==='stale') return !!c.staleInfo;                              // "Out of date" sub-filter
+    if(c.staleInfo) return false;   // out-of-date reports only sit under "Needs reverifying" (the row no longer shows the old result)
     return w==='notmatch' ? completedStatus(c)==='notmatch' : completedStatus(c)!=='notmatch';
   }
   if(w==='today')    return dayDiff(c)===0;
@@ -1322,6 +1396,26 @@ function cap(s){ s=String(s||''); return s.charAt(0).toUpperCase()+s.slice(1); }
 function shortDay(dstr){ return String(dstr||'').replace(/\s+\d{4}\b.*$/,''); }   // "16 Aug 2026" -> "16 Aug"
 function metaJoinLine(c){ var jd=c.joining||fmtDate(c.joiningISO); var verb=(dayDiff(c)>0)?'Joined':'Joins'; return c.rhid+' · '+c.req+' · '+verb+' '+jd; }
 function reportId(c){ var num=(c.rhid||'').replace(/\D/g,'')||'00000'; var mmdd=(c.joiningISO||'').slice(5).replace('-','')||'0000'; return 'RHS-'+num+'-'+mmdd; }
+/* submitted reports for a candidate, oldest first; a report is superseded once a newer one is submitted */
+function submittedReports(candId){ return state.history.filter(function(e){ return e.cand && e.cand.id===candId && e.decision; }); }
+function isSuperseded(hh){ if(!hh || !hh.decision || !hh.cand) return false; var l=submittedReports(hh.cand.id); return l.length>0 && l[l.length-1]!==hh; }
+function latestReportIdx(candId){ var l=submittedReports(candId); return l.length ? state.history.indexOf(l[l.length-1]) : -1; }
+/* Activity: "Continue review" reopens an unsubmitted review */
+function viewCheck(idx){ if(idx<0 || !state.history[idx]) return; openHistory(idx); window.scrollTo({top:0,behavior:'smooth'}); }
+/* Activity: "View report" opens that version as the report document, over the page */
+function viewReport(idx){ if(idx<0 || !state.history[idx] || !state.history[idx].decision) return; setState({repPreview:idx}); }
+function closeReportView(){ setState({repPreview:null}); }
+function reportViewHtml(){
+  var hh=state.history[state.repPreview]; if(!hh) return '';
+  var c=hh.cand, n=submittedReports(c.id).length, v=reportVersion(hh);
+  return '<div class="rh-repview" role="dialog" aria-modal="true" aria-label="Report version '+v+'">'+
+    '<div class="rv-bar"><div class="rv-t">'+h(c.name)+' · Report version '+v+(n>1?' of '+n:'')+'<span>Submitted '+h(submitDateFull(hh.decision))+'</span></div>'+
+      '<button type="button" class="rv-dl" onclick="downloadReport()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg><span class="lbl">Download</span></button>'+
+      '<button type="button" class="rv-x" onclick="closeReportView()" aria-label="Close"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4z"/></svg></button></div>'+
+    '<div class="rv-scroll" onclick="if(event.target===this)closeReportView()"><div class="rv-page">'+
+      reportPrintDoc({decision:hh.decision, rows:hh.rows||[], entry:hh, photo:hh.photo}, c)+
+    '</div></div></div>';
+}
 function reportVersion(hh){ if(!hh) return 1; var id=hh.cand&&hh.cand.id, n=0; for(var i=0;i<state.history.length;i++){ var e=state.history[i]; if(e.cand&&e.cand.id===id&&e.decision){ n++; if(e===hh) return n; } } return n||1; }
 function submitShort(dec){ var m=/^(\d{1,2}\s+[A-Za-z]{3})/.exec((dec&&dec.at)||''); return m?m[1]:''; }
 function submitDateFull(dec){ return String((dec&&dec.at)||'').split(', ')[0]; }
@@ -1473,6 +1567,8 @@ function reverifyChanges(c){
 }
 function startReverify(){
   var c=state.cand; if(!c) return;
+  var lc=latestCheck(c.id), nowP=nowStamp().replace(/ IST$/,'').split(', ');
+  (c.reverifyLog=c.reverifyLog||[]).push({day:nowP[0], time:nowP[1], by:'A. Sharma', fromVersion:lc&&lc.hh&&lc.hh.decision?reportVersion(lc.hh):null, changed:!!c.staleInfo});
   clearTimers(); _runToken++; _qtoken++;
   setState({ done:false, running:false, photo:null, photoOriginal:null, cropRect:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false, reverifyOpen:false });
   toast('Reverify: upload a fresh joining-day photo');
@@ -1492,7 +1588,8 @@ function pdfRowNote(r, c, stale){
 }
 function reportPrintDoc(s, c){
   var dec=s.decision, rows=s.rows||[], hh=s.entry||{};
-  var stale=!!(c&&c.staleInfo);
+  var old=isSuperseded(hh);
+  var stale=!!(c&&c.staleInfo) && !old;
   var by=(dec&&dec.by)||(c.wl&&c.wl.by)||'A. Sharma';
   var joinDate=c.joining||fmtDate(c.joiningISO);
   var submittedAt=(dec&&dec.at)||'';
@@ -1501,7 +1598,7 @@ function reportPrintDoc(s, c){
   var resLabel=stale?('Result as of '+submitDateFull(dec)):'Result';
   var out='<div class="rpt-print">';
   out+='<div class="pd-head"><div><div class="pd-brand">RippleHire</div><div class="pd-tag">Joining-day identity check</div></div>'+
-       '<div class="pd-hr-right"><div>Report '+h(reportId(c))+'</div><div>Version '+reportVersion(hh)+'</div></div></div>';
+       '<div class="pd-hr-right"><div>Report '+h(reportId(c))+'</div><div>Version '+reportVersion(hh)+(old?' of '+submittedReports(c.id).length+' (superseded)':'')+'</div></div></div>';
   out+='<div class="pd-rule"></div>';
   if(stale){
     out+='<div class="pd-stamp"><div class="pd-stamp-t">OUT OF DATE</div><div class="pd-stamp-b">'+(staleList(c).length>1?'Photos changed':'A photo changed')+' after this check. '+h(staleList(c).map(function(ch){ return staleActor(ch)+' '+staleVerb(ch)+' the '+photoPhrase(ch.what)+' on '+ch.date+', '+ch.time+'.'; }).join(' '))+' This copy shows the check as it stood on '+h(submitDateFull(dec))+' and hasn’t been reverified.</div></div>';
@@ -1875,7 +1972,7 @@ function worklistView(){
         candAvatar(c,42)+
         '<div class="wl-grow"><div class="wl-nameline" style="display:flex;align-items:center;gap:7px;min-width:0"><span class="wl-name" style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+h(c.name)+'</span>'+upTag+'</div>'+
           '<div class="wl-sub" style="font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#667085">'+sub+'</div></div>'+
-        stageBar(c)+(done?'<span class="wl-result">'+rowPills(c)+'</span>':'')+kebab+
+        stageBar(c)+kebab+
       '</div>';
     });
     if(shown < full.length){
@@ -2171,7 +2268,7 @@ function render(){
   html += '</main>';
 
   /* downloadable report (print-to-PDF) - lives outside <main> so print CSS can show only this */
-  if(completedView){ html += reportPrintDoc(s, c); }
+  if(completedView && s.repPreview==null){ html += reportPrintDoc(s, c); }
 
   /* SHARE dialog */
   if(s.showShare){
@@ -2303,6 +2400,9 @@ function render(){
       '</aside>';
   }
 
+  /* REPORT preview (from Activity) */
+  if(s.repPreview!=null){ html += reportViewHtml(); }
+
   /* REVERIFY confirm */
   if(s.reverifyOpen && c){
     html += '<div class="rh-scrim" onclick="scrimReverify(event)"><div class="rh-dialog" style="width:560px;max-width:calc(100vw - 32px)">'+
@@ -2387,7 +2487,7 @@ function confirmSubmit(){
   var at = nowStamp().replace(/ IST$/,'');
   var dec = {action:'submitted', by:'A. Sharma', at:at, note:note, status:v.tier, unreviewed:v.unresolved};
   if(state.entry) state.entry.decision = dec;   // persist onto the saved check record
-  if(state.cand && state.cand.staleInfo){ state.cand.staleInfo=null; }   // a fresh submit clears the out-of-date flag (this becomes the new version)
+  if(state.cand && state.cand.staleInfo){ state.cand.pastChanges=(state.cand.pastChanges||[]).concat(staleList(state.cand)); state.cand.staleInfo=null; }   // a fresh submit clears the out-of-date flag (this becomes the new version)
   setState({decision:dec, submitModal:null});
   rhSuccess('Report submitted', (state.cand?state.cand.name+'’s':'The')+' identity check has been submitted.', {label:'View in Completed', onclick:'viewCompleted()'});
 }
@@ -2592,31 +2692,67 @@ function openRerun(){ setState({reverifyOpen:true, rerunMode:true}); }
 function closeReverify(){ setState({reverifyOpen:false}); }
 function scrimReverify(e){ if(e.target===e.currentTarget) closeReverify(); }
 function confirmReverify(){ if(state.cand){ state.cand.reverifying=true; } setState({reverifyOpen:false}); toast('Reverify started'); }
-/* build the seeded activity timeline for a completed candidate */
+/* Activity (audit) timeline for a candidate. Append-only: built from every check on file for this
+   candidate (state.history keeps old reports when a reverify starts), every photo change (current
+   and already-resolved ones), and every reverify started. Newest first, grouped by day. */
+var AL_MO={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+function alKey(day, time){
+  var m=/^(\d{1,2}) (\w{3}) (\d{4})$/.exec(String(day||'').trim()), t=/^(\d{1,2}):(\d{2})/.exec(String(time||''));
+  if(!m) return 0;
+  return Date.UTC(+m[3], AL_MO[m[2]]||0, +m[1], t?+t[1]:0, t?+t[2]:0);
+}
+function alSplit(at, fallbackDay){ var p=String(at||'').split(', '); return p.length>1 ? {day:p[0], time:p[1]} : {day:fallbackDay, time:p[0]||'10:00'}; }
 function activityLog(s, c){
-  var dec=s.decision||null, by=(dec&&dec.by)||'A. Sharma', n=(s.rows||[]).length, groups=[];
-  // most-recent events first
-  staleList(c).slice().reverse().forEach(function(si){ var src=si.byRole==='recruiter'?'Recruiter':'Candidate profile';
-    groups.push({day:h(si.date), evs:[ {k:'ext', ic:'&#9998;', t:h(si.what)+' '+h(staleVerb(si))+' <span class="bext">'+h(src)+'</span>', m:'by <span class="actor">'+h(si.by)+'</span>', ts:h((si.time||'16:40')+' IST')} ]}); });
-  // the working-day group (varies with how far the check has progressed)
-  var evs=[];
-  if(dec){ var atP=String(dec.at||'').split(', '); var subTime=atP.length>1?atP[1]:(dec.at||'10:00');
-    evs.push({k:'human', ic:'&#10003;', t:'Report submitted: '+h(outcomeLabel(dec.status||'match').t), m:'by <span class="actor">'+h(by)+'</span> &middot; '+n+' comparison'+(n===1?'':'s'), ts:h(subTime)+' IST'});
-  } else if(n){
-    evs.push({k:'human', ic:'&#9998;', t:'Review in progress', m:'by <span class="actor">You (Rohan G.)</span> &middot; not yet submitted', ts:'just now'});
+  var evs=[], seq=0;
+  function add(day, time, e){ e.day=day; e.time=time; e.key=alKey(day,time); e.seq=seq++; evs.push(e); }
+  var actor=function(n){ return 'by <span class="actor">'+h(n)+'</span>'; };
+  var entries=state.history.filter(function(e){ return e.cand && e.cand.id===c.id; });
+  entries.forEach(function(e, i){
+    var dec=e.decision, n=(e.rows||[]).length;
+    // when the photo was taken / compared: a live run stamps ranAt; seeded reports ran on the joining day
+    var ran = e.ranAt ? alSplit(e.ranAt) : {day:(dec?alSplit(dec.at,c.joining).day:c.joining), time:'09:42'};
+    var up  = e.ranAt ? ran : {day:ran.day, time:'09:41'};
+    if(i===0) add(ran.day, '09:38', {k:'human', ic:'&#9873;', t:'Verification enabled (Onboarding round)', m:actor((dec&&dec.by)||'A. Sharma'), ts:'09:38 IST'});
+    add(up.day, up.time, {k:'human', ic:'&#8593;', t:'Joining-day photo uploaded', m:actor('A. Sharma'), ts:h(up.time)+' IST'});
+    add(up.day, up.time, {k:'sys', ic:'&#9737;', t:'Quality check passed', m:'system', ts:h(up.time)+' IST'});
+    add(ran.day, ran.time, {k:'sys', ic:'&#9737;', t:'Comparison run: '+n+' photo'+(n===1?'':'s'), m:'system', ts:h(ran.time)+' IST'});
+    if(dec){
+      var sub=alSplit(dec.at, ran.day), ver=reportVersion(e);
+      add(sub.day, sub.time, {k:'human', ic:'&#10003;', t:'Report submitted: '+h(outcomeLabel(dec.status||'match').t)+(entries.filter(function(x){return x.decision;}).length>1?' <span class="bext">Version '+ver+'</span>':''),
+        m:actor(dec.by||'A. Sharma')+' &middot; '+n+' comparison'+(n===1?'':'s'), ts:h(sub.time)+' IST',
+        link:'<button type="button" class="lnk" onclick="viewReport('+state.history.indexOf(e)+')">View report</button>'});
+    } else if(e===s.entry){
+      var nw=alSplit(nowStamp().replace(/ IST$/,''));
+      add(nw.day, nw.time, {k:'human', ic:'&#9998;', t:'Review in progress', m:'by <span class="actor">You (Rohan G.)</span> &middot; not yet submitted', ts:'just now'});
+    } else if(!dec){   // a review that was started and left: open it to carry on
+      add(ran.day, ran.time, {k:'human', ic:'&#9998;', t:'Review not submitted', m:'not yet submitted', ts:h(ran.time)+' IST',
+        link:'<button type="button" class="lnk" onclick="viewCheck('+state.history.indexOf(e)+')">Continue review</button>'});
+    }
+  });
+  // a fresh joining-day photo picked for the current check, not compared yet
+  if(s.cand===c && s.photo && !s.entry && !s.done){
+    var np=alSplit(nowStamp().replace(/ IST$/,''));
+    add(np.day, np.time, {k:'human', ic:'&#8593;', t:'Joining-day photo uploaded', m:actor('A. Sharma')+' &middot; not compared yet', ts:h(np.time)+' IST'});
   }
-  if(n){ evs.push({k:'sys', ic:'&#9737;', t:'Comparison run: '+n+' photo'+(n===1?'':'s'), m:'system', ts:'09:42 IST'});
-         evs.push({k:'sys', ic:'&#9737;', t:'Quality check passed', m:'system', ts:'09:41 IST'}); }
-  if(dec||n||s.photo){ evs.push({k:'human', ic:'&#8593;', t:'Joining-day photo uploaded', m:'by <span class="actor">A. Sharma</span>', ts:'09:41 IST'}); }
-  evs.push({k:'human', ic:'&#9873;', t:'Verification enabled (Onboarding round)', m:'by <span class="actor">'+h(by)+'</span>', ts:'09:38 IST'});
-  var day = dec ? (String(dec.at||'').split(', ')[0]||c.joining||'Today') : 'Today';
-  groups.push({day:h(day), evs:evs});
-  return groups.map(function(g){ return '<div class="dayh">'+g.day+'</div>'+ g.evs.map(function(e){
-    return '<div class="rh-ev '+e.k+'"><div class="node">'+e.ic+'</div><div><div class="t">'+e.t+'</div><div class="m">'+e.m+'</div><div class="ts">'+e.ts+'</div></div></div>';
+  // photo changes, resolved or not
+  (c.pastChanges||[]).concat(staleList(c)).forEach(function(si){
+    var src=si.byRole==='recruiter'?'Recruiter':'Candidate profile', tm=si.time||'16:40';
+    add(si.date, tm, {k:'ext', ic:'&#9998;', t:h(si.what)+' '+h(staleVerb(si))+' <span class="bext">'+h(src)+'</span>', m:actor(si.by), ts:h(tm)+' IST'});
+  });
+  // reverifies started
+  (c.reverifyLog||[]).forEach(function(r){
+    add(r.day, r.time, {k:'human', ic:'&#8635;', t:'Reverify started', m:actor(r.by)+(r.fromVersion?' &middot; version '+r.fromVersion+' report kept':''), ts:h(r.time)+' IST'});
+  });
+  // newest first; same minute keeps the order things happened in (later step first)
+  evs.sort(function(x,y){ return (y.key-x.key) || (y.seq-x.seq); });
+  var today=alSplit(nowStamp().replace(/ IST$/,'')).day, groups=[];
+  evs.forEach(function(e){ var g=groups[groups.length-1]; if(!g || g.day!==e.day){ g={day:e.day, evs:[]}; groups.push(g); } g.evs.push(e); });
+  return groups.map(function(g){ return '<div class="dayh">'+(g.day===today?'Today':h(g.day))+'</div>'+ g.evs.map(function(e){
+    return '<div class="rh-ev '+e.k+'"><div class="node">'+e.ic+'</div><div><div class="t">'+e.t+'</div><div class="m">'+e.m+'</div><div class="ts">'+e.ts+'</div>'+(e.link||'')+'</div></div>';
   }).join(''); }).join('');
 }
 function verifyAnother(){ reset({roundsConfigured:state.roundsConfigured}); window.scrollTo({top:0,behavior:'smooth'}); }
-function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, attest:!!hh.attest, quality:hh.quality||null, searchOpen:false, running:false, done:true, open:null, openRows:{}, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'', activityOpen:false, reverifyOpen:false, cropOpen:false }); if(!noPush) wlSyncUrl(false); }
+function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ repPreview:null, cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, attest:!!hh.attest, quality:hh.quality||null, searchOpen:false, running:false, done:true, open:null, openRows:{}, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'', activityOpen:false, reverifyOpen:false, cropOpen:false }); if(!noPush) wlSyncUrl(false); }
 
 /* ---------- seeded demo worklist data ---------- */
 function fmtLong(iso){ var d=new Date(Date.parse(iso+'T00:00:00Z')); var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return d.getUTCDate()+' '+mo[d.getUTCMonth()]+' '+d.getUTCFullYear(); }
@@ -2702,7 +2838,7 @@ function synthCompletedEntry(c){
   window.addEventListener('resize', function(){ var m=isMobile(); if(m!==state.hasCamera) setState({hasCamera:m}); });
   window.addEventListener('popstate', function(){ wlApplyUrl(); });
   // Esc closes the full-screen photo viewer
-  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && state.lightbox!==null && state.lightbox!==undefined) closeLightbox(); });
+  document.addEventListener('keydown', function(e){ if(e.key!=='Escape') return; if(state.repPreview!=null){ closeReportView(); return; } if(state.lightbox!==null && state.lightbox!==undefined) closeLightbox(); });
   // a11y: make role="button" divs (candidate rows, pick lists) keyboard-operable
   document.addEventListener('keydown', function(e){
     var t=e.target;
