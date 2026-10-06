@@ -6,6 +6,30 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Downloaded report = the report page (2026-10-06)
+
+- **Download prints the report page itself**, not a separate black-and-white layout. The same
+  document shows in the Activity "View report" preview, so the two always match.
+  `reportPrintDoc` renders `completedReport` for that version (state fields swapped in with
+  `withState`, then restored), inside `.rpt-print`:
+  - every control hidden (back, Reverify, download, activity, expand/collapse arrows, the banner's
+    Reverify); `.rpt-print` has `pointer-events:none`
+  - every comparison open; photo pairs 170px wide each (about 45mm), cards don't split across pages,
+    so a 3-photo report is about 2 A4 pages
+  - colours print as on screen (`print-color-adjust:exact`)
+  - a print header (RippleHire, report ID, version, "of N (superseded)" for an older one) and at
+    the end the attestation consent text and the confidentiality line ("Downloaded by … on …")
+  - an older version printed after newer photo changes doesn't show the out-of-date banner
+    (`state._noStale`)
+- No page numbers: the old "Page 1 of 1" was fixed text and a browser print can't number pages
+  reliably. The confidentiality line now appears once at the end.
+- Removed the old PDF layout (`pdfTile`, `pdCol`, `pdfRowNote`, the `.pd-*` table/stamp styles).
+- Harness: 3 new checks; all pass.
+
+**Open items**
+- Not yet checked as a saved PDF from a real print dialog.
+- The out-of-date banner in a downloaded report still ends "Rerun the identity check again."
+
 ## Activity keeps every report, report preview, outcome on Completed rows, top toaster (2026-10-06)
 
 - **Activity is append-only.** Bug: starting a reverify wiped Activity (the 14 Aug report and
