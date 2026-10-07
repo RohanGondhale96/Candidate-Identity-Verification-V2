@@ -476,24 +476,24 @@ var CANDIDATES = [
   { id:'c1', name:'Rahul Deshmukh', rhid:'RH48213', email:'rahul.deshmukh@gmail.com', phone:'+91 98204 44471',
     req:'Senior Backend Engineer', reqid:'REQ-2291', stage:'Onboarding', eligible:true, joining:'3 Aug 2026', joiningISO:'2026-08-03', owner:'me',
     photos:[
-      {label:'Application photo', src:'application', date:'14 Apr 2026', by:null, score:94, tone:'clear'},
+      {label:'Application photo', src:'application', date:'14 Apr 2026, 19:42', by:null, score:94, tone:'clear'},
       {label:'Round 1: screening', src:'interview', date:'06 May 2026, 10:15', by:'K. Deshpande', score:92, tone:'clear'},
       {label:'Round 2: technical', src:'interview', date:'02 Jun 2026, 15:20', by:'R. Menon', score:61, tone:'dark'},
       {label:'Round 3: manager round', src:'interview', date:'18 Jun 2026, 11:05', by:'S. Iyer', score:91, tone:'clear', quality:'poor'},
       {label:'Round 4: HR discussion', src:'interview', date:'27 Jun 2026, 16:40', by:'A. Sharma', score:89, tone:'soft'},
-      {label:'Aadhaar card', src:'document', date:'Uploaded 20 Jun 2026', by:null, score:71},
-      {label:'PAN card', src:'document', date:'Uploaded 20 Jun 2026', by:null, cant:true},
-      {label:'Driving licence', src:'document', date:'Uploaded 20 Jun 2026', by:null, score:22}
+      {label:'Aadhaar card', src:'document', date:'Uploaded 20 Jun 2026, 11:05', by:null, score:71},
+      {label:'PAN card', src:'document', date:'Uploaded 20 Jun 2026, 11:06', by:null, cant:true},
+      {label:'Driving licence', src:'document', date:'Uploaded 20 Jun 2026, 11:08', by:null, score:22}
     ]},
   { id:'c2', name:'Arjun Reddy', rhid:'RH47980', email:'arjun.reddy@outlook.com', phone:'+91 99872 08802',
     req:'Product Designer', reqid:'REQ-2244', stage:'Hired', eligible:true, joining:'15 Aug 2026', joiningISO:'2026-08-15', owner:'me',
     photos:[
-      {label:'Application photo', src:'application', date:'21 Mar 2026', by:null, score:96, tone:'clear'},
+      {label:'Application photo', src:'application', date:'21 Mar 2026, 22:15', by:null, score:96, tone:'clear'},
       {label:'Round 1: portfolio review', src:'interview', date:'09 Apr 2026, 12:00', by:'N. Bhatia', score:93, tone:'clear'},
       {label:'Round 2: craft interview', src:'interview', date:'24 Apr 2026, 14:30', by:'T. Rao', score:95, tone:'clear'},
-      {label:'Aadhaar card', src:'document', date:'Uploaded 28 Apr 2026', by:null, score:88},
-      {label:'PAN card', src:'document', date:'Uploaded 28 Apr 2026', by:null, score:84},
-      {label:'Driving licence', src:'document', date:'Uploaded 28 Apr 2026', by:null, score:79}
+      {label:'Aadhaar card', src:'document', date:'Uploaded 28 Apr 2026, 09:12', by:null, score:88},
+      {label:'PAN card', src:'document', date:'Uploaded 28 Apr 2026, 09:13', by:null, score:84},
+      {label:'Driving licence', src:'document', date:'Uploaded 28 Apr 2026, 09:15', by:null, score:79}
     ]},
   { id:'c3', name:'Meera Krishnan', rhid:'RH48466', email:'meera.k@yahoo.in', phone:'+91 91234 51129',
     req:'Data Analyst', reqid:'REQ-2310', stage:'Onboarding', eligible:true, joining:'16 Aug 2026', joiningISO:'2026-08-16', owner:'me', photos:[] }
@@ -1538,7 +1538,7 @@ function applyPhotoChanges(c){
     var i=-1; for(var k=0;k<c.photos.length;k++){ if(c.photos[k].label===ch.what){ i=k; break; } }
     if(i<0) return;
     if(staleVerb(ch)==='deleted') c.photos.splice(i,1);
-    else if(ch.newImg) c.photos[i]=Object.assign({}, c.photos[i], {img:ch.newImg, date:ch.date||c.photos[i].date});
+    else if(ch.newImg) c.photos[i]=Object.assign({}, c.photos[i], {img:ch.newImg, date:(ch.date ? ch.date+(ch.time?', '+ch.time:'') : c.photos[i].date)});
   });
 }
 /* Reverify: the recruiter uploads a photo of the candidate again; it is compared with the photos on file now */
@@ -2732,11 +2732,11 @@ function buildSeeds(){
     var key='s'+(i+1);
     var img=(window.RH_IMAGES && window.RH_IMAGES[key] && window.RH_IMAGES[key][0]) || null;
     var photos=[
-      {label:'Application photo',   src:'application', date:'02 Apr 2026',        by:null,       score:x.score, img:img},
+      {label:'Application photo',   src:'application', date:'02 Apr 2026, 14:12', by:null,       score:x.score, img:img},
       {label:'Round 1: screening', src:'interview',   date:'18 Apr 2026, 10:30', by:'S. Iyer',  score:x.score, img:img},
       {label:'Round 2: technical', src:'interview',   date:'02 May 2026, 15:20', by:'R. Menon', score:x.score, img:img}
     ];
-    if(x.noface) photos.push({label:'Aadhaar card', src:'document', date:'20 Apr 2026', by:null, score:x.score, img:FACELESS_DOC, cant:true});
+    if(x.noface) photos.push({label:'Aadhaar card', src:'document', date:'Uploaded 20 Apr 2026, 18:30', by:null, score:x.score, img:FACELESS_DOC, cant:true});
     CANDIDATES.push({ id:key, name:x.name, rhid:'RH'+(49001+i), req:x.req, reqid:'REQ-'+(2401+i), stage:'Onboarding', eligible:true, joiningISO:x.iso, joining:fmtLong(x.iso), owner:'me',
       photos:photos,
       wl:{status:x.st, completed:x.completed||null, by:'A. Sharma', at:hhmm(i+2), submitTime:x.sub||null, setAsideReason:x.setAsideReason||null, reason:x.reason} });

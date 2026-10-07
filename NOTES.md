@@ -60,7 +60,9 @@ removed; `causeText` = `aiReason`.
   an older, replaced report still says "Version N of M (superseded)" there.
 - **Timezone on every time.** Any date with a time gets the company timezone label ("18 Apr 2026, 10:30
   IST"): Submitted line, summary rows, card dates, photo captions, out-of-date banner, review screen.
-  Date-only values ("02 Apr 2026") stay plain. One helper `tz()` with `COMPANY_TZ = 'IST'`; in the
+  Date-only values stay plain. Application photos and documents now carry their upload time in the
+  sample data too ("02 Apr 2026, 14:12 IST", "Uploaded 20 Jun 2026, 11:05 IST"), as the product records it;
+  a replaced photo takes the replacement's date and time. One helper `tz()` with `COMPANY_TZ = 'IST'`; in the
   product, times are stored in UTC and shown in the tenant's timezone (same for everyone who opens or
   downloads the report), not the viewer's.
 - Report header shows the RippleHire **logo** (`RH_LOGO`, a 163x33 PNG from the brand team, 24px tall)
