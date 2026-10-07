@@ -1565,7 +1565,7 @@ function reportPrintDoc(s, c){
     function(){ return completedReport(state, c); });
   var out='<div class="rpt-print"><table class="pp-frame"><thead><tr><td><div class="pp-sp"></div></td></tr></thead><tfoot><tr><td><div class="pp-sp"></div></td></tr></tfoot><tbody><tr><td>';
   out+='<div class="pd-head"><div><div class="pd-brand">RippleHire</div></div>'+
-       '<div class="pd-hr-right"><div>Report '+h(reportId(c))+'</div><div>Version '+reportVersion(hh)+(old?' of '+submittedReports(c.id).length+' (superseded)':'')+'</div></div></div>';
+       '<div class="pd-hr-right"><div>Report '+h(reportId(c))+'</div>'+(old?'<div>Version '+reportVersion(hh)+' of '+submittedReports(c.id).length+' (superseded)</div>':'')+'</div></div>';
   out+='<div class="pd-rule"></div>';
   out+='<div class="rpt-pp">'+page+'</div>';
   out+='<div class="pp-foot">Confidential. Contains the candidate’s personal data, including face images. Downloaded by '+h(by)+' on '+h(nowStamp())+'.</div>';

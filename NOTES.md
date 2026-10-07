@@ -56,7 +56,8 @@ removed; `causeText` = `aiReason`.
   document everywhere (PDF, Activity preview, candidate page). Together with the hidden "taken and
   confirmed by" line, the PDF no longer states consent or who confirmed the photo; the report page
   still shows the line.
-- Open: keep or drop "Version 1" in the report header.
+- "Version 1" removed from the report header (2026-10-07, after the first real PDF download). Only
+  an older, replaced report still says "Version N of M (superseded)" there.
 
 ## Reverify: what the recruiter confirms, "confirmed" wording, current photos (2026-10-06)
 
