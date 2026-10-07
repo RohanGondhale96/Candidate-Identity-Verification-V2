@@ -41,6 +41,8 @@ looks like an accident.
   `withState`, then restored), inside `.rpt-print`:
   - every control hidden (back, Reverify, download, activity, expand/collapse arrows, the banner's
     Reverify); `.rpt-print` has `pointer-events:none`
+  - the "Joining-day photo taken and confirmed by …" line is hidden in the PDF (removed 2026-10-07);
+    the Confirmation section at the end covers consent and who is in the photo
   - every comparison open; photo pairs 170px wide each (about 45mm), cards don't split across pages,
     so a 3-photo report is about 2 A4 pages
   - colours print as on screen (`print-color-adjust:exact`)
