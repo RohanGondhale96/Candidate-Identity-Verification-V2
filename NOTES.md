@@ -37,6 +37,15 @@ other photo on file is compared against it. Decisions so far:
 builds one from the seeded scores (review band / poor quality confirmed as same person, below 50
 marked not a match).
 
+**Flag text is fixed, not AI-written.** AWS CompareFaces returns a similarity score, not an
+explanation, so every flagged row shows fixed text from its score band: Needs review "Borderline
+similarity" (or "Low photo quality"), Not a match "Looks like a different person", Couldn't compare
+"No face detected". The hand-written per-photo explanations in the seed data (`cause`, `qreason`) are
+removed; `causeText` = `aiReason`.
+- **Open idea (likely next):** real hints from AWS. CompareFaces also returns each face's quality
+  (sharpness, brightness) and pose, so we could say "The reference photo is blurry" or "Face turned
+  away in the reference photo". Needs `api/compare.js` to return those fields plus wording rules.
+
 **PDF / report document**
 - photo captions in the completed report (page, PDF, Activity preview, candidate page) now match the
   review screen: left "<photo name> · <date>" ("Photo taken during Round 1: screening", "Identity

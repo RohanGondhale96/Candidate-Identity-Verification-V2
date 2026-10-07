@@ -479,12 +479,12 @@ var CANDIDATES = [
     photos:[
       {label:'Application photo', src:'application', date:'14 Apr 2026', by:null, score:94, tone:'clear'},
       {label:'Round 1: screening', src:'interview', date:'06 May 2026, 10:15', by:'K. Deshpande', score:92, tone:'clear'},
-      {label:'Round 2: technical', src:'interview', date:'02 Jun 2026, 15:20', by:'R. Menon', score:61, tone:'dark', cause:'the reference frame catches the candidate mid-turn, so much of the face is out of view.'},
-      {label:'Round 3: manager round', src:'interview', date:'18 Jun 2026, 11:05', by:'S. Iyer', score:91, tone:'clear', quality:'poor', qreason:'Not facing the camera', cause:'the candidate is turned away from the camera in this reference, so key facial features are hard to line up.'},
+      {label:'Round 2: technical', src:'interview', date:'02 Jun 2026, 15:20', by:'R. Menon', score:61, tone:'dark'},
+      {label:'Round 3: manager round', src:'interview', date:'18 Jun 2026, 11:05', by:'S. Iyer', score:91, tone:'clear', quality:'poor'},
       {label:'Round 4: HR discussion', src:'interview', date:'27 Jun 2026, 16:40', by:'A. Sharma', score:89, tone:'soft'},
       {label:'Aadhaar card', src:'document', date:'Uploaded 20 Jun 2026', by:null, score:71},
       {label:'PAN card', src:'document', date:'Uploaded 20 Jun 2026', by:null, cant:true},
-      {label:'Driving licence', src:'document', date:'Uploaded 20 Jun 2026', by:null, score:22, cause:'the face on this document is clearly different from today\'s photo.'}
+      {label:'Driving licence', src:'document', date:'Uploaded 20 Jun 2026', by:null, score:22}
     ]},
   { id:'c2', name:'Arjun Reddy', rhid:'RH47980', email:'arjun.reddy@outlook.com', phone:'+91 99872 08802',
     req:'Product Designer', reqid:'REQ-2244', stage:'Hired', eligible:true, joining:'15 Aug 2026', joiningISO:'2026-08-15', owner:'me',
@@ -792,7 +792,7 @@ function rowMatched(r){ return photoState(r)==='match'; }
 function aiReason(r){
   var st=photoState(r);
   if(st==='cant') return r.err || 'No face detected';
-  if(st==='review') return r.quality==='poor' ? (r.qreason||'Low photo quality') : 'Borderline similarity';
+  if(st==='review') return r.quality==='poor' ? 'Low photo quality' : 'Borderline similarity';
   if(st==='nomatch') return 'Looks like a different person';
   return '';
 }
@@ -894,7 +894,7 @@ function photoStamp(c, hh){
 }
 var NOTMATCH_REASONS = ['Clearly a different person','Facial features don\'t match','Other'];
 /* full-sentence "likely cause" - seeded per flagged photo for the demo; live version comes from the model */
-function causeText(r){ return (r && r.cause) || aiReason(r); }
+function causeText(r){ return aiReason(r); }   // fixed text from the score band only (AWS returns a score, not an explanation)
 /* positive explanation for a model match (seeded per-photo via r.matchCause; the live version comes from the model) */
 function matchReason(r){
   if(r && r.matchCause) return r.matchCause;
@@ -2717,7 +2717,7 @@ function buildSeeds(){
   var seeds=[
     {name:'Vikram Nair',  req:'Data Engineer',     st:'toverify',    iso:'2026-08-15', reason:'', score:91, noface:true},
     {name:'Priya Sharma', req:'QA Analyst',        st:'toverify',    iso:'2026-08-12', reason:'', score:88},
-    {name:'Imran Shaikh', req:'UX Designer',       st:'inreview',    iso:'2026-08-13', reason:'Checked · not submitted', score:63, cause:'the reference photo is soft and unevenly lit, so it\'s harder to be sure this is the same person.'},
+    {name:'Imran Shaikh', req:'UX Designer',       st:'inreview',    iso:'2026-08-13', reason:'Checked · not submitted', score:63},
     {name:'Ananya Rao',   req:'Product Manager',   st:'verified',    completed:'match',        iso:'2026-08-14', reason:'Submitted by A. Sharma · 14:35', score:94, sub:'14:35'},
     {name:'Rohit Menon',  req:'SDET',              st:'verified',    completed:'inconclusive', iso:'2026-08-15', reason:'Submitted by A. Sharma · 15:42 · 1 couldn’t be confirmed', score:92, sub:'15:42', setAsideReason:'old photo, low resolution'},
     {name:'Sana Kapoor',  req:'Frontend Engineer', st:'notverified', completed:'notmatch',     iso:'2026-08-13', reason:'Submitted by A. Sharma · 10:20', score:22, sub:'10:20'},
@@ -2727,7 +2727,7 @@ function buildSeeds(){
     var key='s'+(i+1);
     var img=(window.RH_IMAGES && window.RH_IMAGES[key] && window.RH_IMAGES[key][0]) || null;
     var photos=[
-      {label:'Application photo',   src:'application', date:'02 Apr 2026',        by:null,       score:x.score, img:img, cause:(x.cause||null)},
+      {label:'Application photo',   src:'application', date:'02 Apr 2026',        by:null,       score:x.score, img:img},
       {label:'Round 1: screening', src:'interview',   date:'18 Apr 2026, 10:30', by:'S. Iyer',  score:x.score, img:img},
       {label:'Round 2: technical', src:'interview',   date:'02 May 2026, 15:20', by:'R. Menon', score:x.score, img:img}
     ];
