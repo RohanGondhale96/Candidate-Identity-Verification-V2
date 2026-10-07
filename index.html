@@ -1559,7 +1559,7 @@ function reportPrintDoc(s, c){
   var page=withState({decision:dec, rows:s.rows||[], entry:hh, photo:s.photo, attest:(s.attest!=null?s.attest:hh.attest), openRows:{}, _noStale:old},
     function(){ return completedReport(state, c); });
   var out='<div class="rpt-print">';
-  out+='<div class="pd-head"><div><div class="pd-brand">RippleHire</div><div class="pd-tag">Joining-day identity check</div></div>'+
+  out+='<div class="pd-head"><div><div class="pd-brand">RippleHire</div></div>'+
        '<div class="pd-hr-right"><div>Report '+h(reportId(c))+'</div><div>Version '+reportVersion(hh)+(old?' of '+submittedReports(c.id).length+' (superseded)':'')+'</div></div></div>';
   out+='<div class="pd-rule"></div>';
   out+='<div class="rpt-pp">'+page+'</div>';

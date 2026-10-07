@@ -44,7 +44,8 @@ looks like an accident.
   - every comparison open; photo pairs 170px wide each (about 45mm), cards don't split across pages,
     so a 3-photo report is about 2 A4 pages
   - colours print as on screen (`print-color-adjust:exact`)
-  - a print header (RippleHire, report ID, version, "of N (superseded)" for an older one) and at
+  - a print header (RippleHire, report ID, version, "of N (superseded)" for an older one; no
+    sub-line under RippleHire, removed 2026-10-07) and at
     the end the attestation consent text and the confidentiality line ("Downloaded by … on …")
   - an older version printed after newer photo changes doesn't show the out-of-date banner
     (`state._noStale`)
