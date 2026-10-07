@@ -6,6 +6,44 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Candidate page, report-only view, PDF trims (2026-10-07)
+
+**Context (new track).** Customer Success wants the identity check to also run as an automation in
+RippleHire's Agent Builder (no-code automations), for example when a candidate reaches the Offer
+round. No photo is taken: one photo on file (application photo for now) is the reference and every
+other photo on file is compared against it. Decisions so far:
+- The automated check is kept **separate** from the joining-day flow: its own standalone report page,
+  not in the worklist or Activity. In the product it is opened from a Collab entry on the RippleHire
+  candidate page ("View report", new tab).
+- No admin screen for the automation (the automation itself picks the reference and the photos).
+  The joining-day check will need its own admin screen later.
+- Open: whether an unattended run can produce "Needs review" or only Match / Not a match.
+- Next: design the automated report (same look as the joining-day report).
+
+**Candidate page** (`candidate.html`, standalone; the manager's idea). Layout A1 chosen from 6 options
+(split view, profile + report cards, journey timeline; then 3 split-view variants):
+- left: profile card (photo, name, RHID · role, stage pill, then Email, Phone, Joined, Location,
+  Recruiter, Source) and the list of every report for the candidate, each with a result pill
+- right: the selected report with Download
+- trimmed on review: no Requisition, no "Open in new tab", no icons and no dots in the list, no dot on
+  the stage pill, role shown once (under the name)
+- the joining-day report on the right is the **real** finalized report (see below), loaded once in an
+  iframe; Download prints it. Automated / Shield / Impersonation show placeholders until samples arrive.
+- demo data: Rahul Deshmukh (c1)
+
+**Report-only view.** `index.html?reportOnly=<candidate id>` renders just the report document
+(`reportPrintDoc`, the same one Download and the Activity preview use) and nothing else
+(`reportOnlyView`; `render` is frozen). If the candidate has no submitted report, `demoReportFor(c)`
+builds one from the seeded scores (review band / poor quality confirmed as same person, below 50
+marked not a match).
+
+**PDF / report document**
+- the "Confirmation" section (consent + "taken on the joining date") is removed from the report
+  document everywhere (PDF, Activity preview, candidate page). Together with the hidden "taken and
+  confirmed by" line, the PDF no longer states consent or who confirmed the photo; the report page
+  still shows the line.
+- Open: keep or drop "Version 1" in the report header.
+
 ## Reverify: what the recruiter confirms, "confirmed" wording, current photos (2026-10-06)
 
 - **"Attest" is gone from the UI.** Report line "Joining-day photo taken and confirmed by …",

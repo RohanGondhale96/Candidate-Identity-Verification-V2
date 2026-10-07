@@ -417,11 +417,13 @@
   .rpt-print .pp-sp{height:0}
   .rpt-print .pp-frame{width:100%;border-collapse:collapse}
   .rpt-print .pp-frame td{padding:0;vertical-align:top}
-  .rpt-print .pp-att{margin-top:18px;font-size:12.5px;color:#2A2A2A;break-inside:avoid}
-  .rpt-print .pp-att-h{font-size:13px;font-weight:700;margin-bottom:4px}
-  .rpt-print .pp-att p{margin:0 0 4px;line-height:1.5}
   .rpt-print .pp-foot{margin-top:18px;padding-top:8px;border-top:1px solid #D5D5D5;font-size:10.5px;color:#666}
 
+  /* report-only view (embedded in the candidate page) */
+  body.rv-embed-body{background:#fff}
+  .rh-repview.rv-embed{position:static;inset:auto;background:none;display:block;z-index:auto}
+  .rh-repview.rv-embed .rv-scroll{padding:0;overflow:visible}
+  .rh-repview.rv-embed .rv-page{box-shadow:none;max-width:none;border-radius:0;padding:24px 26px}
   /* Report preview (opened from Activity): any version, shown as the downloadable report */
   .rh-repview{position:fixed;inset:0;z-index:90;background:rgba(17,24,39,.62);display:flex;flex-direction:column}
   .rh-repview .rv-bar{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:12px 20px;background:#0B0D12;color:#fff}
@@ -1573,10 +1575,6 @@ function reportPrintDoc(s, c){
        '<div class="pd-hr-right"><div>Report '+h(reportId(c))+'</div><div>Version '+reportVersion(hh)+(old?' of '+submittedReports(c.id).length+' (superseded)':'')+'</div></div></div>';
   out+='<div class="pd-rule"></div>';
   out+='<div class="rpt-pp">'+page+'</div>';
-  out+='<div class="pp-att"><div class="pp-att-h">Confirmation</div>'+
-       (isReverifyCheck(hh)
-         ? '<p>Consent was obtained from the candidate to use and compare this photo.</p><p>The photo is of '+h(c.name)+', the person who reported to join on '+h(c.joining||'')+'.</p></div>'
-         : '<p>Consent was obtained from the candidate to take and compare the joining-day photo.</p><p>The photo was taken on the joining date, of the person who reported to join.</p></div>');
   out+='<div class="pp-foot">Confidential. Contains the candidate’s personal data, including face images. Downloaded by '+h(by)+' on '+h(nowStamp())+'.</div>';
   out+='</td></tr></tbody></table></div>';
   return out;
@@ -2751,6 +2749,34 @@ function buildSeeds(){
    (rows + decision) and store it as a history entry - pick() then routes it through openHistory,
    reusing all the real report rendering. Kept internally consistent so the worklist pill and the
    report banner agree the same way a real submission would. */
+/* DEMO: a submitted joining-day report built from the candidate's own seeded scores (for candidates
+   whose check isn't seeded as completed, e.g. Rahul): clear matches stay Match, the review band was
+   confirmed as the same person by the recruiter, a clear mismatch was marked Not a match. */
+function demoReportFor(c){
+  var rows = c.photos.map(function(p){
+    var r = Object.assign({}, p, {status:'done', confidence:92, review:null, asked:true});
+    if(p.cant){ r.status='error'; r.err='No face detected in this document'; r.score=null; return r; }
+    r.samePerson = p.score>=80;
+    if(p.score<50){ r.review='notmatch'; r.reviewedBy='A. Sharma'; }
+    else if(p.score<85 || p.quality==='poor'){ r.review='same'; r.reviewedBy='A. Sharma'; }   // review band / poor quality: recruiter confirmed
+    return r;
+  });
+  var joining = (c.photos[1] && c.photos[1].img) || (c.photos[0] && c.photos[0].img) || null;
+  var v = reportSummary(rows);
+  return { cand:c, photo:joining, rows:rows, shared:[], at:'10:20', attest:true, quality:{usable:true, reason:'ok', message:''},
+           decision:{ action:'submitted', by:'A. Sharma', at:(c.joining||'')+', 10:20', note:'', status:v.tier, unreviewed:v.unresolved } };
+}
+function reportOnlyView(){
+  var id; try{ id=new URLSearchParams(location.search).get('reportOnly'); }catch(e){}
+  if(!id) return;
+  var c=CANDIDATES.find(function(x){ return x.id===id || x.rhid===id; }); if(!c) return;
+  var lc=latestCheck(c.id), hh=(lc && lc.hh && lc.hh.decision) ? lc.hh : null;
+  if(!hh){ hh=demoReportFor(c); state.history.push(hh); }
+  var doc=reportPrintDoc({decision:hh.decision, rows:hh.rows||[], entry:hh, photo:hh.photo, attest:true}, c);
+  document.body.classList.add('rv-embed-body');
+  document.getElementById('app').innerHTML='<div class="rh-repview rv-embed"><div class="rv-scroll"><div class="rv-page">'+doc+'</div></div></div>';
+  render=function(){};   // this view is a static document; nothing re-renders it
+}
 function synthCompletedEntry(c){
   var kind = (c.wl && c.wl.completed) || 'match';
   var joining = (c.photos[0] && c.photos[0].img) || null;
@@ -2813,6 +2839,7 @@ function synthCompletedEntry(c){
     if(el.getBoundingClientRect().top < vh + 240) wlLoadMore();
   }, {passive:true});
   wlApplyUrl();
+  reportOnlyView();
 })();
 </script>
 </body>
