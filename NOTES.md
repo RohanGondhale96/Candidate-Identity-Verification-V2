@@ -58,6 +58,14 @@ removed; `causeText` = `aiReason`.
   still shows the line.
 - "Version 1" removed from the report header (2026-10-07, after the first real PDF download). Only
   an older, replaced report still says "Version N of M (superseded)" there.
+- **No "Downloaded by … on …" in the PDF; details go in the file name** (agreed with Kabir and Atharv,
+  2026-10-07). The backend generates the PDF once when the report is submitted and stores it in the
+  cloud, so opening/downloading is instant. A per-download line would force a re-render on every
+  download. None of the other RippleHire reports (transcript, Impersonation, iCatch) have it either.
+  - footer is now only "Confidential. Contains the candidate's personal data, including face images."
+  - file name: `<RHID>-JoiningDayIdentityCheck-<report id>` (e.g. `RH49006-JoiningDayIdentityCheck-RHS-49006-0813`),
+    `-v<N>` added only for an older, replaced version (`reportFileName`). In the prototype the page title
+    is set to it for the print, since Save as PDF uses the title as the file name.
 - **Timezone on every time.** Any date with a time gets the company timezone label ("18 Apr 2026, 10:30
   IST"): Submitted line, summary rows, card dates, photo captions, out-of-date banner, review screen.
   Date-only values stay plain. Application photos and documents now carry their upload time in the
