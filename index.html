@@ -884,6 +884,10 @@ function joinStamp(c){ return c ? (c.joining||fmtLong(c.joiningISO))+', 09:41' :
    compared is happening now; seeded reports were taken on the joining day */
 /* a check started from Reverify (its photo could be from the joining day or later, so we don't claim a date) */
 function isReverifyCheck(hh){ return !!((hh && hh.reverify) || (state.reverifyRun && (!hh || hh===state.entry))); }
+/* Times are labelled with the company's timezone (tenant setting in the product; IST in this prototype).
+   Only a date that carries a time gets the label: "18 Apr 2026, 10:30" -> "18 Apr 2026, 10:30 IST". */
+var COMPANY_TZ='IST';
+function tz(t){ t=String(t==null?'':t); return /\d{1,2}:\d{2}$/.test(t) ? t+' '+COMPANY_TZ : t; }
 function photoStamp(c, hh){
   // reverify: we only know when the photo was uploaded, so that is the time on record
   if(isReverifyCheck(hh)) return (hh && hh.ranAt) || nowStamp().replace(/ IST$/,'');
@@ -1250,9 +1254,9 @@ function comparePanes(r, seed, i, c){
   // caption mirrors the joining-day pane: "Photo taken during <round>" / date+time (per manager)
   var capPrimary = r.by ? ('Photo taken during '+h(r.label)) : (r.src==='document' ? 'Identity document' : h(r.label||'On-file photo'));
   var refPane='<div class="rpt-pane" onclick="openLightbox('+i+')" style="'+paneStyle+'">'+photoTile(r,seed,'contain')+
-    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+capPrimary+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:2px">'+h(r.date)+'</div></div></div>';
+    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+capPrimary+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:2px">'+h(tz(r.date))+'</div></div></div>';
   var todayPane='<div class="rpt-pane" onclick="openLightbox(\'join\')" style="'+paneStyle+'">'+uploadedImg('contain')+
-    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+(isReverifyCheck(state.entry)?'Photo uploaded':'Photo taken on joining day')+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(photoStamp(c, state.entry))+'</div></div></div>';
+    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+(isReverifyCheck(state.entry)?'Photo uploaded':'Photo taken on joining day')+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(tz(photoStamp(c, state.entry)))+'</div></div></div>';
   return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+refPane+todayPane+'</div>';
 }
 function reportThumbs(r, seed){
@@ -1263,7 +1267,7 @@ var V2CARD='background:#fff;border:1px solid #E5E9F0;border-radius:16px;box-shad
 function reportCard(i, r, c){
   var st=photoState(r), flagged=(st==='review'||st==='nomatch'), isCant=(st==='cant');
   var open=effectiveOpen(i,r), seed=(c?c.id:'')+r.label, chip=rowBadge(r), clickable=!isCant;
-  var subline = h(r.date);
+  var subline = h(tz(r.date));
   var caret = isCant ? '<span style="width:30px;flex-shrink:0"></span>'
     : '<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" style="width:30px;height:30px;border:0;background:none;cursor:pointer;display:grid;place-items:center;border-radius:7px;flex-shrink:0">'+chevron(open?'180deg':'0deg')+'</button>';
   var head='<div style="display:flex;align-items:center;gap:13px;padding:14px 16px'+(clickable?';cursor:pointer':'')+'"'+(clickable?(' onclick="toggleRow('+i+')"'):'')+'>'+
@@ -1401,7 +1405,7 @@ function staleVerb(si){ return (si&&si.verb)||'changed'; }
 function staleBannerVerb(si){ var v=staleVerb(si); return v==='replaced'?'updated':v; }
 function staleTitle(c){ var si=c.staleInfo, list=(si&&(si.changes||[si]))||[]; if(list.length!==1) return 'Photos updated after report was submitted'; return list[0].what+' '+staleBannerVerb(list[0])+' after report was submitted'; }
 function staleSentence(c){ var si=c.staleInfo; if(!si) return ''; var list=si.changes||[si];
-  var parts=list.map(function(ch){ return staleActor(ch)+' '+staleBannerVerb(ch)+' the '+photoPhrase(ch.what)+' on '+ch.date+', '+ch.time+'.'; });
+  var parts=list.map(function(ch){ return staleActor(ch)+' '+staleBannerVerb(ch)+' the '+photoPhrase(ch.what)+' on '+tz(ch.date+', '+ch.time)+'.'; });
   return parts.join(' ')+' Rerun the identity check again.'; }
 function reportVerdict(rows){ var v=reportSummary(rows); return {confirmed:(v.tier==='match'||v.tier==='reviewed'), tier:v.tier}; }
 /* single source for a row's result label + colours (mirrors rowBadge, but re-usable as a grey variant) */
@@ -1433,7 +1437,7 @@ function completedCard(i, r, c, stale){
     :'<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" class="rpt-caret">'+chevron(open?'180deg':'0deg')+'</button>';
   var head='<div class="rpt-cardhead"'+(isCant?'':(' onclick="toggleRow('+i+')" style="cursor:pointer"'))+'>'+
     (open?'':reportThumbs(r,seed))+
-    '<div style="flex:1;min-width:0"><div class="rpt-cardname" style="display:flex;align-items:center;gap:8px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h(r.label)+'</span>'+(changed?changeTag(changeFor(c,r)):'')+'</div><div class="rpt-carddate">'+h(r.date)+'</div></div>'+
+    '<div style="flex:1;min-width:0"><div class="rpt-cardname" style="display:flex;align-items:center;gap:8px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h(r.label)+'</span>'+(changed?changeTag(changeFor(c,r)):'')+'</div><div class="rpt-carddate">'+h(tz(r.date))+'</div></div>'+
     '<div class="rpt-cardright">'+resultBadge(r,stale)+caret+'</div>'+
   '</div>';
   var body='';
@@ -1481,12 +1485,12 @@ function completedReport(s, c){
     '<div class="rpt-vhead">'+
       '<span class="rpt-vico" style="color:'+vcol+'"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'+vico+'</svg></span>'+
       '<span class="rpt-vtext" style="color:'+vcol+'">'+h(verdictText)+'</span>'+
-      '<span class="rpt-vsub">Submitted by '+h(by)+' · '+h(submittedAt)+'</span>'+
+      '<span class="rpt-vsub">Submitted by '+h(by)+' · '+h(tz(submittedAt))+'</span>'+
     '</div>'+
     '<div class="rpt-stable">'+ rows.map(function(r,i){
       return '<button type="button" class="rpt-srow" onclick="scrollToRow('+i+')">'+
         '<span class="s-name"><span class="s-lbl">'+h(r.label)+'</span>'+(isChangedRow(c,r)?changeTag(changeFor(c,r)):'')+'</span>'+
-        '<span class="s-date">'+h(r.date)+'</span>'+
+        '<span class="s-date">'+h(tz(r.date))+'</span>'+
         '<span class="s-badge">'+resultBadge(r,stale)+'</span>'+
       '</button>';
     }).join('')+'</div>'+
