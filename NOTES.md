@@ -58,6 +58,9 @@ removed; `causeText` = `aiReason`.
   still shows the line.
 - "Version 1" removed from the report header (2026-10-07, after the first real PDF download). Only
   an older, replaced report still says "Version N of M (superseded)" there.
+- **Summary rows show photo name + result only.** The date next to each result read like the time of
+  the match (all comparisons run at once, on joining day); the photo's own date stays in its card
+  (title and caption). Removed `.s-date` (2026-10-07).
 - **No "Downloaded by … on …" in the PDF; details go in the file name** (agreed with Kabir and Atharv,
   2026-10-07). The backend generates the PDF once when the report is submitted and stores it in the
   cloud, so opening/downloading is instant. A per-download line would force a re-render on every
