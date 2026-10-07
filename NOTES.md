@@ -58,6 +58,8 @@ removed; `causeText` = `aiReason`.
   still shows the line.
 - "Version 1" removed from the report header (2026-10-07, after the first real PDF download). Only
   an older, replaced report still says "Version N of M (superseded)" there.
+- Report header shows the RippleHire **logo** (`RH_LOGO`, a 163x33 PNG from the brand team, 24px tall)
+  instead of the word. Open: swap in the SVG for a crisp print (the file is in OneDrive, not reachable yet).
 
 ## Reverify: what the recruiter confirms, "confirmed" wording, current photos (2026-10-06)
 
