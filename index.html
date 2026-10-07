@@ -1428,13 +1428,6 @@ function completedRowNote(r, c){
   return '';
 }
 /* photo pair for the completed report - captions are just "Reference" / "Joining day" */
-function completedPanes(r, seed, i){
-  var paneStyle='position:relative;width:100%;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD';
-  var capStyle='position:absolute;left:0;right:0;bottom:0;padding:16px 11px 8px;background:linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,0));color:#fff;font-size:12px;font-weight:600';
-  var ref='<div class="rpt-pane" onclick="openLightbox('+i+')" style="'+paneStyle+'">'+photoTile(r,seed,'contain')+'<div style="'+capStyle+'">Reference</div></div>';
-  var today='<div class="rpt-pane" onclick="openLightbox(\'join\')" style="'+paneStyle+'">'+uploadedImg('contain')+'<div style="'+capStyle+'">Joining day</div></div>';
-  return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:2px">'+ref+today+'</div>';
-}
 function completedCard(i, r, c, stale){
   var open=effectiveOpen(i,r), seed=(c?c.id:'')+r.label, isCant=(photoState(r)==='cant'), changed=isChangedRow(c,r);
   var caret=isCant?'<span style="width:30px;flex-shrink:0"></span>'
@@ -1448,7 +1441,7 @@ function completedCard(i, r, c, stale){
   if(isCant){ body='<div class="rpt-cardbody">'+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
   else if(open){
     var note=changed ? amberNoteBox('This is the photo compared on '+submitShort(state.decision)+'. The new one hasn’t been checked yet.') : completedRowNote(r,c);
-    body='<div class="rpt-cardbody">'+completedPanes(r,seed,i)+note+'</div>';
+    body='<div class="rpt-cardbody">'+comparePanes(r,seed,i,c)+note+'</div>';   // same captions as the review screen
   }
   return '<article id="rpt-round-'+i+'" class="rpt-card">'+head+body+'</article>';
 }

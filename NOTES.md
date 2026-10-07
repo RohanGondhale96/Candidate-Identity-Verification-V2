@@ -38,6 +38,11 @@ builds one from the seeded scores (review band / poor quality confirmed as same 
 marked not a match).
 
 **PDF / report document**
+- photo captions in the completed report (page, PDF, Activity preview, candidate page) now match the
+  review screen: left "<photo name> · <date>" ("Photo taken during Round 1: screening", "Identity
+  document"), right "Photo taken on joining day · <time>" (reverify: "Photo uploaded · <time>").
+  `completedCard` reuses `comparePanes`; `completedPanes` (the "Reference" / "Joining day" labels)
+  is gone.
 - the "Confirmation" section (consent + "taken on the joining date") is removed from the report
   document everywhere (PDF, Activity preview, candidate page). Together with the hidden "taken and
   confirmed by" line, the PDF no longer states consent or who confirmed the photo; the report page
