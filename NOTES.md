@@ -43,8 +43,13 @@ looks like an accident.
     Reverify); `.rpt-print` has `pointer-events:none`
   - the "Joining-day photo taken and confirmed by …" line is hidden in the PDF (removed 2026-10-07);
     the Confirmation section at the end covers consent and who is in the photo
-  - every comparison open; photo pairs 170px wide each (about 45mm), cards don't split across pages,
-    so a 3-photo report is about 2 A4 pages
+  - every comparison open; cards don't split across pages. Since 2026-10-07 the two photos fill the
+    card width, cropped to head and shoulders (`.rpt-pane` 16:10, `object-fit:cover`, top 22%), with
+    the result top-right and the reviewer note underneath; a 3-photo report is about 1.6 A4 pages.
+    Tried and dropped: two cards per row, photos-left/result-right, a compact one-line row.
+  - no page margin (`@page{margin:0}`), so Chrome has nowhere to print its own date / title / URL /
+    page count; a repeating table header/footer (`.pp-frame`, `.pp-sp` 12mm) gives each page its
+    top and bottom space
   - colours print as on screen (`print-color-adjust:exact`)
   - a print header (RippleHire, report ID, version, "of N (superseded)" for an older one; no
     sub-line under RippleHire, removed 2026-10-07) and at

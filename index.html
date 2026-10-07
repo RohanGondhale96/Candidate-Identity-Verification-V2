@@ -409,12 +409,19 @@
   .rpt-print .rpt-attest{display:none !important}   /* the PDF's Confirmation section at the end covers this */
   .rpt-print .rh-card,.rpt-print .rpt-card{box-shadow:none}
   .rpt-print .rpt-card{break-inside:avoid;page-break-inside:avoid}
-  .rpt-print .rpt-panes{grid-template-columns:repeat(2,170px) !important;gap:10px !important}
+  /* each comparison: the two photos fill the card width, cropped to head and shoulders */
+  .rpt-print .rpt-panes{grid-template-columns:1fr 1fr !important;gap:10px !important}
+  .rpt-print .rpt-pane{aspect-ratio:16/10 !important}
+  .rpt-print .rpt-pane img{object-fit:cover !important;object-position:center 22% !important}
+  .rpt-print .rpt-note{margin-top:12px}
+  .rpt-print .pp-sp{height:0}
+  .rpt-print .pp-frame{width:100%;border-collapse:collapse}
+  .rpt-print .pp-frame td{padding:0;vertical-align:top}
   .rpt-print .pp-att{margin-top:18px;font-size:12.5px;color:#2A2A2A;break-inside:avoid}
   .rpt-print .pp-att-h{font-size:13px;font-weight:700;margin-bottom:4px}
   .rpt-print .pp-att p{margin:0 0 4px;line-height:1.5}
   .rpt-print .pp-foot{margin-top:18px;padding-top:8px;border-top:1px solid #D5D5D5;font-size:10.5px;color:#666}
-  @media(max-width:600px){.rpt-print .rpt-panes{grid-template-columns:1fr 1fr !important}}
+
   /* Report preview (opened from Activity): any version, shown as the downloadable report */
   .rh-repview{position:fixed;inset:0;z-index:90;background:rgba(17,24,39,.62);display:flex;flex-direction:column}
   .rh-repview .rv-bar{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:12px 20px;background:#0B0D12;color:#fff}
@@ -440,7 +447,9 @@
     .rh-repview .rv-bar{display:none !important}
     .rh-repview .rv-scroll{padding:0;overflow:visible}
     .rh-repview .rv-page{padding:0;box-shadow:none;max-width:none}
-    @page{size:A4 portrait;margin:14mm}
+    @page{size:A4 portrait;margin:0}
+    .rpt-print{padding:0 14mm}
+    .rpt-print .pp-sp{height:12mm}
     html,body{background:#fff}
     .rpt-print{display:block !important;color:#2A2A2A}
     .pd-head{display:flex;justify-content:space-between;align-items:flex-start}
@@ -1559,7 +1568,7 @@ function reportPrintDoc(s, c){
   var by=(dec&&dec.by)||(c.wl&&c.wl.by)||'A. Sharma';
   var page=withState({decision:dec, rows:s.rows||[], entry:hh, photo:s.photo, attest:(s.attest!=null?s.attest:hh.attest), openRows:{}, _noStale:old},
     function(){ return completedReport(state, c); });
-  var out='<div class="rpt-print">';
+  var out='<div class="rpt-print"><table class="pp-frame"><thead><tr><td><div class="pp-sp"></div></td></tr></thead><tfoot><tr><td><div class="pp-sp"></div></td></tr></tfoot><tbody><tr><td>';
   out+='<div class="pd-head"><div><div class="pd-brand">RippleHire</div></div>'+
        '<div class="pd-hr-right"><div>Report '+h(reportId(c))+'</div><div>Version '+reportVersion(hh)+(old?' of '+submittedReports(c.id).length+' (superseded)':'')+'</div></div></div>';
   out+='<div class="pd-rule"></div>';
@@ -1569,7 +1578,7 @@ function reportPrintDoc(s, c){
          ? '<p>Consent was obtained from the candidate to use and compare this photo.</p><p>The photo is of '+h(c.name)+', the person who reported to join on '+h(c.joining||'')+'.</p></div>'
          : '<p>Consent was obtained from the candidate to take and compare the joining-day photo.</p><p>The photo was taken on the joining date, of the person who reported to join.</p></div>');
   out+='<div class="pp-foot">Confidential. Contains the candidate’s personal data, including face images. Downloaded by '+h(by)+' on '+h(nowStamp())+'.</div>';
-  out+='</div>';
+  out+='</td></tr></tbody></table></div>';
   return out;
 }
 
