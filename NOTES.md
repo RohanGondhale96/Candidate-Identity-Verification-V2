@@ -6,6 +6,35 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Admin screen: Joining-day Identity Check settings (2026-10-08)
+
+`admin.html`, styled like the other RippleHire admin screens (AI Voice Interview, Interview & Review
+Setup, Impersonation Verification): dark top nav, back arrow + title, left sub-nav, one white card,
+green toggles, role checkboxes + "Allow specific users" chips, underlined inputs, Submit bottom right,
+RH toaster top centre. Settings are saved in the browser (`localStorage` key `rhIdvSettings`, shared
+with `index.html` on the same site) and the prototype reads them on load, so they really drive it.
+The settings model + defaults live in one block (`IDV_DEFAULTS`, `idvLoad`, `idvSave`) copied into
+both pages; anything missing falls back to the defaults. Worklist has a **Settings** button.
+
+| Section | Configurable | Effect in the prototype |
+|---|---|---|
+| Basic setup | on/off; rounds (Offered, Onboarding, Hired); who can run a check, submit a report, reverify (roles + specific users) | off shows a "turned off" card; worklist lists only candidates in the chosen rounds; no access hides the action or shows a note (`canDo`) |
+| Photos to compare | application photo; interview photos (all or selected Round 1-4); identity documents (checkboxes, Aadhaar / PAN / Driving licence ticked by default, "+ Add more" pop-up for Passport, Voter ID, …) | `comparePhotos(c)` decides what each run compares and what the photo list shows |
+| Match rules | Match / Needs review thresholds for photos (85/50) and documents (65/40); Reset to defaults (thresholds only, only here) | `photoBar` / `reviewFloor` |
+| Photo upload | camera on/off, file upload on/off | Take photo / Upload file buttons |
+| Reverify | out of date when a photo is replaced / deleted / added; ask for a reason; who is notified | `applyOutdatedRules`; reason box in the Reverify dialog, saved in Activity; Activity says who was notified |
+| Report | company timezone | times converted (fixed offsets, no daylight saving) and labelled on the report and in Activity (`tz`, `tzTime`) |
+
+**Not configurable on purpose (always on):** photo quality checks (more than one face, blurry, too
+dark, not facing, face covered; no face), crop, the confirmation checkbox wording, reverify on a
+current report, the downloaded file name. A first version exposed these; removed on review.
+Roles exclude Subsidiary Recruiter. No gating rule (for example "mark joined only when confirmed")
+for now.
+
+**Prototype limits:** settings are per browser (no backend); the signed-in user is fixed as
+A. Sharma (Recruiter) for access rules; "notify" is shown in Activity, no email is sent.
+Harness: checks for each setting; all pass with the defaults unchanged.
+
 ## Candidate page, report-only view, PDF trims (2026-10-07)
 
 **Context (new track).** Customer Success wants the identity check to also run as an automation in

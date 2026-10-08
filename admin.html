@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Joining-day Identity Check</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{--blue:#0076FB;--ink:#2A2A2A;--muted:#5A6473;--soft:#747474;--line:#E0E3E8;--bg:#F5F6F8;--green:#1E8E3E}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Open Sans','Helvetica Neue',sans-serif;color:var(--ink);background:var(--bg);font-size:14px}
+  button,input,select,textarea{font-family:inherit}
+  /* top nav (as in the other RippleHire admin screens) */
+  .topnav{height:86px;background:#0B0D12;color:#fff;display:flex;align-items:center;padding:0 28px;border-bottom:5px solid #3B3FD1}
+  .topnav .co{font-weight:800;letter-spacing:.04em;font-size:15px;min-width:180px}
+  .topnav nav{flex:1;display:flex;justify-content:center;gap:4px;overflow:hidden}
+  .topnav nav a{color:#fff;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:14px;padding:6px 10px;white-space:nowrap}
+  .topnav nav svg{width:22px;height:22px}
+  .topnav .kebab{width:24px;text-align:center;font-size:22px;line-height:1}
+  .ph{background:#fff;border-bottom:1px solid #E7E9ED;height:70px;display:flex;align-items:center;gap:14px;padding:0 24px}
+  .ph a{color:var(--ink);display:grid;place-items:center}
+  .ph h1{margin:0;font-size:20px;font-weight:500}
+  .layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:20px;max-width:1500px;margin:0 auto;padding:36px 24px 60px}
+  .side{display:flex;flex-direction:column;gap:4px;padding-top:6px}
+  .side button{border:0;background:none;text-align:left;padding:13px 12px;font-size:14.5px;color:var(--ink);border-radius:4px;cursor:pointer;font-weight:500}
+  .side button:hover{background:#ECEEF2}
+  .side button.on{background:#E3E5EA;font-weight:600}
+  .card{background:#fff;border-radius:4px;box-shadow:0 1px 4px rgba(16,24,40,.08);padding:40px 42px 32px}
+  .sec-title{margin:0 0 8px;font-size:20px;font-weight:600}
+  .info{display:flex;align-items:flex-start;gap:8px;font-size:14px;color:var(--ink);line-height:1.5;margin:0}
+  .info.soft{color:#7A8494;font-size:13.5px}
+  .info svg{flex-shrink:0;margin-top:2px}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 0}
+  .row .t{font-size:16px}
+  .block{padding:26px 0;border-top:1px solid var(--line)}
+  .block:first-of-type{border-top:0}
+  .block h3{margin:0 0 10px;font-size:16px;font-weight:500}
+  .sub{padding-left:36px}
+  .lbl{font-size:12.5px;color:#5F6B7A;margin-bottom:4px}
+  .req{color:#D93025}
+  .hint{font-size:12.5px;color:var(--soft);margin-top:6px;line-height:1.45}
+  .err{font-size:12.5px;color:#D93025;margin-top:6px}
+  /* toggle */
+  .tg{position:relative;width:42px;height:22px;flex-shrink:0;cursor:pointer}
+  .tg input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+  .tg span{position:absolute;inset:0;border-radius:999px;background:#C9CDD3;transition:background .15s}
+  .tg span::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:left .15s}
+  .tg input:checked+span{background:var(--green)}
+  .tg input:checked+span::after{left:22px}
+  .tg input:focus-visible+span{box-shadow:0 0 0 3px rgba(0,118,251,.35)}
+  /* checkboxes / radios */
+  .cbs{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:8px}
+  .cbs.col{flex-direction:column;gap:12px}
+  .cb{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:15px}
+  .cb input{width:17px;height:17px;margin:0;accent-color:var(--blue);cursor:pointer}
+  /* chips + email input */
+  .chips{display:flex;flex-wrap:wrap;gap:10px;align-items:center;border-bottom:1px solid #9AA1AC;padding:6px 0 8px;margin-top:6px}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:#E8EAEE;border-radius:999px;padding:7px 10px 7px 14px;font-size:14.5px}
+  .chip button{border:0;background:#6E7683;color:#fff;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;cursor:pointer;padding:0;font-size:11px;line-height:1}
+  .chips input{flex:1;min-width:180px;border:0;outline:0;font-size:14.5px;padding:6px 0;background:none}
+  /* underlined inputs */
+  .fld{max-width:380px;margin-top:6px}
+  .fld input,.fld select{width:100%;border:0;border-bottom:1px solid #9AA1AC;padding:7px 0;font-size:15px;outline:0;background:none;color:var(--ink)}
+  .fld input:focus,.fld select:focus,.ta:focus{border-bottom-color:var(--blue)}
+  .ta{width:100%;border:0;border-bottom:1px solid #9AA1AC;padding:7px 0;font-size:14.5px;outline:0;resize:vertical;min-height:44px;line-height:1.5;color:var(--ink);background:none}
+  .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,280px));gap:18px 40px;margin-top:12px}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:28px}
+  .btn{height:40px;border-radius:6px;padding:0 20px;font-size:15px;font-weight:700;cursor:pointer}
+  .btn.pri{background:var(--blue);border:1px solid var(--blue);color:#fff}
+  .btn.pri:hover{background:#026BE1}
+  .lnk{border:0;background:none;color:var(--blue);font-weight:600;font-size:14px;cursor:pointer;padding:0}
+  .lnk:hover{text-decoration:underline}
+  .addmore{margin-top:14px;border:0;background:none;color:var(--blue);font-weight:600;font-size:14px;cursor:pointer;padding:0}
+  .addmore:hover{text-decoration:underline}
+  .scrim{position:fixed;inset:0;background:rgba(17,24,39,.45);display:grid;place-items:center;z-index:40;padding:16px}
+  .dlg{background:#fff;border-radius:8px;width:440px;max-width:100%;box-shadow:0 12px 32px rgba(0,0,0,.2);display:flex;flex-direction:column;max-height:calc(100vh - 32px)}
+  .dlg header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)}
+  .dlg h2{margin:0;font-size:17px;font-weight:600}
+  .dlg .x{border:0;background:#F1F2F4;width:30px;height:30px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--ink)}
+  .dlg .dbody{padding:16px 20px;overflow:auto}
+  .dlg footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--line)}
+  .btn.sec{background:#fff;border:1px solid #C7CCD4;color:var(--ink);font-weight:600}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .tok{display:inline-block;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:#F1F3F6;border:1px solid #E1E4EA;border-radius:4px;padding:1px 6px;margin:2px 4px 2px 0;cursor:pointer}
+  .preview{margin-top:10px;font-size:13px;color:var(--muted)}
+  .preview b{font-family:ui-monospace,Consolas,monospace;font-weight:500;color:var(--ink)}
+  /* RippleHire toaster: top centre */
+  .toaster{position:fixed;top:24px;left:0;right:0;margin:0 auto;width:420px;max-width:calc(100vw - 32px);background:#fff;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.12);border-left:2px solid #12B76A;display:flex;gap:12px;padding:16px;z-index:50;animation:tin .2s ease-out}
+  .toaster.bad{border-left-color:#D93025}
+  .toaster .ti{width:32px;height:32px;border-radius:50%;background:#D1FAE5;color:#12B76A;display:grid;place-items:center;flex-shrink:0}
+  .toaster.bad .ti{background:#FDECEC;color:#D93025}
+  .toaster .tt{font-size:15px;font-weight:700}.toaster .tm{font-size:13px;color:var(--muted);margin-top:2px}
+  @keyframes tin{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.toaster{animation:none}}
+  @media(max-width:900px){
+    .topnav{height:60px}.topnav nav{display:none}
+    .layout{grid-template-columns:1fr;padding:16px}
+    .side{flex-direction:row;overflow-x:auto;gap:6px}
+    .side button{white-space:nowrap;padding:9px 12px}
+    .card{padding:24px 18px}
+    .sub{padding-left:0}
+    .grid2{grid-template-columns:1fr}
+    .toaster{top:16px;left:16px;right:16px;width:auto;margin:0}
+  }
+</style>
+</head>
+<body>
+<header class="topnav">
+  <div class="co">YOUR COMPANY</div>
+  <nav aria-label="Main">
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>Home</a><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10v4h3l7 4V6L6 10H3z"/><path d="M17 9l3-2M17 15l3 2M18 12h3"/></svg>Campaigns</a><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2M3 12h18"/></svg>Jobs</a><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 14.8c1.6.8 2.6 2.6 3 5.2"/></svg>Candidates</a><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M8 14l3 3 5-6"/></svg>Drive</a><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9z"/></svg>Events</a><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20h14M7 16l9.5-9.5a2 2 0 0 0-3-3L4 13v3z"/></svg>Requests</a><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Insights</a><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10M10 20V4M15 20v-7M20 20V8"/></svg>Reports</a><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload</a>
+  </nav>
+  <div class="kebab" aria-hidden="true">&#8942;</div>
+</header>
+<div class="ph"><a href="index.html" aria-label="Back to the worklist"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></a><h1>Joining-day Identity Check</h1></div>
+<div class="layout">
+  <div class="side" id="side" role="tablist" aria-label="Settings sections"></div>
+  <main class="card" id="card"></main>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ===== Joining-day Identity Check settings (shared by admin.html and the prototype) =====
+   Saved in this browser (localStorage 'rhIdvSettings'); anything missing falls back to the defaults.
+   Not configurable (always on): photo quality checks, crop, the confirmation checkbox wording,
+   reverify on a current report, the downloaded file name. */
+var IDV_ROLES = ['Admin','Recruiter','Hiring User','HM Admin','Hiring User ER','Approver','Onboarding user','Primary Recruiter'];
+var IDV_ROUNDS = ['Offered','Onboarding','Hired'];
+var IDV_INTERVIEW_ROUNDS = ['Round 1','Round 2','Round 3','Round 4'];
+var IDV_ALL_DOCUMENTS = ['Aadhaar card','PAN card','Driving licence','Passport','Voter ID card','Ration card','Employee ID card','Student ID card','OCI card','National ID card'];
+var IDV_TIMEZONES = [['IST','India (IST, UTC+5:30)',330],['UTC','UTC',0],['GST','Gulf (GST, UTC+4)',240],['SGT','Singapore (SGT, UTC+8)',480],['GMT','UK (GMT, UTC+0)',0],['EST','US Eastern (EST, UTC-5)',-300],['PST','US Pacific (PST, UTC-8)',-480]];
+var IDV_DEFAULTS = {
+  enabled: true,
+  rounds: ['Onboarding','Hired'],
+  access: {
+    run:      { roles:['Admin','Recruiter','Onboarding user'], users:[] },
+    submit:   { roles:['Admin','Recruiter'], users:[] },
+    reverify: { roles:['Admin','Recruiter'], users:[] }
+  },
+  photos: { application:true, interviews:true, interviewMode:'all', interviewRounds:['Round 1','Round 2','Round 3','Round 4'],
+            documents:true, documentList:['Aadhaar card','PAN card','Driving licence'], documentTypes:['Aadhaar card','PAN card','Driving licence'] },
+  thresholds: { photoMatch:85, photoReview:50, docMatch:65, docReview:40 },
+  upload: { allowCamera:true, allowFile:true },
+  reverify: { outdatedOn:{ replaced:true, deleted:true, added:true }, requireReason:false, notify:{ roles:['Recruiter'], users:[] } },
+  report: { timezone:'IST' }
+};
+function idvMerge(base, over){
+  if(Array.isArray(base)) return Array.isArray(over) ? over.slice() : base.slice();
+  if(base && typeof base==='object'){ var o={}; Object.keys(base).forEach(function(k){ o[k]=idvMerge(base[k], over && typeof over==='object' ? over[k] : undefined); }); return o; }
+  return (over===undefined || over===null || typeof over!==typeof base) ? base : over;
+}
+function idvLoad(){ var saved=null; try{ saved=JSON.parse(localStorage.getItem('rhIdvSettings')||'null'); }catch(e){} return idvMerge(IDV_DEFAULTS, saved); }
+function idvSave(s){ try{ localStorage.setItem('rhIdvSettings', JSON.stringify(s)); return true; }catch(e){ return false; } }
+
+
+var S = idvLoad(), SEC = 'basic', ERR = {};
+try{ var h=(location.hash||'').slice(1); if(h) SEC=h; }catch(e){}
+var SECTIONS = [['basic','Basic setup'],['photos','Photos to compare'],['match','Match rules'],['upload','Photo upload'],['reverify','Reverify'],['report','Report']];
+function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+var I_INFO='<svg width="16" height="16" viewBox="0 0 24 24" fill="#0076FB" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>';
+function info(t, soft){ return '<p class="info'+(soft?' soft':'')+'">'+I_INFO+'<span>'+t+'</span></p>'; }
+function get(path){ return path.split('.').reduce(function(o,k){ return o==null?o:o[k]; }, S); }
+function set(path, v){ var ks=path.split('.'), o=S; for(var i=0;i<ks.length-1;i++) o=o[ks[i]]; o[ks[ks.length-1]]=v; }
+function toggle(path, label, desc){
+  return '<div class="row"><div><div class="t">'+label+'</div>'+(desc?'<div class="hint" style="margin-top:4px">'+desc+'</div>':'')+'</div>'+
+    '<label class="tg"><input type="checkbox" '+(get(path)?'checked':'')+' onchange="set(\''+path+'\',this.checked);draw()" aria-label="'+esc(label)+'"><span></span></label></div>';
+}
+function cbList(path, options, col){
+  var cur=get(path)||[];
+  return '<div class="cbs'+(col?' col':'')+'">'+options.map(function(o){ var on=cur.indexOf(o)>=0;
+    return '<label class="cb"><input type="checkbox" '+(on?'checked':'')+' onchange="flip(\''+path+'\',\''+esc(o)+'\',this.checked)">'+esc(o)+'</label>'; }).join('')+'</div>';
+}
+function flip(path, v, on){ var a=(get(path)||[]).slice(), i=a.indexOf(v); if(on&&i<0) a.push(v); if(!on&&i>=0) a.splice(i,1); set(path,a); delete ERR[path]; draw(); }
+function chips(path, placeholder, kind){
+  var cur=get(path)||[];
+  return '<div class="chips">'+cur.map(function(u,i){ return '<span class="chip">'+esc(u)+'<button type="button" aria-label="Remove '+esc(u)+'" onclick="rmChip(\''+path+'\','+i+')">&#10005;</button></span>'; }).join('')+
+    '<input type="text" placeholder="'+esc(placeholder)+'" aria-label="'+esc(placeholder)+'" onkeydown="chipKey(event,\''+path+'\',\''+(kind||'')+'\')" onblur="chipAdd(this,\''+path+'\',\''+(kind||'')+'\')"></div>'+
+    (ERR[path]?'<div class="err">'+ERR[path]+'</div>':'');
+}
+function rmChip(path,i){ var a=(get(path)||[]).slice(); a.splice(i,1); set(path,a); draw(); }
+function chipKey(e,path,kind){ if(e.key==='Enter'||e.key===','){ e.preventDefault(); chipAdd(e.target,path,kind,true); } }
+function chipAdd(el,path,kind,refocus){
+  var v=(el.value||'').trim().replace(/,$/,''); if(!v) return;
+  if(kind==='email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){ ERR[path]='Enter a valid email address.'; draw(); return; }
+  var a=(get(path)||[]).slice(); if(a.indexOf(v)<0) a.push(v); set(path,a); delete ERR[path]; draw();
+  if(refocus){ var inp=document.querySelector('.chips input[onkeydown*="'+path+'"]'); if(inp) inp.focus(); }
+}
+function access(key, title){
+  return '<div class="block"><h3>'+title+'</h3><div class="lbl">Select role:<span class="req">*</span></div>'+cbList('access.'+key+'.roles', IDV_ROLES)+
+    '<div class="lbl" style="margin-top:14px">Allow specific users:</div>'+chips('access.'+key+'.users','Type email...','email')+
+    (ERR['access.'+key]?'<div class="err">'+ERR['access.'+key]+'</div>':'')+'</div>';
+}
+function num(path, label, min, max){
+  return '<div><div class="lbl">'+label+' <span class="req">*</span></div><div class="fld" style="max-width:none"><input type="number" min="'+min+'" max="'+max+'" value="'+esc(get(path))+'" oninput="set(\''+path+'\', this.value===\'\'?\'\':Number(this.value))" onchange="draw()"></div>'+
+    (ERR[path]?'<div class="err">'+ERR[path]+'</div>':'')+'</div>';
+}
+function text(path, label, hint){
+  return '<div style="margin-top:18px"><div class="lbl">'+label+' <span class="req">*</span></div><textarea class="ta" rows="2" oninput="set(\''+path+'\', this.value)">'+esc(get(path))+'</textarea>'+
+    (hint?'<div class="hint">'+hint+'</div>':'')+(ERR[path]?'<div class="err">'+ERR[path]+'</div>':'')+'</div>';
+}
+
+/* ---------- sections ---------- */
+function secBasic(){
+  return '<h2 class="sec-title">Basic setup</h2>'+info('Verify each joining candidate against the photos on file before they start.')+
+    toggle('enabled','Enable joining-day identity check')+
+    (S.enabled ? '<div class="block"><h3 style="margin-bottom:2px">Select RH rounds where the identity check can be run <span class="req">*</span></h3><div class="hint" style="margin:0 0 4px">Candidates in these rounds appear on the worklist.</div>'+cbList('rounds', IDV_ROUNDS, true)+
+      (ERR.rounds?'<div class="err">'+ERR.rounds+'</div>':'')+'</div>'+
+      access('run','Select who has access to run an identity check')+
+      access('submit','Select who has access to submit a report')+
+      access('reverify','Select who has access to reverify a candidate') : '');
+}
+function secPhotos(){
+  return '<h2 class="sec-title">Photos to compare</h2>'+info('The joining-day photo is compared against every photo selected here.')+
+    toggle('photos.application','Application photo','The photo the candidate added to their application.')+
+    '<div class="block" style="padding:0;border:0"></div>'+
+    toggle('photos.interviews','Interview photos','Photos captured during interview rounds.')+
+    (S.photos.interviews ? '<div class="sub" style="padding-bottom:18px"><div class="cbs col">'+
+        '<label class="cb"><input type="radio" name="im" '+(S.photos.interviewMode==='all'?'checked':'')+' onchange="set(\'photos.interviewMode\',\'all\');draw()">All interview rounds</label>'+
+        '<label class="cb"><input type="radio" name="im" '+(S.photos.interviewMode==='selected'?'checked':'')+' onchange="set(\'photos.interviewMode\',\'selected\');draw()">Selected rounds only</label></div>'+
+        (S.photos.interviewMode==='selected' ? '<div style="padding-left:26px">'+cbList('photos.interviewRounds', IDV_INTERVIEW_ROUNDS)+(ERR['photos.interviewRounds']?'<div class="err">'+ERR['photos.interviewRounds']+'</div>':'')+'</div>' : '')+
+      '</div>' : '')+
+    toggle('photos.documents','Identity documents','Photo on an ID document the candidate uploaded.')+
+    (S.photos.documents ? '<div class="sub" style="padding-bottom:10px"><div class="lbl">Documents compared <span class="req">*</span></div>'+cbList('photos.documentTypes', S.photos.documentList, true)+
+      (ERR['photos.documentTypes']?'<div class="err">'+ERR['photos.documentTypes']+'</div>':'')+
+      (IDV_ALL_DOCUMENTS.some(function(d){ return S.photos.documentList.indexOf(d)<0; }) ? '<button type="button" class="addmore" onclick="openDocs()">+ Add more</button>' : '')+'</div>' : '')+
+    (ERR.photos?'<div class="err">'+ERR.photos+'</div>':'');
+}
+/* "Add more" documents pop-up */
+var DOCPICK = null;
+function openDocs(){ DOCPICK = []; draw(); setTimeout(function(){ var f=document.querySelector('.dlg input'); if(f) f.focus(); }, 0); }
+function closeDocs(){ DOCPICK = null; draw(); }
+function pickDoc(d, on){ var i=DOCPICK.indexOf(d); if(on&&i<0) DOCPICK.push(d); if(!on&&i>=0) DOCPICK.splice(i,1); draw(); }
+function addDocs(){
+  DOCPICK.forEach(function(d){ if(S.photos.documentList.indexOf(d)<0) S.photos.documentList.push(d); if(S.photos.documentTypes.indexOf(d)<0) S.photos.documentTypes.push(d); });
+  delete ERR['photos.documentTypes']; DOCPICK = null; draw();
+}
+function docDialog(){
+  if(DOCPICK===null) return '';
+  var rest = IDV_ALL_DOCUMENTS.filter(function(d){ return S.photos.documentList.indexOf(d)<0; });
+  return '<div class="scrim" onclick="if(event.target===this)closeDocs()"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-t">'+
+    '<header><h2 id="dlg-t">Add documents</h2><button type="button" class="x" onclick="closeDocs()" aria-label="Close">&#10005;</button></header>'+
+    '<div class="dbody"><p class="hint" style="margin:0 0 12px">Select the documents to compare against the joining-day photo.</p><div class="cbs col">'+
+      rest.map(function(d){ return '<label class="cb"><input type="checkbox" '+(DOCPICK.indexOf(d)>=0?'checked':'')+' onchange="pickDoc(\''+esc(d)+'\',this.checked)">'+esc(d)+'</label>'; }).join('')+
+    '</div></div>'+
+    '<footer><button type="button" class="btn sec" onclick="closeDocs()">Cancel</button><button type="button" class="btn pri" '+(DOCPICK.length?'':'disabled')+' onclick="addDocs()">Add'+(DOCPICK.length?' ('+DOCPICK.length+')':'')+'</button></footer>'+
+  '</div></div>';
+}
+function secMatch(){
+  return '<h2 class="sec-title">Match rules</h2>'+info('A similarity score (0 to 100) is generated for each comparison. These thresholds decide Match, Needs review and Not a match.')+
+    '<div class="block"><h3>Photos (application and interview)</h3><div class="grid2">'+num('thresholds.photoMatch','Match at or above (0-100)',0,100)+num('thresholds.photoReview','Needs review at or above (0-100)',0,100)+'</div>'+
+      '<div class="hint">Below '+esc(S.thresholds.photoReview)+' is Not a match.</div></div>'+
+    '<div class="block"><h3>Identity documents</h3><div class="grid2">'+num('thresholds.docMatch','Match at or above (0-100)',0,100)+num('thresholds.docReview','Needs review at or above (0-100)',0,100)+'</div>'+
+      '<div class="hint">Document photos are small and printed, so they usually score lower. Below '+esc(S.thresholds.docReview)+' is Not a match.</div></div>';
+}
+function secUpload(){
+  return '<h2 class="sec-title">Photo upload</h2>'+info('How recruiters add the joining-day photo.')+
+    toggle('upload.allowCamera','Allow taking a photo with the camera','Shown on phones and tablets.')+
+    toggle('upload.allowFile','Allow uploading a photo from the device')+
+    (ERR['upload.source']?'<div class="err">'+ERR['upload.source']+'</div>':'');
+}
+function secReverify(){
+  return '<h2 class="sec-title">Reverify</h2>'+info('When a report goes out of date, the recruiter reverifies the candidate. The old report is kept as a previous version.')+
+    '<div class="block"><h3>Mark a report out of date when a photo on file is <span class="req">*</span></h3><div class="cbs col">'+
+      [['replaced','Replaced'],['deleted','Deleted'],['added','Added']].map(function(x){ return '<label class="cb"><input type="checkbox" '+(S.reverify.outdatedOn[x[0]]?'checked':'')+' onchange="set(\'reverify.outdatedOn.'+x[0]+'\',this.checked);draw()">'+x[1]+'</label>'; }).join('')+
+      '</div>'+(ERR.outdated?'<div class="err">'+ERR.outdated+'</div>':'')+'</div>'+
+    toggle('reverify.requireReason','Ask for a reason when reverifying','The reason is saved in Activity.')+
+    '<div class="block"><h3>Notify when a report goes out of date</h3><div class="lbl">Select role:</div>'+cbList('reverify.notify.roles', IDV_ROLES)+
+      '<div class="lbl" style="margin-top:14px">Notify specific users:</div>'+chips('reverify.notify.users','Type email...','email')+'</div>';
+}
+function secReport(){
+  return '<h2 class="sec-title">Report</h2>'+info('How the identity check report shows times.')+
+    '<div class="block"><h3>Company timezone <span class="req">*</span></h3><div class="fld"><select onchange="set(\'report.timezone\',this.value);draw()">'+
+      IDV_TIMEZONES.map(function(z){ return '<option value="'+z[0]+'" '+(S.report.timezone===z[0]?'selected':'')+'>'+esc(z[1])+'</option>'; }).join('')+'</select></div>'+
+      '<div class="hint">Every time on the report is shown in this timezone, for everyone who opens or downloads it.</div></div>';
+}
+
+/* ---------- validate + save ---------- */
+function validate(){
+  ERR={}; var first=null; function bad(k,msg,sec){ ERR[k]=msg; if(!first) first=sec; }
+  if(S.enabled){
+    if(!S.rounds.length) bad('rounds','Select at least one round.','basic');
+    ['run','submit','reverify'].forEach(function(k){ var a=S.access[k]; if(!a.roles.length && !a.users.length) bad('access.'+k,'Select at least one role or add a user.','basic'); });
+  }
+  if(!S.photos.application && !S.photos.interviews && !S.photos.documents) bad('photos','Turn on at least one kind of photo to compare.','photos');
+  if(S.photos.interviews && S.photos.interviewMode==='selected' && !S.photos.interviewRounds.length) bad('photos.interviewRounds','Select at least one round.','photos');
+  if(S.photos.documents && !S.photos.documentTypes.length) bad('photos.documentTypes','Add at least one document type.','photos');
+  [['photoMatch','photoReview'],['docMatch','docReview']].forEach(function(p){
+    var m=S.thresholds[p[0]], r=S.thresholds[p[1]];
+    [p[0],p[1]].forEach(function(k){ var v=S.thresholds[k]; if(v===''||isNaN(v)||v<0||v>100) bad('thresholds.'+k,'Enter a number from 0 to 100.','match'); });
+    if(!ERR['thresholds.'+p[0]] && !ERR['thresholds.'+p[1]] && !(m>r)) bad('thresholds.'+p[1],'Must be lower than the Match threshold.','match');
+  });
+  if(!S.upload.allowCamera && !S.upload.allowFile) bad('upload.source','Allow at least one way to add the photo.','upload');
+  var o=S.reverify.outdatedOn; if(!o.replaced && !o.deleted && !o.added) bad('outdated','Select at least one.','reverify');
+  return first;
+}
+function submit(){
+  var sec=validate();
+  if(sec){ SEC=sec; draw(); toast('Some settings need attention','Fix the highlighted fields and submit again.',true); return; }
+  if(idvSave(S)){ toast('Settings saved','The joining-day identity check now uses these settings.'); } else { toast('Couldn’t save','Your browser blocked saving these settings.',true); }
+  draw();
+}
+function resetDefaults(){ S.thresholds=idvMerge(IDV_DEFAULTS.thresholds,null); Object.keys(ERR).forEach(function(k){ if(k.indexOf('thresholds.')===0) delete ERR[k]; }); draw(); toast('Match rules reset to defaults','Submit to save them.'); }
+var _tt;
+function toast(t,m,bad){
+  var el=document.getElementById('toast'); clearTimeout(_tt);
+  el.innerHTML='<div class="toaster'+(bad?' bad':'')+'" role="status"><span class="ti">'+(bad?'!':'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>')+'</span><div><div class="tt">'+esc(t)+'</div><div class="tm">'+esc(m)+'</div></div></div>';
+  _tt=setTimeout(function(){ el.innerHTML=''; }, 4500);
+}
+
+function draw(){
+  var y=window.scrollY;
+  document.getElementById('side').innerHTML=SECTIONS.map(function(x){ return '<button type="button" role="tab" aria-selected="'+(x[0]===SEC)+'" class="'+(x[0]===SEC?'on':'')+'" onclick="go(\''+x[0]+'\')">'+x[1]+'</button>'; }).join('');
+  var body={basic:secBasic,photos:secPhotos,match:secMatch,upload:secUpload,reverify:secReverify,report:secReport}[SEC]||secBasic;
+  document.getElementById('card').innerHTML=body()+
+    '<div class="foot">'+(SEC==='match'?'<button type="button" class="lnk" onclick="resetDefaults()">Reset to defaults</button>':'<span></span>')+'<button type="button" class="btn pri" onclick="submit()">Submit</button></div>'+docDialog();
+  window.scrollTo(0,y);
+}
+function go(k){ SEC=k; try{ history.replaceState(null,'','#'+k); }catch(e){} draw(); window.scrollTo(0,0); }
+draw();
+</script>
+</body>
+</html>

@@ -675,9 +675,10 @@ function run(){
   var token=_runToken;
   if(!state.photo){ setState({upErr:'Upload a joining-day photo first.'}); return; }
   // all rows start scanning at once; each settles independently as its Gemini call returns
-  var rows = state.cand.photos.map(function(p){ return Object.assign({}, p, {status:'running', score:null, reason:'', err:'', review:null, asked:false}); });
+  var CMP = comparePhotos(state.cand);   // admin: Photos to compare
+  var rows = CMP.map(function(p){ return Object.assign({}, p, {status:'running', score:null, reason:'', err:'', review:null, asked:false}); });
   setState({ rows:rows, running:true, done:false, open:null, openRows:{}, shared:[], viewingHistory:false, decision:null, decisionErr:'', entry:null }, function(){
-    var photos = state.cand.photos;
+    var photos = CMP;
     if(!photos.length){ setState({running:false, done:true}); return; }
     photos.forEach(function(p, i){
       if(USE_LIVE_SCORING){
@@ -769,8 +770,58 @@ function scoreColor(s){ return s>=85 ? '#1a8a3a' : s>=50 ? '#B7791F' : '#EB4040'
 
 /* source-aware bars: photos match at 85+, documents (older/low-res) at 65+.
    below the review floor (photos 50, docs 40) it is a hard no-match. */
-function photoBar(r){ return (r && r.src==='document') ? 65 : 85; }
-function reviewFloor(r){ return (r && r.src==='document') ? 40 : 50; }
+/* ===== Joining-day Identity Check settings (shared by admin.html and the prototype) =====
+   Saved in this browser (localStorage 'rhIdvSettings'); anything missing falls back to the defaults.
+   Not configurable (always on): photo quality checks, crop, the confirmation checkbox wording,
+   reverify on a current report, the downloaded file name. */
+var IDV_ROLES = ['Admin','Recruiter','Hiring User','HM Admin','Hiring User ER','Approver','Onboarding user','Primary Recruiter'];
+var IDV_ROUNDS = ['Offered','Onboarding','Hired'];
+var IDV_INTERVIEW_ROUNDS = ['Round 1','Round 2','Round 3','Round 4'];
+var IDV_ALL_DOCUMENTS = ['Aadhaar card','PAN card','Driving licence','Passport','Voter ID card','Ration card','Employee ID card','Student ID card','OCI card','National ID card'];
+var IDV_TIMEZONES = [['IST','India (IST, UTC+5:30)',330],['UTC','UTC',0],['GST','Gulf (GST, UTC+4)',240],['SGT','Singapore (SGT, UTC+8)',480],['GMT','UK (GMT, UTC+0)',0],['EST','US Eastern (EST, UTC-5)',-300],['PST','US Pacific (PST, UTC-8)',-480]];
+var IDV_DEFAULTS = {
+  enabled: true,
+  rounds: ['Onboarding','Hired'],
+  access: {
+    run:      { roles:['Admin','Recruiter','Onboarding user'], users:[] },
+    submit:   { roles:['Admin','Recruiter'], users:[] },
+    reverify: { roles:['Admin','Recruiter'], users:[] }
+  },
+  photos: { application:true, interviews:true, interviewMode:'all', interviewRounds:['Round 1','Round 2','Round 3','Round 4'],
+            documents:true, documentList:['Aadhaar card','PAN card','Driving licence'], documentTypes:['Aadhaar card','PAN card','Driving licence'] },
+  thresholds: { photoMatch:85, photoReview:50, docMatch:65, docReview:40 },
+  upload: { allowCamera:true, allowFile:true },
+  reverify: { outdatedOn:{ replaced:true, deleted:true, added:true }, requireReason:false, notify:{ roles:['Recruiter'], users:[] } },
+  report: { timezone:'IST' }
+};
+function idvMerge(base, over){
+  if(Array.isArray(base)) return Array.isArray(over) ? over.slice() : base.slice();
+  if(base && typeof base==='object'){ var o={}; Object.keys(base).forEach(function(k){ o[k]=idvMerge(base[k], over && typeof over==='object' ? over[k] : undefined); }); return o; }
+  return (over===undefined || over===null || typeof over!==typeof base) ? base : over;
+}
+function idvLoad(){ var saved=null; try{ saved=JSON.parse(localStorage.getItem('rhIdvSettings')||'null'); }catch(e){} return idvMerge(IDV_DEFAULTS, saved); }
+function idvSave(s){ try{ localStorage.setItem('rhIdvSettings', JSON.stringify(s)); return true; }catch(e){ return false; } }
+
+var IDV = idvLoad();
+/* the signed-in recruiter in this prototype (access rules are checked against this person) */
+var CURRENT_USER = { name:'A. Sharma', email:'a.sharma@yourcompany.com', role:'Recruiter' };
+function canDo(k){ var a=(IDV.access&&IDV.access[k])||{roles:[],users:[]}; return a.roles.indexOf(CURRENT_USER.role)>=0 || a.users.indexOf(CURRENT_USER.email)>=0; }
+function noAccessNote(t){ return '<div style="display:flex;gap:9px;align-items:flex-start;padding:12px 14px;background:#F3F5F8;border:1px solid #E3E7EE;border-radius:8px;font-size:13px;color:#5A6473;line-height:1.5"><svg width="16" height="16" viewBox="0 0 24 24" fill="#0076FB" style="flex-shrink:0;margin-top:2px" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg><span>'+t+'</span></div>'; }
+/* which photos on file are compared (admin: Photos to compare) */
+function roundNum(label){ var m=/^Round (\d+)/.exec(label||''); return m ? 'Round '+m[1] : null; }
+function photoIncluded(p){
+  if(!p) return false;
+  if(p.src==='application') return !!IDV.photos.application;
+  if(p.src==='interview'){ if(!IDV.photos.interviews) return false; return IDV.photos.interviewMode!=='selected' || IDV.photos.interviewRounds.indexOf(roundNum(p.label))>=0; }
+  if(p.src==='document'){ if(!IDV.photos.documents) return false; var l=String(p.label||'').toLowerCase(); return IDV.photos.documentTypes.some(function(t){ return String(t).toLowerCase()===l; }); }
+  return true;
+}
+function comparePhotos(c){ return ((c && c.photos) || []).filter(photoIncluded); }
+/* every photo quality check is always on: a failed check blocks the photo */
+function qualityBlocks(q){ return !!(q && q.usable===false); }
+/* thresholds (admin: Match rules) */
+function photoBar(r){ return (r && r.src==='document') ? IDV.thresholds.docMatch : IDV.thresholds.photoMatch; }
+function reviewFloor(r){ return (r && r.src==='document') ? IDV.thresholds.docReview : IDV.thresholds.photoReview; }
 
 /* AI/model state for a row BEFORE any human action: match | review | nomatch | cant | null.
    Quality gates the score (confidence): a poor-quality photo is Needs review whatever the number
@@ -884,8 +935,22 @@ function joinStamp(c){ return c ? (c.joining||fmtLong(c.joiningISO))+', 09:41' :
 function isReverifyCheck(hh){ return !!((hh && hh.reverify) || (state.reverifyRun && (!hh || hh===state.entry))); }
 /* Times are labelled with the company's timezone (tenant setting in the product; IST in this prototype).
    Only a date that carries a time gets the label: "18 Apr 2026, 10:30" -> "18 Apr 2026, 10:30 IST". */
-var COMPANY_TZ='IST';
-function tz(t){ t=String(t==null?'':t); return /\d{1,2}:\d{2}$/.test(t) ? t+' '+COMPANY_TZ : t; }
+var COMPANY_TZ=IDV.report.timezone||'IST';
+/* times in this prototype are recorded in IST; they are shown converted to the company timezone (fixed offsets, no daylight saving) */
+function tzOffset(z){ for(var i=0;i<IDV_TIMEZONES.length;i++){ if(IDV_TIMEZONES[i][0]===z) return IDV_TIMEZONES[i][2]; } return 330; }
+function tz(t){
+  t=String(t==null?'':t);
+  var m=/^(.*?)(\d{1,2}) (\w{3}) (\d{4}), (\d{1,2}):(\d{2})$/.exec(t);
+  if(!m) return t;
+  var shift=tzOffset(COMPANY_TZ)-330;
+  if(!shift) return t+' '+COMPANY_TZ;
+  var MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var d=new Date(Date.UTC(+m[4], MO.indexOf(m[3]), +m[2], +m[5], +m[6]) + shift*60000);
+  var dd=d.getUTCDate(), pad=function(n){ return (n<10?'0':'')+n; };
+  return m[1]+(m[2].length===2?pad(dd):dd)+' '+MO[d.getUTCMonth()]+' '+d.getUTCFullYear()+', '+pad(d.getUTCHours())+':'+pad(d.getUTCMinutes())+' '+COMPANY_TZ;
+}
+/* "HH:MM" on a given day, in the company timezone (Activity) */
+function tzTime(day, time){ var x=tz(day+', '+time); var k=x.lastIndexOf(', '); return k>=0 ? x.slice(k+2) : x; }
 function photoStamp(c, hh){
   // reverify: we only know when the photo was uploaded, so that is the time on record
   if(isReverifyCheck(hh)) return (hh && hh.ranAt) || nowStamp().replace(/ IST$/,'');
@@ -1348,7 +1413,7 @@ function reportFeed(s, c){
     var tick='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
     var btnStyle='border:0;color:#fff;background:#0076FB;border-radius:8px;padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;white-space:nowrap';
     var reviewCta = left===0
-      ? '<button type="button" onclick="openSubmit()" style="'+btnStyle+'">'+tick+'Submit report</button>'
+      ? (canDo('submit') ? '<button type="button" onclick="openSubmit()" style="'+btnStyle+'">'+tick+'Submit report</button>' : '<span style="font-size:13px;color:#747474">Only people with submit access can submit this report.</span>')
       : (left===1
         ? '<button type="button" onclick="reviewNext()" style="'+btnStyle+'">'+arrow+'Review photo</button>'
         : '<button type="button" onclick="reviewNext()" style="'+btnStyle+'">'+arrow+'Review next photo</button>');
@@ -1457,7 +1522,7 @@ function completedReport(s, c){
   var dec=s.decision, rows=s.rows||[], hh=s.entry||{};
   var stale=!!(c&&c.staleInfo) && !state._noStale;
   var joinDate=c.joining||fmtDate(c.joiningISO);
-  var uploadStamp=photoStamp(c, hh)+' IST';
+  var uploadStamp=tz(photoStamp(c, hh));
   var by=(dec&&dec.by)||(c.wl&&c.wl.by)||'A. Sharma';
   var submittedAt=(dec&&dec.at)||'';
   var vv=reportVerdict(rows), confirmed=vv.confirmed;
@@ -1472,14 +1537,14 @@ function completedReport(s, c){
     html+='<div class="rpt-ood">'+
       '<span class="ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>'+
       '<div class="tx"><h3>'+h(staleTitle(c))+'</h3><p>'+h(staleSentence(c))+'</p></div>'+
-      '<button type="button" class="rh-btn primary sm rpt-reverify rpt-reverify-amber" onclick="openReverify()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Reverify</button>'+
+      (!canDo('reverify') ? '' : '<button type="button" class="rh-btn primary sm rpt-reverify rpt-reverify-amber" onclick="openReverify()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Reverify</button>')+
     '</div>';
   }
   html+='<div style="padding:20px">';
   html+='<div class="rpt-headrow">'+avatar(c.name,44)+
     '<div style="min-width:0;flex:1"><div class="rpt-name">'+h(c.name)+'</div><div class="rpt-meta">'+h(metaJoinLine(c))+'</div></div>'+
     '<div class="rpt-acts">'+
-      (stale?'':'<button type="button" class="rh-btn secondary sm" onclick="openRerun()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Reverify</button>')+
+      ((stale || !canDo('reverify'))?'':'<button type="button" class="rh-btn secondary sm" onclick="openRerun()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Reverify</button>')+
       '<button type="button" class="rh-actbtn" aria-label="Download report" onclick="downloadReport()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg><span class="tip">Download report</span></button>'+
       '<button type="button" class="rh-actbtn" aria-label="View activity" onclick="openActivity()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span class="tip">View activity</span></button>'+
     '</div>'+
@@ -1546,8 +1611,9 @@ function applyPhotoChanges(c){
 /* Reverify: the recruiter uploads a photo of the candidate again; it is compared with the photos on file now */
 function startReverify(){
   var c=state.cand; if(!c) return;
+  var why=''; if(IDV.reverify.requireReason){ var el=document.getElementById('rv-reason'); why=el?el.value.trim():''; if(!why){ setState({reverifyErr:'Add a reason to reverify.'}); return; } }
   var lc=latestCheck(c.id), last=lc&&lc.hh, nowP=nowStamp().replace(/ IST$/,'').split(', ');
-  (c.reverifyLog=c.reverifyLog||[]).push({day:nowP[0], time:nowP[1], by:'A. Sharma', fromVersion:last&&last.decision?reportVersion(last):null, changed:!!c.staleInfo});
+  (c.reverifyLog=c.reverifyLog||[]).push({day:nowP[0], time:nowP[1], by:'A. Sharma', fromVersion:last&&last.decision?reportVersion(last):null, changed:!!c.staleInfo, reason:why});
   applyPhotoChanges(c);
   clearTimers(); _runToken++; _qtoken++;
   setState({ done:false, running:false, photo:null, photoOriginal:null, cropRect:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false, reverifyOpen:false, repPreview:null, reverifyRun:true });
@@ -1623,7 +1689,7 @@ function inDateRange(c){ var r=state.dateRange;
 }
 /* redesigned worklist: joining-date range filter (YYYY-MM-DD compares lexically) */
 function inJoinRange(c){ var f=state.dateFrom, t=state.dateTo; if(f && c.joiningISO < f) return false; if(t && c.joiningISO > t) return false; return true; }
-function wlBase(){ return CANDIDATES.filter(function(c){ return c.eligible!==false && c.joiningISO; }); }
+function wlBase(){ return CANDIDATES.filter(function(c){ return c.eligible!==false && c.joiningISO && IDV.enabled && IDV.rounds.indexOf(c.stage)>=0; }); }
 function wlCount(status){
   var b=wlBase();
   if(status==='attention') return b.filter(isOverdue).length;
@@ -1810,6 +1876,8 @@ function findCandidateCard(ok){
 }
 
 function worklistView(){
+  if(!IDV.enabled) return '<div class="rh-card wl-content" style="text-align:center;padding:48px 24px"><div style="font-size:17px;font-weight:600;margin-bottom:6px">The joining-day identity check is turned off</div>'+
+    '<div style="font-size:13.5px;color:#747474;margin-bottom:18px">An admin can turn it on in the identity check settings.</div><a class="rh-btn secondary sm" href="admin.html" style="text-decoration:none;display:inline-flex;align-items:center">Open settings</a></div>';
   var s=state, view=s.wlView||'pending', when=s.wlWhen||'all';
   var nPending=wlStatusRows('pending').length, nDone=wlStatusRows('completed').length;
   var fctrl='height:34px;border:1px solid #DCE2EB;border-radius:9px;background:#fff;font-family:inherit;font-size:13px;padding:0 10px;color:#2A2A2A;cursor:pointer';
@@ -1880,7 +1948,8 @@ function worklistView(){
       '<h2 class="wl-sectitle">Candidates</h2>'+
       '<div class="wl-secdesc"><svg viewBox="0 0 24 24" width="16" height="16" fill="#0076FB" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>Verify each joining candidate against the photos on file before they start.</div>'+
     '</div>'+
-      '<button type="button" class="wl-export" onclick="wlExportExcel()" aria-label="Export to Excel"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>Export to Excel</button>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="wl-export" href="admin.html" style="text-decoration:none" aria-label="Identity check settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</a>'+
+      '<button type="button" class="wl-export" onclick="wlExportExcel()" aria-label="Export to Excel"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>Export to Excel</button>'+'</div>'+
     '</div>';
 
   /* stat cards */
@@ -2014,13 +2083,15 @@ function render(){
       '<div style="margin-bottom:16px"><div style="font-size:16px;font-weight:600;line-height:1.5">Upload joining day photo</div>'+
         (s.photo?'':'<p style="margin:4px 0 0;font-size:14px;color:#747474;line-height:1.55">'+(s.hasCamera?'Frame the photo from the chest up, with the face clearly visible and looking at the camera.':'Choose a clear, front-facing photo with the face fully visible.')+'</p>')+
       '</div>';
-    if(!s.photo){
+    if(!canDo('run')){
+      html += noAccessNote('You don\u2019t have access to run identity checks. Ask your admin to add you in the identity check settings.');
+    } else if(!s.photo){
       html += '<div ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" style="border:1.5px dashed '+(s.drag?'#0076FB':'#C6C6C6')+';border-radius:6px;padding:30px 20px;text-align:center;background:'+(s.drag?'#EBF5FF':'#F7F8FA')+'">'+
         '<svg viewBox="25 25 22 22" width="28" height="28" fill="#929292" style="margin-bottom:6px"><path d="M32.7143 40.2353H38.2857V34.5882H42L35.5 28L29 34.5882H32.7143V40.2353ZM29 42.1176H42V44H29V42.1176Z"></path></svg>'+
         '<p style="margin:0 0 16px;font-size:13.5px;color:#747474">'+(s.hasCamera?'Take a photo, or choose one from this device':'Choose one from this device')+'</p>'+
         '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">'+
-          (s.hasCamera?'<button class="rh-btn secondary sm" onclick="openCamera()">Take photo</button>':'')+
-          '<button class="rh-btn secondary sm" onclick="openPicker()">Upload file</button>'+
+          ((s.hasCamera && IDV.upload.allowCamera)?'<button class="rh-btn secondary sm" onclick="openCamera()">Take photo</button>':'')+
+          (IDV.upload.allowFile?'<button class="rh-btn secondary sm" onclick="openPicker()">Upload file</button>':'')+
         '</div></div>';
     } else {
       var busy = s.qualityChecking || s.running;
@@ -2038,8 +2109,8 @@ function render(){
         var st1 = s.qualityChecking ? 'active' : 'done';   // done once we've moved on to comparing
         var st2 = s.running ? 'active' : 'pending';
         var step1Sub = st1==='done' ? 'Sharp, front facing, face fills the frame' : 'Sharpness, lighting and framing';
-        var nDoc = c.photos.filter(function(p){ return p.src==='document'; }).length;
-        var nInt = c.photos.length - nDoc;
+        var nDoc = comparePhotos(c).filter(function(p){ return p.src==='document'; }).length;
+        var nInt = comparePhotos(c).length - nDoc;
         var step2Sub = nInt+' interview photo'+(nInt===1?'':'s')+', '+nDoc+' identity document'+(nDoc===1?'':'s');
         right = '<div style="flex:1;min-width:250px;display:flex;flex-direction:column;justify-content:center;gap:18px">'+fileName+
           '<div style="display:flex;flex-direction:column;gap:16px">'+
@@ -2088,17 +2159,18 @@ function render(){
   } else if(c && c.photos.length && !s.done){
     // Option A: keep the on-file list visible during processing, dimmed and inert (context stays, no layout swap).
     var _done = s.done, _busy = s.qualityChecking || s.running, _idle = !_done && !_busy;
-    var tableRows = _done ? s.rows : c.photos;
+    var CP = comparePhotos(c);
+    var tableRows = _done ? s.rows : CP;
     html += '<div class="rh-card" style="padding:0'+(_busy?';opacity:.6;pointer-events:none':'')+'"'+(_busy?' aria-hidden="true"':'')+'><div style="border-radius:8px;overflow:hidden">';
     if(_busy){
       var busyLabel = s.running
-        ? ('Comparing against '+c.photos.length+' photo'+(c.photos.length===1?'':'s')+' on file…')
-        : ('Total '+c.photos.length+' photo'+(c.photos.length===1?'':'s')+' on file');
+        ? ('Comparing against '+CP.length+' photo'+(CP.length===1?'':'s')+' on file…')
+        : ('Total '+CP.length+' photo'+(CP.length===1?'':'s')+' on file');
       html += '<div style="display:flex;align-items:center;gap:10px;padding:13px 20px;border-bottom:1px solid #E0E0E0;font-size:13px;color:#747474">'+(s.running?'<span class="rh-radar" aria-hidden="true"></span>':'')+h(busyLabel)+'</div>';
     } else if(_idle){
       var idleLabel = isFuture(c)
-        ? (c.photos.length+' photo'+(c.photos.length===1?'':'s')+' on file')
-        : ('Total '+c.photos.length+' photo'+(c.photos.length===1?'':'s')+' on file');
+        ? (CP.length+' photo'+(CP.length===1?'':'s')+' on file')
+        : ('Total '+CP.length+' photo'+(CP.length===1?'':'s')+' on file');
       html += '<div style="padding:13px 20px;border-bottom:1px solid #E0E0E0;font-size:13px;color:#747474">'+h(idleLabel)+'</div>';
     }
     if(_done){
@@ -2366,6 +2438,9 @@ function render(){
         (s.rerunMode?'':reverifyChanges(c))+
         '<ul style="margin:6px 0 0;padding-left:18px;color:#5A6473;font-size:13px;line-height:1.7"><li>You&#39;ll upload a <b>new joining-day photo</b> and it will be compared against every photo on file again.</li><li>This <b>current report is kept</b> as a previous version, open it any time from Activity.</li><li>The new run <b>becomes the current report</b> once you submit it.</li></ul>'+
       '</div>'+
+      (IDV.reverify.requireReason ? '<div style="padding:0 20px 4px"><label for="rv-reason" style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Reason for reverifying <span style="color:#D93025">*</span></label>'+
+        '<textarea id="rv-reason" rows="2" style="width:100%;border:1px solid #DCE2EB;border-radius:6px;padding:8px 10px;font-family:inherit;font-size:13.5px;resize:vertical" placeholder="For example: new application photo uploaded"></textarea>'+
+        (s.reverifyErr?'<div style="color:#D93025;font-size:12.5px;margin-top:4px">'+h(s.reverifyErr)+'</div>':'')+'</div>' : '')+
       '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeReverify()">Cancel</button><button class="rh-btn primary sm rpt-reverify" onclick="startReverify()">Start reverify</button></footer>'+
     '</div></div>';
   }
@@ -2416,7 +2491,7 @@ function pick(id){ var c=CANDIDATES.find(function(x){return x.id===id;}); if(!c)
 function setTab(t){ setState({tab:t}); }
 function changeCandidate(){ setState({cand:null, searchOpen:true, done:false, running:false, rows:[], entry:null, decision:null, decisionErr:'', viewingHistory:false}); wlSyncUrl(true); window.scrollTo({top:0,behavior:'smooth'}); }
 function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click(); }
-function openPicker(){ var el=document.getElementById('rh-file'); if(el){ el.value=''; el.click(); } }
+function openPicker(){ if(!IDV.upload.allowFile && IDV.upload.allowCamera && state.hasCamera){ openCamera(); return; } var el=document.getElementById('rh-file'); if(el){ el.value=''; el.click(); } }
 function onFileInput(e){ handleFile(e.target.files[0]); }
 function retake(){ clearTimers(); _runToken++; _qtoken++; setState({photo:null, photoOriginal:null, cropRect:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, upErr:'', done:false, running:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null}); }
 /* The recruiter doesn't personally confirm/deny identity - the system carries the status. They
@@ -2527,7 +2602,8 @@ function submitPhoto(){
   setState({qualityChecking:true, quality:null, upErr:''});
   geminiQuality(s.photo)
     .then(function(res){ if(tok!==_qtoken) return;
-      if(res && res.usable===false){ setState({qualityChecking:false, quality:res}); }   // fail -> show error, block
+      if(qualityBlocks(res)){ setState({qualityChecking:false, quality:res}); }   // fail -> show error, block
+      else if(res && res.usable===false){ setState({qualityChecking:false, quality:{usable:true, reason:'ok', message:'', skipped:res.reason}}, run); }   // that check is turned off by the admin
       else { setState({qualityChecking:false, quality:res||{usable:true}}, run); }        // pass -> auto-run the comparison
     })
     .catch(function(){ if(tok!==_qtoken) return; setState({qualityChecking:false, quality:{usable:true, reason:'error', message:''}}, run); });  // couldn't check -> don't block
@@ -2646,9 +2722,9 @@ function resetCrop(){
 /* Activity (audit) drawer + reverify (seeded mock) */
 function openActivity(){ setState({activityOpen:true}); }
 function closeActivity(){ setState({activityOpen:false}); }
-function openReverify(){ setState({reverifyOpen:true, rerunMode:false}); }
+function openReverify(){ setState({reverifyOpen:true, rerunMode:false, reverifyErr:''}); }
 /* manual re-run on a current (not out-of-date) report: same flow as Reverify, no data changed */
-function openRerun(){ setState({reverifyOpen:true, rerunMode:true}); }
+function openRerun(){ setState({reverifyOpen:true, rerunMode:true, reverifyErr:''}); }
 function closeReverify(){ setState({reverifyOpen:false}); }
 function scrimReverify(e){ if(e.target===e.currentTarget) closeReverify(); }
 function confirmReverify(){ if(state.cand){ state.cand.reverifying=true; } setState({reverifyOpen:false}); toast('Reverify started'); }
@@ -2675,36 +2751,36 @@ function activityLog(s, c){
     // when the photo was taken / compared: a live run stamps ranAt; seeded reports ran on the joining day
     var ran = e.ranAt ? alSplit(e.ranAt) : {day:(dec?alSplit(dec.at,c.joining).day:c.joining), time:'09:42'};
     var up  = e.ranAt ? ran : {day:ran.day, time:'09:41'};
-    if(i===0) add(ran.day, '09:38', {k:'human', ic:'&#9873;', t:'Verification enabled (Onboarding round)', m:actor((dec&&dec.by)||'A. Sharma'), ts:'09:38 IST'});
-    add(up.day, up.time, {k:'human', ic:'&#8593;', t:(e.reverify?'Photo uploaded':'Joining-day photo uploaded'), m:actor('A. Sharma'), ts:h(up.time)+' IST'});
-    add(up.day, up.time, {k:'sys', ic:'&#9737;', t:'Quality check passed', m:'system', ts:h(up.time)+' IST'});
-    add(ran.day, ran.time, {k:'sys', ic:'&#9737;', t:'Comparison run: '+n+' photo'+(n===1?'':'s'), m:'system', ts:h(ran.time)+' IST'});
+    if(i===0) add(ran.day, '09:38', {k:'human', ic:'&#9873;', t:'Verification enabled (Onboarding round)', m:actor((dec&&dec.by)||'A. Sharma'), ts:h(tzTime(ran.day,'09:38'))});
+    add(up.day, up.time, {k:'human', ic:'&#8593;', t:(e.reverify?'Photo uploaded':'Joining-day photo uploaded'), m:actor('A. Sharma'), ts:h(tzTime(up.day,up.time))});
+    add(up.day, up.time, {k:'sys', ic:'&#9737;', t:'Quality check passed', m:'system', ts:h(tzTime(up.day,up.time))});
+    add(ran.day, ran.time, {k:'sys', ic:'&#9737;', t:'Comparison run: '+n+' photo'+(n===1?'':'s'), m:'system', ts:h(tzTime(ran.day,ran.time))});
     if(dec){
       var sub=alSplit(dec.at, ran.day), ver=reportVersion(e);
       add(sub.day, sub.time, {k:'human', ic:'&#10003;', t:'Report submitted: '+h(outcomeLabel(dec.status||'match').t)+(entries.filter(function(x){return x.decision;}).length>1?' <span class="bext">Version '+ver+'</span>':''),
-        m:actor(dec.by||'A. Sharma')+' &middot; '+n+' comparison'+(n===1?'':'s'), ts:h(sub.time)+' IST',
+        m:actor(dec.by||'A. Sharma')+' &middot; '+n+' comparison'+(n===1?'':'s'), ts:h(tzTime(sub.day,sub.time)),
         link:'<button type="button" class="lnk" onclick="viewReport('+state.history.indexOf(e)+')">View report</button>'});
     } else if(e===s.entry){
       var nw=alSplit(nowStamp().replace(/ IST$/,''));
       add(nw.day, nw.time, {k:'human', ic:'&#9998;', t:'Review in progress', m:'by <span class="actor">You (Rohan G.)</span> &middot; not yet submitted', ts:'just now'});
     } else if(!dec){   // a review that was started and left: open it to carry on
-      add(ran.day, ran.time, {k:'human', ic:'&#9998;', t:'Review not submitted', m:'not yet submitted', ts:h(ran.time)+' IST',
+      add(ran.day, ran.time, {k:'human', ic:'&#9998;', t:'Review not submitted', m:'not yet submitted', ts:h(tzTime(ran.day,ran.time)),
         link:'<button type="button" class="lnk" onclick="viewCheck('+state.history.indexOf(e)+')">Continue review</button>'});
     }
   });
   // a fresh joining-day photo picked for the current check, not compared yet
   if(s.cand===c && s.photo && !s.entry && !s.done){
     var np=alSplit(nowStamp().replace(/ IST$/,''));
-    add(np.day, np.time, {k:'human', ic:'&#8593;', t:'Joining-day photo uploaded', m:actor('A. Sharma')+' &middot; not compared yet', ts:h(np.time)+' IST'});
+    add(np.day, np.time, {k:'human', ic:'&#8593;', t:'Joining-day photo uploaded', m:actor('A. Sharma')+' &middot; not compared yet', ts:h(tzTime(np.day,np.time))});
   }
   // photo changes, resolved or not
   (c.pastChanges||[]).concat(staleList(c)).forEach(function(si){
     var src=si.byRole==='recruiter'?'Recruiter':'Candidate profile', tm=si.time||'16:40';
-    add(si.date, tm, {k:'ext', ic:'&#9998;', t:h(si.what)+' '+h(staleVerb(si))+' <span class="bext">'+h(src)+'</span>', m:actor(si.by), ts:h(tm)+' IST'});
+    add(si.date, tm, {k:'ext', ic:'&#9998;', t:h(si.what)+' '+h(staleVerb(si))+' <span class="bext">'+h(src)+'</span>', m:actor(si.by)+notifyLine(), ts:h(tzTime(si.date,tm))});
   });
   // reverifies started
   (c.reverifyLog||[]).forEach(function(r){
-    add(r.day, r.time, {k:'human', ic:'&#8635;', t:'Reverify started', m:actor(r.by)+(r.fromVersion?' &middot; version '+r.fromVersion+' report kept':''), ts:h(r.time)+' IST'});
+    add(r.day, r.time, {k:'human', ic:'&#8635;', t:'Reverify started', m:actor(r.by)+(r.reason?' &middot; reason: '+h(r.reason):'')+(r.fromVersion?' &middot; version '+r.fromVersion+' report kept':''), ts:h(tzTime(r.day,r.time))});
   });
   // newest first; same minute keeps the order things happened in (later step first)
   evs.sort(function(x,y){ return (y.key-x.key) || (y.step-x.step) || (y.seq-x.seq); });
@@ -2757,6 +2833,17 @@ function buildSeeds(){
 /* DEMO: a submitted joining-day report built from the candidate's own seeded scores (for candidates
    whose check isn't seeded as completed, e.g. Rahul): clear matches stay Match, the review band was
    confirmed as the same person by the recruiter, a clear mismatch was marked Not a match. */
+/* admin: Reverify > mark out of date when a photo is replaced / deleted / added */
+function applyOutdatedRules(){
+  CANDIDATES.forEach(function(c){
+    if(!c.staleInfo) return;
+    var keep=staleList(c).filter(function(ch){ var v=staleVerb(ch); return IDV.reverify.outdatedOn[v]!==false; });
+    if(!keep.length) c.staleInfo=null;
+    else if(keep.length!==staleList(c).length) c.staleInfo=Object.assign({}, c.staleInfo, {changes:keep});
+  });
+}
+/* who is told when a report goes out of date (admin: Reverify > Notify) */
+function notifyLine(){ var n=IDV.reverify.notify, who=n.roles.concat(n.users); return who.length ? ' &middot; notified '+h(who.join(', ')) : ''; }
 function demoReportFor(c){
   var rows = c.photos.map(function(p){
     var r = Object.assign({}, p, {status:'done', confidence:92, review:null, asked:true});
@@ -2844,6 +2931,7 @@ function synthCompletedEntry(c){
     var vh=window.innerHeight||document.documentElement.clientHeight||0;
     if(el.getBoundingClientRect().top < vh + 240) wlLoadMore();
   }, {passive:true});
+  applyOutdatedRules();
   wlApplyUrl();
   reportOnlyView();
 })();
