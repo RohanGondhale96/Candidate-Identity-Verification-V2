@@ -970,7 +970,7 @@ function matchReason(r){
 /* plain-language reason a reference couldn’t be compared */
 function cantReason(r){
   var base=(r&&r.err) || 'We couldn’t find a face in this reference.';
-  if(/no face/i.test(base)) return base + '. The scan is probably too dark, blurry or cropped to pick out a face, so there’s nothing to line up against today’s photo.';
+  if(/no face/i.test(base)) return base.replace(/\.+$/,'') + '. The scan is probably too dark, blurry or cropped to pick out a face, so there’s nothing to line up against today’s photo.';
   return base;
 }
 /* small tinted callout for the match / couldn’t-compare explanations (mirrors the amber "needs a look" note) */
@@ -1332,12 +1332,12 @@ function reportCard(i, r, c){
   var caret = isCant ? '<span style="width:30px;flex-shrink:0"></span>'
     : '<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" style="width:30px;height:30px;border:0;background:none;cursor:pointer;display:grid;place-items:center;border-radius:7px;flex-shrink:0">'+chevron(open?'180deg':'0deg')+'</button>';
   var head='<div style="display:flex;align-items:center;gap:13px;padding:14px 16px'+(clickable?';cursor:pointer':'')+'"'+(clickable?(' onclick="toggleRow('+i+')"'):'')+'>'+
-    (open?'':reportThumbs(r,seed))+
+    ((open||isCant)?'':reportThumbs(r,seed))+
     '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.35">'+h(r.label)+'</div><div style="font-size:12px;color:#667085;margin-top:1px">'+subline+'</div></div>'+
     '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+chip+caret+'</div>'+
   '</div>';
   var body='';
-  if(isCant){ body='<div style="padding:0 16px 16px">'+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
+  if(isCant){ body='<div style="padding:0 16px 16px">'+comparePanes(r,seed,i,c)+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }   // show the photos so the recruiter can see why
   else if(open){ var panel = st==='review' ? reasonCodes(i,r) : (st==='nomatch' ? nomatchOverride(i,r) : matchOverride(i,r)); body='<div style="padding:0 16px 16px">'+comparePanes(r,seed,i,c)+panel+'</div>'; }
   return '<article id="rpt-round-'+i+'" style="'+V2CARD+';scroll-margin-top:12px'+(st==='review'?';border-color:#D9DFE8':'')+'">'+head+body+'</article>';
 }
@@ -1502,12 +1502,12 @@ function completedCard(i, r, c, stale){
   var caret=isCant?'<span style="width:30px;flex-shrink:0"></span>'
     :'<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" class="rpt-caret">'+chevron(open?'180deg':'0deg')+'</button>';
   var head='<div class="rpt-cardhead"'+(isCant?'':(' onclick="toggleRow('+i+')" style="cursor:pointer"'))+'>'+
-    (open?'':reportThumbs(r,seed))+
+    ((open||isCant)?'':reportThumbs(r,seed))+
     '<div style="flex:1;min-width:0"><div class="rpt-cardname" style="display:flex;align-items:center;gap:8px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h(r.label)+'</span>'+(changed?changeTag(changeFor(c,r)):'')+'</div><div class="rpt-carddate">'+h(tz(r.date))+'</div></div>'+
     '<div class="rpt-cardright">'+resultBadge(r,stale)+caret+'</div>'+
   '</div>';
   var body='';
-  if(isCant){ body='<div class="rpt-cardbody">'+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
+  if(isCant){ body='<div class="rpt-cardbody">'+comparePanes(r,seed,i,c)+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
   else if(open){
     var note=changed ? amberNoteBox('This is the photo compared on '+submitShort(state.decision)+'. The new one hasn’t been checked yet.') : completedRowNote(r,c);
     body='<div class="rpt-cardbody">'+comparePanes(r,seed,i,c)+note+'</div>';   // same captions as the review screen
@@ -2626,9 +2626,9 @@ function openLightbox(i){ setState({lightbox:i}); }
 /* full-screen viewer item: a photo on file (index) or the joining-day photo ('join') */
 function viewerItem(c){
   var k=state.lightbox;
-  if(k==='join') return state.photo ? {label:'Photo taken on joining day', date:(c.joining||''), src:state.photo} : null;
-  var p=c.photos[k]; if(!p) return null;
-  return {label:p.label, date:p.date+(p.by?' · '+p.by:''), src:p.img||null};
+  if(k==='join') return state.photo ? {label:(isReverifyCheck(state.entry)?'Photo uploaded':'Photo taken on joining day'), date:tz(photoStamp(c, state.entry)), src:state.photo} : null;
+  var p=(state.rows && state.rows[k]) || comparePhotos(c)[k]; if(!p) return null;
+  return {label:p.label, date:tz(p.date)+(p.by?' · '+p.by:''), src:p.img||null};
 }
 function downloadViewerPhoto(){
   var c=state.cand; if(!c) return; var v=viewerItem(c); if(!v||!v.src) return;

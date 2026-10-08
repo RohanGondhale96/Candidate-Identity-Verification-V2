@@ -6,6 +6,18 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## "Couldn't compare" cards show the photos (2026-10-08)
+
+- A "Couldn't compare" card now shows the reference (document) and the joining-day photo like every
+  other comparison, with "Why we couldn't compare" underneath, so the recruiter can see why (scan too
+  dark, cropped, no face on the document). Click either photo for the full-screen viewer. The header
+  thumbnail is dropped (the photos are already shown). Applies to the review screen, completed
+  report, PDF and Activity preview.
+- Fixed the double full stop in the reason ("…reference photo.. The scan…").
+- Viewer fix: it picked the photo by position in the candidate's full photo list; with the admin's
+  "Photos to compare" able to skip photos that could open the wrong one. It now uses the check's own
+  rows (`state.rows`), and the joining-day photo shows its real date and time.
+
 ## Admin screen: Joining-day Identity Check settings (2026-10-08)
 
 `admin.html`, styled like the other RippleHire admin screens (AI Voice Interview, Interview & Review
