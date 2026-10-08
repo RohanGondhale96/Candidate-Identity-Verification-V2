@@ -783,8 +783,7 @@ var IDV_DEFAULTS = {
   enabled: true,
   rounds: ['Onboarding','Hired'],
   access: {
-    run:      { roles:['Admin','Recruiter','Onboarding user'], users:[] },
-    submit:   { roles:['Admin','Recruiter'], users:[] },
+    run:      { roles:['Admin','Recruiter','Onboarding user'], users:[] },   // runs the check and submits the report (same person)
     reverify: { roles:['Admin','Recruiter'], users:[] }
   },
   photos: { application:true, interviews:true, interviewMode:'all', interviewRounds:['Round 1','Round 2','Round 3','Round 4'],
@@ -1413,7 +1412,7 @@ function reportFeed(s, c){
     var tick='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
     var btnStyle='border:0;color:#fff;background:#0076FB;border-radius:8px;padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;white-space:nowrap';
     var reviewCta = left===0
-      ? (canDo('submit') ? '<button type="button" onclick="openSubmit()" style="'+btnStyle+'">'+tick+'Submit report</button>' : '<span style="font-size:13px;color:#747474">Only people with submit access can submit this report.</span>')
+      ? (canDo('run') ? '<button type="button" onclick="openSubmit()" style="'+btnStyle+'">'+tick+'Submit report</button>' : '<span style="font-size:13px;color:#747474">Only people with access to run identity checks can submit this report.</span>')
       : (left===1
         ? '<button type="button" onclick="reviewNext()" style="'+btnStyle+'">'+arrow+'Review photo</button>'
         : '<button type="button" onclick="reviewNext()" style="'+btnStyle+'">'+arrow+'Review next photo</button>');

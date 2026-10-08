@@ -133,8 +133,7 @@ var IDV_DEFAULTS = {
   enabled: true,
   rounds: ['Onboarding','Hired'],
   access: {
-    run:      { roles:['Admin','Recruiter','Onboarding user'], users:[] },
-    submit:   { roles:['Admin','Recruiter'], users:[] },
+    run:      { roles:['Admin','Recruiter','Onboarding user'], users:[] },   // runs the check and submits the report (same person)
     reverify: { roles:['Admin','Recruiter'], users:[] }
   },
   photos: { application:true, interviews:true, interviewMode:'all', interviewRounds:['Round 1','Round 2','Round 3','Round 4'],
@@ -205,8 +204,7 @@ function secBasic(){
     toggle('enabled','Enable joining-day identity check')+
     (S.enabled ? '<div class="block"><h3 style="margin-bottom:2px">Select RH rounds where the identity check can be run <span class="req">*</span></h3><div class="hint" style="margin:0 0 4px">Candidates in these rounds appear on the worklist.</div>'+cbList('rounds', IDV_ROUNDS, true)+
       (ERR.rounds?'<div class="err">'+ERR.rounds+'</div>':'')+'</div>'+
-      access('run','Select who has access to run an identity check')+
-      access('submit','Select who has access to submit a report')+
+      access('run','Select who has access to run an identity check and submit the report')+
       access('reverify','Select who has access to reverify a candidate') : '');
 }
 function secPhotos(){
@@ -279,7 +277,7 @@ function validate(){
   ERR={}; var first=null; function bad(k,msg,sec){ ERR[k]=msg; if(!first) first=sec; }
   if(S.enabled){
     if(!S.rounds.length) bad('rounds','Select at least one round.','basic');
-    ['run','submit','reverify'].forEach(function(k){ var a=S.access[k]; if(!a.roles.length && !a.users.length) bad('access.'+k,'Select at least one role or add a user.','basic'); });
+    ['run','reverify'].forEach(function(k){ var a=S.access[k]; if(!a.roles.length && !a.users.length) bad('access.'+k,'Select at least one role or add a user.','basic'); });
   }
   if(!S.photos.application && !S.photos.interviews && !S.photos.documents) bad('photos','Turn on at least one kind of photo to compare.','photos');
   if(S.photos.interviews && S.photos.interviewMode==='selected' && !S.photos.interviewRounds.length) bad('photos.interviewRounds','Select at least one round.','photos');

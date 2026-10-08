@@ -18,7 +18,7 @@ both pages; anything missing falls back to the defaults. Worklist has a **Settin
 
 | Section | Configurable | Effect in the prototype |
 |---|---|---|
-| Basic setup | on/off; rounds (Offered, Onboarding, Hired); who can run a check, submit a report, reverify (roles + specific users) | off shows a "turned off" card; worklist lists only candidates in the chosen rounds; no access hides the action or shows a note (`canDo`) |
+| Basic setup | on/off; rounds (Offered, Onboarding, Hired); who can run a check **and submit the report** (one rule, same person; merged 2026-10-08), who can reverify (roles + specific users) | off shows a "turned off" card; worklist lists only candidates in the chosen rounds; no access hides the action or shows a note (`canDo`) |
 | Photos to compare | application photo; interview photos (all or selected Round 1-4); identity documents (checkboxes, Aadhaar / PAN / Driving licence ticked by default, "+ Add more" pop-up for Passport, Voter ID, …) | `comparePhotos(c)` decides what each run compares and what the photo list shows |
 | Match rules | Match / Needs review thresholds for photos (85/50) and documents (65/40); Reset to defaults (thresholds only, only here) | `photoBar` / `reviewFloor` |
 | Photo upload | camera on/off, file upload on/off | Take photo / Upload file buttons |
