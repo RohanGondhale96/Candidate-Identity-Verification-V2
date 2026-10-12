@@ -152,8 +152,10 @@ function idvSave(s){ try{ localStorage.setItem('rhIdvSettings', JSON.stringify(s
 
 
 var S = idvLoad(), SEC = 'basic', ERR = {};
-try{ var h=(location.hash||'').slice(1); if(h) SEC=h; }catch(e){}
-var SECTIONS = [['basic','Basic setup'],['photos','Photos to compare'],['match','Match rules'],['upload','Photo upload'],['reverify','Reverify'],['report','Report']];
+/* Photo upload, Reverify and Report are hidden for now (focus on the first three); their sections are kept
+   below and their settings keep their defaults, so they can be shown again by adding them back here. */
+var SECTIONS = [['basic','Basic setup'],['photos','Photos to compare'],['match','Match rules']];
+try{ var h=(location.hash||'').slice(1); if(h && SECTIONS.some(function(x){ return x[0]===h; })) SEC=h; }catch(e){}
 function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 var I_INFO='<svg width="16" height="16" viewBox="0 0 24 24" fill="#0076FB" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>';
 function info(t, soft){ return '<p class="info'+(soft?' soft':'')+'">'+I_INFO+'<span>'+t+'</span></p>'; }

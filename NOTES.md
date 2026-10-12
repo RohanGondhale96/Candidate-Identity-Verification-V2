@@ -37,6 +37,12 @@ both pages; anything missing falls back to the defaults. Worklist has a **Settin
 | Reverify | out of date when a photo is replaced / deleted / added; ask for a reason; who is notified | `applyOutdatedRules`; reason box in the Reverify dialog, saved in Activity; Activity says who was notified |
 | Report | company timezone | times converted (fixed offsets, no daylight saving) and labelled on the report and in Activity (`tz`, `tzTime`) |
 
+**Hidden for now (2026-10-12):** the left menu shows only Basic setup, Photos to compare and Match
+rules. Photo upload, Reverify and Report are hidden (`SECTIONS` in admin.html); their code stays and
+their settings keep the defaults (camera + file on; out of date on replaced / deleted / added; no
+reason; Recruiter notified; timezone IST). A browser that saved other values before keeps them until
+the sections come back or the setting is cleared.
+
 **Not configurable on purpose (always on):** photo quality checks (more than one face, blurry, too
 dark, not facing, face covered; no face), crop, the confirmation checkbox wording, reverify on a
 current report, the downloaded file name. A first version exposed these; removed on review.
