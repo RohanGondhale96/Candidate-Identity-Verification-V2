@@ -6,6 +6,19 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Worklist stage bar = progress only, in blue (2026-10-12)
+
+A developer reading the worklist was confused: the third segment never fills on To verify (a finished
+check moves to Completed), "Check in progress" was blue while "Ready to check" was black, and on
+Completed the green bars competed with the result (a "Not a match" row had three green bars).
+Decision: the bar only shows how far along the check is; the result colour lives only in the text.
+- To verify: all status text black; done stages blue (`#0076FB`), the rest grey. Ready to check = 1
+  blue, Check in progress = 2 blue, Not joined yet = all grey. The third segment reads as "one step left".
+- Completed: all 3 segments blue for every row; the text carries the result as before: "Check
+  completed · Match" (green), "· Not a match" (red), "Needs reverifying · …" (amber).
+- Tried and not chosen: green progress + bars in the result colour (green / red / amber); a neutral
+  grey bar on To verify with no bar on Completed.
+
 ## "Couldn't compare" cards show the photos (2026-10-08)
 
 - A "Couldn't compare" card now shows the reference (document) and the joining-day photo like every

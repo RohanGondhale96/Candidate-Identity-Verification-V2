@@ -1165,13 +1165,16 @@ function _pill(txt,color,bg){ return '<span style="display:inline-flex;align-ite
 function pill2(txt,color,bg){ return '<span style="background:'+bg+';color:'+color+';border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;white-space:nowrap">'+h(txt)+'</span>'; }
 /* the row status pills: base status + a modifier (Delayed) / outcome (Match / Not a match) */
 /* worklist stage: one label over a 3-segment bar (Not joined yet / Ready to check / Check in progress /
-   Check completed / Needs reverifying). Shown on both tabs; the last segment carries the meaning. */
+   Check completed / Needs reverifying). Shown on both tabs. */
 var WL_SEG={g:'#12B76A',b:'#0076FB',l:'#BFD7F7',n:'#E5E7EB',a:'#F59E0B'};
+/* The bar only shows how far along the check is: done stages are blue, the rest grey, so it never
+   competes with the result. The result colour lives in the text (Match green, Not a match red,
+   Needs reverifying amber). */
 function stageInfo(c){
-  if(isCompleted(c)) return c.staleInfo ? {label:'Needs reverifying',col:'#8A6414',segs:'gga'} : {label:'Check completed',col:'#1A7A3A',segs:'ggg'};
+  if(isCompleted(c)) return c.staleInfo ? {label:'Needs reverifying',col:'#8A6414',segs:'bbb'} : {label:'Check completed',col:'#2A2A2A',segs:'bbb'};
   if(isFuture(c)) return {label:'Not joined yet',col:'#6B7280',segs:'nnn'};
-  if(wlStatus(c)==='inreview') return {label:'Check in progress',col:'#0055B5',segs:'gbn'};
-  return {label:'Ready to check',col:'#2A2A2A',segs:'gln'};
+  if(wlStatus(c)==='inreview') return {label:'Check in progress',col:'#2A2A2A',segs:'bbn'};
+  return {label:'Ready to check',col:'#2A2A2A',segs:'bnn'};
 }
 /* One Filter on To verify: tick boxes in two groups. Ticks within a group add up (OR),
    the two groups narrow each other (AND). Nothing ticked = everyone. */
