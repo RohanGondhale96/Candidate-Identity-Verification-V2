@@ -337,7 +337,7 @@
   .wl-stage-l{font-size:12.5px;font-weight:600;white-space:nowrap}
   .wl-stage.wide{width:340px}
   .wl-stage-dot{color:#A0A7B2;font-weight:400;margin:0 6px}
-  .wl-stage-bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+  .wl-stage-bar{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px}
   .wl-stage-bar i{display:block;height:4px;border-radius:2px}
   @media(max-width:600px){
     .wl-stage{order:3;width:auto;flex-basis:calc(100% - 55px);margin-left:55px}
@@ -1170,11 +1170,13 @@ var WL_SEG={g:'#12B76A',b:'#0076FB',l:'#BFD7F7',n:'#E5E7EB',a:'#F59E0B'};
 /* The bar only shows how far along the check is: done stages are blue, the rest grey, so it never
    competes with the result. The result colour lives in the text (Match green, Not a match red,
    Needs reverifying amber). */
+/* To verify has two steps (joined, check started); a finished check moves to Completed, so a third
+   segment would never fill. Completed rows show no bar, only the status and the result. */
 function stageInfo(c){
-  if(isCompleted(c)) return c.staleInfo ? {label:'Needs reverifying',col:'#8A6414',segs:'bbb'} : {label:'Check completed',col:'#2A2A2A',segs:'bbb'};
-  if(isFuture(c)) return {label:'Not joined yet',col:'#6B7280',segs:'nnn'};
-  if(wlStatus(c)==='inreview') return {label:'Check in progress',col:'#2A2A2A',segs:'bbn'};
-  return {label:'Ready to check',col:'#2A2A2A',segs:'bnn'};
+  if(isCompleted(c)) return c.staleInfo ? {label:'Needs reverifying',col:'#8A6414',segs:''} : {label:'Check completed',col:'#2A2A2A',segs:''};
+  if(isFuture(c)) return {label:'Not joined yet',col:'#6B7280',segs:'nn'};
+  if(wlStatus(c)==='inreview') return {label:'Check in progress',col:'#2A2A2A',segs:'bb'};
+  return {label:'Ready to check',col:'#2A2A2A',segs:'bn'};
 }
 /* One Filter on To verify: tick boxes in two groups. Ticks within a group add up (OR),
    the two groups narrow each other (AND). Nothing ticked = everyone. */
@@ -1196,14 +1198,16 @@ function stageOutcome(c){
       txt=order.map(function(v,i){ return cnt[v]+(i===0?(' photo'+(cnt[v]===1?'':'s')):'')+' '+v; }).join(', '); }
     else { var w=String((l[0]&&l[0].what)||'Photo'); txt=w.charAt(0).toUpperCase()+w.slice(1)+' '+staleVerb(l[0]); }
     return '<span class="wl-stage-o" style="color:#5A6473;font-weight:400">'+h(txt)+'</span>'; }
-  return completedStatus(c)==='notmatch'
+  var cs=completedStatus(c);
+  if(cs==='inconclusive') return '<span class="wl-stage-o" style="color:#5A6473">Inconclusive</span>';
+  return cs==='notmatch'
     ? '<span class="wl-stage-o" style="color:#B42318">Not a match</span>'
     : '<span class="wl-stage-o" style="color:#1A7A3A">Match</span>';
 }
 function stageBar(c){
   var st=stageInfo(c), out=stageOutcome(c);
-  return '<span class="wl-stage'+(out?' wide':'')+'"><span class="wl-stage-l" style="color:'+st.col+'">'+h(st.label)+(out?'<span class="wl-stage-dot" aria-hidden="true">&middot;</span>'+out:'')+'</span><span class="wl-stage-bar" aria-hidden="true">'+
-    st.segs.split('').map(function(k){ return '<i style="background:'+WL_SEG[k]+'"></i>'; }).join('')+'</span></span>';
+  return '<span class="wl-stage'+(out?' wide':'')+'"><span class="wl-stage-l" style="color:'+st.col+'">'+h(st.label)+(out?'<span class="wl-stage-dot" aria-hidden="true">&middot;</span>'+out:'')+'</span>'+(st.segs?'<span class="wl-stage-bar" aria-hidden="true">'+
+    st.segs.split('').map(function(k){ return '<i style="background:'+WL_SEG[k]+'"></i>'; }).join('')+'</span>':'')+'</span>';
 }
 /* timing badge next to the name: only Today and Delayed (no Upcoming); none once the check is done */
 function timingBadge(c){
@@ -1217,9 +1221,10 @@ function rowPills(c){
     // on the Completed tab we drop the "Completed" pill (the tab already says so)
     if(c.staleInfo){   // out of date: needs reverifying, with the old result greyed out
       var lc=latestCheck(c.id), dec=lc&&lc.hh&&lc.hh.decision, when=submitShort(dec)||shortDay(c.joining);
-      var oldOut=completedStatus(c)==='notmatch'?'Not matched':'Matched';
+      var oldOut=completedStatus(c)==='notmatch'?'Not matched':(completedStatus(c)==='inconclusive'?'Inconclusive':'Matched');
       return pill2(oldOut+' on '+when,'#8A97A8','#ECEEF1');
     }
+    if(completedStatus(c)==='inconclusive') return pill2('Inconclusive','#5A6473','#ECEEF1');
     return completedStatus(c)==='notmatch'
       ? pill2('Not a match','#B42318','#FDECEC')
       : pill2('Match','#1A7A3A','#E7F4EC');
@@ -1233,7 +1238,7 @@ function inWhen(c,w,v){
   if(v==='completed'){
     if(w==='stale') return !!c.staleInfo;                              // "Out of date" sub-filter
     if(c.staleInfo) return false;   // out-of-date reports only sit under "Needs reverifying" (the row no longer shows the old result)
-    return w==='notmatch' ? completedStatus(c)==='notmatch' : completedStatus(c)!=='notmatch';
+    return completedStatus(c)===w;   // match / notmatch / inconclusive
   }
   if(w==='today')    return dayDiff(c)===0;
   if(w==='upcoming') return isFuture(c);
@@ -1526,12 +1531,12 @@ function completedReport(s, c){
   var uploadStamp=tz(photoStamp(c, hh));
   var by=(dec&&dec.by)||(c.wl&&c.wl.by)||'A. Sharma';
   var submittedAt=(dec&&dec.at)||'';
-  var vv=reportVerdict(rows), confirmed=vv.confirmed;
-  var vcol=stale?'#667085':(confirmed?'#1a8a3a':'#D93025');
-  var vico=confirmed?'<path d="M5 12.5l4.5 4.5L19 7.5"/>':'<path d="M7 7l10 10M17 7L7 17"/>';
+  var vv=reportVerdict(rows), confirmed=vv.confirmed, inconc=(vv.tier==='inconclusive');
+  var vcol=(stale||inconc)?'#667085':(confirmed?'#1a8a3a':'#D93025');
+  var vico=inconc?'<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.6v.1"/>':(confirmed?'<path d="M5 12.5l4.5 4.5L19 7.5"/>':'<path d="M7 7l10 10M17 7L7 17"/>');
   var verdictText=stale
-    ? ((confirmed?'Confirmed':'Not confirmed')+' on '+submitShort(dec)+', before the '+(staleList(c).length>1?'photos':'photo')+' changed')
-    : (confirmed?'Identity confirmed':'Can’t confirm identity');
+    ? ((inconc?'Inconclusive':(confirmed?'Confirmed':'Not confirmed'))+' on '+submitShort(dec)+', before the '+(staleList(c).length>1?'photos':'photo')+' changed')
+    : (inconc?'Inconclusive: no photo could be confirmed':(confirmed?'Identity confirmed':'Can’t confirm identity'));
 
   var html='<div class="rh-card" style="padding:0;overflow:hidden">';
   if(stale){
@@ -1652,6 +1657,7 @@ function isDismissed(c){ return !!state.dismissed[c.id]; }
 /* map a submitted report's system status (banner tier) to a worklist status */
 function submittedStatus(tier){ return (tier==='match'||tier==='reviewed') ? 'verified' : (tier==='mismatch' ? 'notverified' : 'needsreview'); }
 function wlStatus(c){
+  if(c.reverifying) return 'inreview';   // reverify started and left before submitting
   var lc = latestCheck(c.id);
   if(lc){ var d=lc.hh.decision; if(d && d.action==='submitted') return submittedStatus(d.status); return 'inreview'; }
   return (c.wl && c.wl.status) || 'toverify';
@@ -1666,7 +1672,7 @@ function completedStatus(c){
   var lc=latestCheck(c.id);
   if(lc && lc.hh && lc.hh.rows){ var v=reportSummary(lc.hh.rows);
     if(v.tier==='mismatch') return 'notmatch';
-    if(v.tier==='inconclusive' || v.ignored>0) return 'inconclusive';
+    if(v.tier==='inconclusive') return 'inconclusive';   // nothing left to compare: every photo set aside or couldn't be compared
     return 'match';
   }
   return (c.wl && c.wl.completed) || 'match';
@@ -1681,7 +1687,7 @@ function completedPill(c){
 function setWlTab(t){ setState({wlTab:t, filter:'all', dateRange:'all', page:1, wlShown:WL_PAGE, wlMenu:null}); wlSyncUrl(true); }
 function dayDiff(c){ return Math.round((WL_TODAY_MS - Date.parse(c.joiningISO+'T00:00:00Z'))/86400000); } // +past, -future, 0 today
 function isFuture(c){ return dayDiff(c) < 0; }
-function isOverdue(c){ if(isDismissed(c)) return false; var st=wlStatus(c); return dayDiff(c)>0 && (st==='toverify'||st==='inreview'); }
+function isOverdue(c){ if(isDismissed(c) || c.reverifying) return false; var st=wlStatus(c); return dayDiff(c)>0 && (st==='toverify'||st==='inreview'); }
 /* active-tab "when" filter: All / Today / Delayed (Delayed = overdue, a status cross-cut) */
 function inDateRange(c){ var r=state.dateRange;
   if(r==='today')   return dayDiff(c)===0;
@@ -1774,7 +1780,7 @@ function wlExportExcel(){
   var head = ['Name','RHID','Role','Joining date','Status','Stage','Delayed','Outcome'];
   var body = rows.map(function(c){
     var st = isCompleted(c) ? 'Completed' : 'To verify';
-    var outcome = isCompleted(c) ? (completedStatus(c)==='notmatch' ? 'Not a match' : 'Match') : '';
+    var outcome = isCompleted(c) ? ({notmatch:'Not a match', inconclusive:'Inconclusive'}[completedStatus(c)] || 'Match') : '';
     var cells = [c.name, c.rhid, c.req, (c.joining||fmtDate(c.joiningISO)), st, stageInfo(c).label, (isOverdue(c)?'Yes':''), outcome];
     return '<tr>'+cells.map(function(x){ return '<td>'+esc(x)+'</td>'; }).join('')+'</tr>';
   }).join('');
@@ -1899,7 +1905,7 @@ function worklistView(){
   /* sub-filter values (timing for open work, outcome for completed) */
   var statusRows=wlStatusRows(view);
   var SEG = view==='completed'
-    ? [['all','All'],['match','Match'],['notmatch','Not a match'],['stale','Needs reverifying']]
+    ? [['all','All'],['match','Match'],['notmatch','Not a match'],['inconclusive','Inconclusive'],['stale','Needs reverifying']]
     : [['all','All'],['today','Today'],['upcoming','Upcoming'],['delayed','Delayed']];
   var segCount=function(val){ return statusRows.filter(function(c){ return inWhen(c,val,view); }).length; };
   /* To verify: one Filter (Stage + Joining tick boxes); each option counts within the other group's ticks */
@@ -2430,6 +2436,16 @@ function render(){
   /* REPORT preview (from Activity) */
   if(s.repPreview!=null){ html += reportViewHtml(); }
 
+  /* LEAVE an unsubmitted reverify */
+  if(s.leaveOpen && c){
+    html += '<div class="rh-scrim" onclick="scrimLeave(event)"><div class="rh-dialog" role="alertdialog" aria-labelledby="lv-t" style="width:480px;max-width:calc(100vw - 32px)">'+
+      '<header><h2 id="lv-t">Leave this reverify?</h2><button class="x" onclick="closeLeave()" aria-label="Close"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
+      '<div class="dbody"><p style="margin:0;font-size:13.5px;color:#2A2A2A;line-height:1.6">'+h(c.name)+' will move to <b>Check in progress</b> on the To verify tab. You can continue the reverify from there.</p>'+
+        '<p style="margin:10px 0 0;font-size:13px;color:#5A6473;line-height:1.6">'+(s.rows&&s.rows.length?'The comparisons so far are saved. ':(s.photo?'The photo you added isn’t saved yet. ':''))+'The current report stays as it is until you submit the new one.</p></div>'+
+      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeLeave()">Stay</button><button class="rh-btn primary sm" onclick="confirmLeave()">Leave</button></footer>'+
+    '</div></div>';
+  }
+
   /* REVERIFY confirm */
   if(s.reverifyOpen && c){
     html += '<div class="rh-scrim" onclick="scrimReverify(event)"><div class="rh-dialog" style="width:560px;max-width:calc(100vw - 32px)">'+
@@ -2488,9 +2504,23 @@ function render(){
 /* ---------- handlers (global) ---------- */
 function onQuery(v){ state._refocus='rh-q'; setState({q:v, deepMiss:null}); }
 function onPickQuery(v){ state._refocus='rh-pick'; setState({pickQ:v}); }
-function pick(id){ var c=CANDIDATES.find(function(x){return x.id===id;}); if(!c) return; var lc=latestCheck(id); if(lc) openHistory(lc.idx); else select(c); }
+function pick(id){ var c=CANDIDATES.find(function(x){return x.id===id;}); if(!c) return; var lc=latestCheck(id);
+  // a reverify left before the comparison ran: reopen the upload step of that reverify
+  if(c.reverifying && lc && lc.hh.decision && lc.hh.decision.action==='submitted'){ openHistory(lc.idx); resumeReverify(); return; }
+  if(lc) openHistory(lc.idx); else select(c); }
+/* reopen a reverify's upload step (no new Activity entry: it was logged when the reverify started) */
+function resumeReverify(){
+  clearTimers(); _runToken++; _qtoken++;
+  setState({ done:false, running:false, photo:null, photoOriginal:null, cropRect:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false, reverifyOpen:false, repPreview:null, reverifyRun:true });
+}
 function setTab(t){ setState({tab:t}); }
-function changeCandidate(){ setState({cand:null, searchOpen:true, done:false, running:false, rows:[], entry:null, decision:null, decisionErr:'', viewingHistory:false}); wlSyncUrl(true); window.scrollTo({top:0,behavior:'smooth'}); }
+/* Back during a reverify that isn't submitted yet: confirm first, the candidate moves to Check in progress */
+function reverifyUnsubmitted(){ return !!(state.cand && state.reverifyRun && !state.decision); }
+function changeCandidate(){ if(reverifyUnsubmitted()){ setState({leaveOpen:true}); return; } leaveCandidate(); }
+function closeLeave(){ setState({leaveOpen:false}); }
+function scrimLeave(e){ if(e.target===e.currentTarget) closeLeave(); }
+function confirmLeave(){ if(state.cand) state.cand.reverifying=true; setState({leaveOpen:false}); leaveCandidate(); }
+function leaveCandidate(){ setState({cand:null, searchOpen:true, done:false, running:false, rows:[], entry:null, decision:null, decisionErr:'', viewingHistory:false}); wlSyncUrl(true); window.scrollTo({top:0,behavior:'smooth'}); }
 function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click(); }
 function openPicker(){ if(!IDV.upload.allowFile && IDV.upload.allowCamera && state.hasCamera){ openCamera(); return; } var el=document.getElementById('rh-file'); if(el){ el.value=''; el.click(); } }
 function onFileInput(e){ handleFile(e.target.files[0]); }
@@ -2517,6 +2547,7 @@ function confirmSubmit(){
   var at = nowStamp().replace(/ IST$/,'');
   var dec = {action:'submitted', by:'A. Sharma', at:at, note:note, status:v.tier, unreviewed:v.unresolved};
   if(state.entry) state.entry.decision = dec;   // persist onto the saved check record
+  if(state.cand) state.cand.reverifying=false;
   if(state.cand && state.cand.staleInfo){ state.cand.pastChanges=(state.cand.pastChanges||[]).concat(staleList(state.cand)); state.cand.staleInfo=null; }   // a fresh submit clears the out-of-date flag (this becomes the new version)
   setState({decision:dec, submitModal:null});
   rhSuccess('Report submitted', (state.cand?state.cand.name+'’s':'The')+' identity check has been submitted.', {label:'View in Completed', onclick:'viewCompleted()'});
@@ -2916,7 +2947,7 @@ function synthCompletedEntry(c){
   function isMobile(){ return (window.matchMedia && (window.matchMedia('(pointer:coarse)').matches || window.matchMedia('(max-width: 767px)').matches)) || false; }
   state.hasCamera = isMobile();
   window.addEventListener('resize', function(){ var m=isMobile(); if(m!==state.hasCamera) setState({hasCamera:m}); });
-  window.addEventListener('popstate', function(){ wlApplyUrl(); });
+  window.addEventListener('popstate', function(){ if(reverifyUnsubmitted()) state.cand.reverifying=true; wlApplyUrl(); });
   // Esc closes the full-screen photo viewer
   document.addEventListener('keydown', function(e){ if(e.key!=='Escape') return; if(state.repPreview!=null){ closeReportView(); return; } if(state.lightbox!==null && state.lightbox!==undefined) closeLightbox(); });
   // a11y: make role="button" divs (candidate rows, pick lists) keyboard-operable

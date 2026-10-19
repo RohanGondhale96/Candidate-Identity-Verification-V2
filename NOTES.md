@@ -6,6 +6,36 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Leave-reverify pop-up, Inconclusive outcome, 2-line stage bar (2026-10-19)
+
+Previewed on a canvas of real screens and approved by Rohan.
+
+- **Back during a reverify asks first.** After Start reverify, the back arrow before Submit report opens
+  "Leave this reverify?" (Stay / Leave): "<name> will move to Check in progress on the To verify tab. You
+  can continue the reverify from there." It also says what's kept ("The comparisons so far are saved", or
+  "The photo you added isn't saved yet"; the current report stays until the new one is submitted).
+  - **Leave** sets `c.reverifying`: `wlStatus` = in review, so the candidate leaves Completed and shows on
+    To verify as Check in progress. No Delayed badge for a reverify (`isOverdue`).
+  - Opening them again continues the reverify: the upload step if nothing was compared (`resumeReverify`,
+    no second Activity entry), or the in-progress comparisons if they ran. Submitting clears the flag.
+  - The browser's own Back can't show a pop-up; it moves the candidate the same way without asking.
+  - Before this, leaving a reverify before the comparison ran silently dropped it and the candidate stayed
+    on Completed.
+- **Every photo set aside = Inconclusive, not Match.** Bug: the report said "Can't confirm identity" (red)
+  but the worklist showed Match, because anything that wasn't Not a match was shown as Match. Now, when
+  nothing is left to compare (every photo set aside or couldn't be compared), `completedStatus` is
+  `inconclusive`: "Check completed · Inconclusive" (grey), a new **Inconclusive** option in the Outcome
+  filter, the report header "Inconclusive: no photo could be confirmed" (grey, info icon; also the PDF),
+  and "Inconclusive" in the Excel export. If only some photos are set aside, the result still comes from
+  the rest (Rohit's seed, one set aside, is now Match, as the worklist always showed).
+  - Considered: blocking Submit when everything is set aside. Not chosen: Inconclusive keeps a record that
+    the check was done and couldn't be confirmed.
+- **Stage bar: 2 lines on To verify, none on Completed.** People said the third line never fills on To
+  verify, and on Completed it's always full. To verify: Not joined yet 0 of 2, Ready to check 1 of 2,
+  Check in progress 2 of 2. Completed: status and result text only. (Noted: a full bar on Check in progress
+  may read as "done"; light blue for the second line is the fallback if that confuses.)
+- Harness: 172 pass (updated stage / completed-status checks; new checks for Inconclusive and the pop-up).
+
 ## Worklist stage bar = progress only, in blue (2026-10-12)
 
 A developer reading the worklist was confused: the third segment never fills on To verify (a finished
