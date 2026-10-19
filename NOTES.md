@@ -30,6 +30,10 @@ Previewed on a canvas of real screens and approved by Rohan.
   the rest (Rohit's seed, one set aside, is now Match, as the worklist always showed).
   - Considered: blocking Submit when everything is set aside. Not chosen: Inconclusive keeps a record that
     the check was done and couldn't be confirmed.
+  - Name kept as **Inconclusive**, not "Can't confirm identity" (decided 2026-10-19): that phrase is already
+    the red header of a Not a match report, and "Can't confirm" is the button that sets one photo aside.
+    Reusing it would make "we couldn't tell" read like a fraud flag. If plainer words are wanted later,
+    "Couldn't confirm" works only if the Not a match header is renamed too (for example "Not the same person").
 - **Stage bar: 2 lines on To verify, none on Completed.** People said the third line never fills on To
   verify, and on Completed it's always full. To verify: Not joined yet 0 of 2, Ready to check 1 of 2,
   Check in progress 2 of 2. Completed: status and result text only. (Noted: a full bar on Check in progress
