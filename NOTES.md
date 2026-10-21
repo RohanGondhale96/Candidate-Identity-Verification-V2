@@ -6,6 +6,34 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Take photo on desktop: the laptop camera (2026-10-21)
+
+The PM asked for a Take photo button next to Upload file on desktop. Three options were mocked on the real
+screen (Upload file only / laptop camera / "Use your phone" with a QR hand-off) and Rohan chose the
+**laptop camera** (option B).
+- **Desktop:** Take photo asks the browser for camera access (`getUserMedia`) and opens a "Take photo"
+  dialog: live preview (mirrored like a selfie; the saved photo is not mirrored), a face outline, and
+  **Capture** / **Cancel** / **Upload a file instead**. Capture puts the photo in the usual card as "Laptop
+  camera photo" (`photoSource:'webcam'`); consent, quality check and Submit are unchanged.
+  - Change photo reopens the camera for a camera photo; the multiple-faces button reads "Take new photo".
+  - Cancel, Esc or clicking outside closes the dialog and turns the camera off (`stopWebcam`).
+  - Camera blocked: "Camera access is blocked. Allow the camera for this site in your browser settings, or
+    upload a file instead." No camera: "We couldn't find a camera on this device." Capture stays disabled.
+  - The button only shows when the browser supports the camera API and the admin camera setting is on
+    (`camAvailable`). The camera needs HTTPS, which the Vercel site has.
+  - `render()` rebuilds the page, so the live stream is re-attached after each render (`attachWebcam`).
+- **Phones:** unchanged, they still use the phone's own camera (file input with `capture`).
+- **Activity:** a camera photo reads "Joining-day photo taken with the laptop camera" ("Photo taken with the
+  laptop camera" on a reverify); a file still reads "uploaded" (`photoEventText`, stored on the check as
+  `photoSource`).
+- **Concerns raised before the decision (kept for the record):** the joiner may have to sit in the
+  recruiter's seat or the laptop gets turned round; in that seat the joiner can see other candidates' data;
+  webcam photos are darker and lower resolution, so more may fail the quality check; asking consent with the
+  camera already on feels backwards. Not chosen: "Use your phone" (QR code, photo taken on the recruiter's
+  phone appears on the laptop), which avoided these but needs more to build.
+- Harness: 179 pass (7 new checks); verified in a real browser with a simulated camera (capture, change
+  photo, Esc, Activity wording).
+
 ## Leave-reverify pop-up, Inconclusive outcome, 2-line stage bar (2026-10-19)
 
 Previewed on a canvas of real screens and approved by Rohan.

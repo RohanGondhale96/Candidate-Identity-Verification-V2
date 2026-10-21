@@ -333,6 +333,11 @@
   .wl-grow{flex:1;min-width:0}
   .wl-pills{display:inline-flex;gap:6px;flex-shrink:0}
   .wl-when{font-size:12.5px;color:#5A6473;white-space:nowrap;flex-shrink:0}
+  .rh-cam-box{position:relative;aspect-ratio:16/9;background:#11151C;border-radius:8px;overflow:hidden}
+  .rh-cam-box video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+  .rh-cam-oval{position:absolute;left:50%;top:50%;width:34%;height:78%;transform:translate(-50%,-52%);border:2px dashed rgba(255,255,255,.8);border-radius:50%;pointer-events:none}
+  .rh-cam-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;color:#C9D1DE;font-size:13.5px;line-height:1.5}
+  .rh-cam-msg.err{color:#fff}
   .wl-stage{width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:6px}
   .wl-stage-l{font-size:12.5px;font-weight:600;white-space:nowrap}
   .wl-stage.wide{width:340px}
@@ -632,7 +637,7 @@ function handleFile(f){
     img.onload = function(){
       if(img.width<200 || img.height<200) return setState({upErr:'Photo is too small to compare reliably.'});
       // downscale so the request stays well under the serverless body limit (mobile cameras shoot several MB)
-      setState({photo:downscalePhoto(img, 1280, 0.85), photoOriginal:null, cropRect:null, photoName:f.name, consent:false, attest:false, quality:null, qualityChecking:false, upErr:''});
+      setState({photo:downscalePhoto(img, 1280, 0.85), photoOriginal:null, cropRect:null, photoName:f.name, photoSource:'file', consent:false, attest:false, quality:null, qualityChecking:false, upErr:''});
     };
     img.onerror = function(){ setState({upErr:"That image couldn't be read. Try another photo."}); };
     img.src = r.result;
@@ -705,7 +710,7 @@ function settleRow(i, token, res, err){
     var allSettled = rows.every(function(r){ return r.status==='done' || r.status==='error'; });
     if(!allSettled) return {rows:rows};
     var at = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-    var entry = {cand:prev.cand, photo:prev.photo, rows:rows, shared:prev.shared, at:at, ranAt:nowStamp().replace(/ IST$/,''), reverify:!!prev.reverifyRun, decision:null, attest:prev.attest, quality:prev.quality};
+    var entry = {cand:prev.cand, photo:prev.photo, rows:rows, shared:prev.shared, at:at, ranAt:nowStamp().replace(/ IST$/,''), reverify:!!prev.reverifyRun, photoSource:prev.photoSource||'file', decision:null, attest:prev.attest, quality:prev.quality};
     return {rows:rows, running:false, done:true, history:prev.history.concat([entry]), entry:entry, decision:null, decisionErr:''};
   }, function(){
     // run just finished - glide up to the top of the results instead of snapping mid-report
@@ -2088,16 +2093,16 @@ function render(){
   if(c && c.photos.length && !s.done && !isFuture(c)){
     html += '<div class="rh-card">'+
       '<div style="margin-bottom:16px"><div style="font-size:16px;font-weight:600;line-height:1.5">Upload joining day photo</div>'+
-        (s.photo?'':'<p style="margin:4px 0 0;font-size:14px;color:#747474;line-height:1.55">'+(s.hasCamera?'Frame the photo from the chest up, with the face clearly visible and looking at the camera.':'Choose a clear, front-facing photo with the face fully visible.')+'</p>')+
+        (s.photo?'':'<p style="margin:4px 0 0;font-size:14px;color:#747474;line-height:1.55">'+(camAvailable()?'Frame the photo from the chest up, with the face clearly visible and looking at the camera.':'Choose a clear, front-facing photo with the face fully visible.')+'</p>')+
       '</div>';
     if(!canDo('run')){
       html += noAccessNote('You don\u2019t have access to run identity checks. Ask your admin to add you in the identity check settings.');
     } else if(!s.photo){
       html += '<div ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" style="border:1.5px dashed '+(s.drag?'#0076FB':'#C6C6C6')+';border-radius:6px;padding:30px 20px;text-align:center;background:'+(s.drag?'#EBF5FF':'#F7F8FA')+'">'+
         '<svg viewBox="25 25 22 22" width="28" height="28" fill="#929292" style="margin-bottom:6px"><path d="M32.7143 40.2353H38.2857V34.5882H42L35.5 28L29 34.5882H32.7143V40.2353ZM29 42.1176H42V44H29V42.1176Z"></path></svg>'+
-        '<p style="margin:0 0 16px;font-size:13.5px;color:#747474">'+(s.hasCamera?'Take a photo, or choose one from this device':'Choose one from this device')+'</p>'+
+        '<p style="margin:0 0 16px;font-size:13.5px;color:#747474">'+(camAvailable()?'Take a photo, or choose one from this device':'Choose one from this device')+'</p>'+
         '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">'+
-          ((s.hasCamera && IDV.upload.allowCamera)?'<button class="rh-btn secondary sm" onclick="openCamera()">Take photo</button>':'')+
+          (camAvailable()?'<button class="rh-btn secondary sm" onclick="takePhoto()">Take photo</button>':'')+
           (IDV.upload.allowFile?'<button class="rh-btn secondary sm" onclick="openPicker()">Upload file</button>':'')+
         '</div></div>';
     } else {
@@ -2140,12 +2145,12 @@ function render(){
         var buttons = multiFace
           // more than one face -> crop-to-fix in-product, or upload a fresh photo
           ? '<div style="display:flex;gap:12px">'+
-              '<button type="button" class="rh-btn primary" style="flex:1" onclick="openPicker()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Upload new photo</button>'+
+              '<button type="button" class="rh-btn primary" style="flex:1" onclick="changePhoto()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>'+(s.photoSource==='webcam'?'Take new photo':'Upload new photo')+'</button>'+
               '<button type="button" class="rh-btn secondary" style="flex:1" onclick="openCrop()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>Crop photo</button>'+
             '</div>'
           : '<div style="display:flex;gap:12px">'+
               '<button type="button" class="rh-btn primary" style="flex:1" '+(canSubmit?'':'disabled')+' onclick="submitPhoto()">Submit</button>'+
-              '<button type="button" class="rh-btn secondary" style="flex:1" onclick="openPicker()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Change photo</button>'+
+              '<button type="button" class="rh-btn secondary" style="flex:1" onclick="changePhoto()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Change photo</button>'+
             '</div>';
         right = '<div style="flex:1;min-width:250px;display:flex;flex-direction:column">'+
           '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px">'+fileName+errBlock+checks+'</div>'+
@@ -2436,6 +2441,22 @@ function render(){
   /* REPORT preview (from Activity) */
   if(s.repPreview!=null){ html += reportViewHtml(); }
 
+  /* TAKE PHOTO with the laptop camera */
+  if(s.camOpen && c){
+    html += '<div class="rh-scrim" onclick="scrimWebcam(event)"><div class="rh-dialog" role="dialog" aria-labelledby="cam-t" style="width:640px;max-width:calc(100vw - 32px)">'+
+      '<header><h2 id="cam-t">Take photo</h2><button class="x" onclick="closeWebcam()" aria-label="Close"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
+      '<div class="dbody">'+
+        '<p style="margin:0 0 12px;font-size:13px;color:#5A6473;line-height:1.5">Ask the candidate to look at the laptop camera. Frame the photo from the chest up, with the face inside the outline.</p>'+
+        '<div class="rh-cam-box">'+
+          (s.camErr ? '<div class="rh-cam-msg err">'+h(s.camErr)+'</div>'
+            : '<video id="rh-webcam" autoplay playsinline muted></video>'+
+              (s.camReady ? '<div class="rh-cam-oval" aria-hidden="true"></div>' : '<div class="rh-cam-msg">Starting the camera\u2026</div>'))+
+        '</div>'+
+      '</div>'+
+      '<footer><button class="rh-btn tertiary sm" onclick="webcamToFile()" style="margin-right:auto">Upload a file instead</button><button class="rh-btn secondary sm" onclick="closeWebcam()">Cancel</button><button class="rh-btn primary sm" '+(s.camReady&&!s.camErr?'':'disabled')+' onclick="captureWebcam()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Capture</button></footer>'+
+    '</div></div>';
+  }
+
   /* LEAVE an unsubmitted reverify */
   if(s.leaveOpen && c){
     html += '<div class="rh-scrim" onclick="scrimLeave(event)"><div class="rh-dialog" role="alertdialog" aria-labelledby="lv-t" style="width:480px;max-width:calc(100vw - 32px)">'+
@@ -2499,6 +2520,8 @@ function render(){
   wlObserveMore();
   // (re)initialise the crop tool while its modal is open
   if(s.cropOpen) initCrop();
+  // keep the laptop camera preview live while its dialog is open
+  if(s.camOpen) attachWebcam();
 }
 
 /* ---------- handlers (global) ---------- */
@@ -2521,6 +2544,34 @@ function closeLeave(){ setState({leaveOpen:false}); }
 function scrimLeave(e){ if(e.target===e.currentTarget) closeLeave(); }
 function confirmLeave(){ if(state.cand) state.cand.reverifying=true; setState({leaveOpen:false}); leaveCandidate(); }
 function leaveCandidate(){ setState({cand:null, searchOpen:true, done:false, running:false, rows:[], entry:null, decision:null, decisionErr:'', viewingHistory:false}); wlSyncUrl(true); window.scrollTo({top:0,behavior:'smooth'}); }
+/* Take photo: phones use their own camera app (file input with capture); a desktop opens the
+   laptop camera in a dialog (getUserMedia). Both follow the admin camera setting. */
+var _camStream=null;
+function webcamSupported(){ return !!(typeof navigator!=='undefined' && navigator.mediaDevices && navigator.mediaDevices.getUserMedia); }
+function camAvailable(){ return !!IDV.upload.allowCamera && (state.hasCamera || webcamSupported()); }
+function takePhoto(){ if(state.hasCamera) openCamera(); else openWebcam(); }
+function changePhoto(){ if(state.photoSource==='webcam' && !state.hasCamera && camAvailable()) openWebcam(); else openPicker(); }
+function stopWebcam(){ if(_camStream){ try{ _camStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} } _camStream=null; }
+function openWebcam(){
+  stopWebcam();
+  setState({camOpen:true, camReady:false, camErr:''});
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'user', width:{ideal:1280}, height:{ideal:720}}, audio:false})
+    .then(function(st){ if(!state.camOpen){ st.getTracks().forEach(function(t){ t.stop(); }); return; } _camStream=st; setState({camReady:true}); })
+    .catch(function(e){ setState({camErr:(e && (e.name==='NotAllowedError'||e.name==='SecurityError')) ? 'Camera access is blocked. Allow the camera for this site in your browser settings, or upload a file instead.' : 'We couldn\u2019t find a camera on this device. Upload a file instead.'}); });
+}
+function closeWebcam(){ stopWebcam(); setState({camOpen:false, camReady:false, camErr:''}); }
+function scrimWebcam(e){ if(e.target===e.currentTarget) closeWebcam(); }
+function webcamToFile(){ closeWebcam(); openPicker(); }
+/* keep the live preview attached across re-renders (render() rebuilds the page) */
+function attachWebcam(){ var v=document.getElementById('rh-webcam'); if(v && _camStream && v.srcObject!==_camStream){ v.srcObject=_camStream; try{ var pr=v.play(); if(pr&&pr.catch) pr.catch(function(){}); }catch(e){} } }
+function captureWebcam(){
+  var v=document.getElementById('rh-webcam'); if(!v || !v.videoWidth) return;
+  var c=document.createElement('canvas'); c.width=v.videoWidth; c.height=v.videoHeight;
+  c.getContext('2d').drawImage(v,0,0,c.width,c.height);   // the photo is not mirrored, even though the preview is
+  var data=downscalePhoto(c, 1280, 0.85);
+  stopWebcam();
+  setState({camOpen:false, camReady:false, camErr:'', photo:data, photoOriginal:null, cropRect:null, photoName:'Laptop camera photo', photoSource:'webcam', consent:false, attest:false, quality:null, qualityChecking:false, upErr:''});
+}
 function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click(); }
 function openPicker(){ if(!IDV.upload.allowFile && IDV.upload.allowCamera && state.hasCamera){ openCamera(); return; } var el=document.getElementById('rh-file'); if(el){ el.value=''; el.click(); } }
 function onFileInput(e){ handleFile(e.target.files[0]); }
@@ -2770,10 +2821,15 @@ function alKey(day, time){
   return Date.UTC(+m[3], AL_MO[m[2]]||0, +m[1], t?+t[1]:0, t?+t[2]:0);
 }
 function alSplit(at, fallbackDay){ var p=String(at||'').split(', '); return p.length>1 ? {day:p[0], time:p[1]} : {day:fallbackDay, time:p[0]||'10:00'}; }
+/* Activity wording for the joining-day photo: uploaded from a file, or taken with the laptop camera */
+function photoEventText(reverify, source){
+  if(source==='webcam') return reverify ? 'Photo taken with the laptop camera' : 'Joining-day photo taken with the laptop camera';
+  return reverify ? 'Photo uploaded' : 'Joining-day photo uploaded';
+}
 function activityLog(s, c){
   var evs=[], seq=0;
   // step: where an event sits in the flow, so events in the same minute keep their real order
-  var STEP=[['Verification enabled',0],['Reverify started',2],['Joining-day photo uploaded',3],['Quality check',4],['Comparison run',5],['Review ',6],['Report submitted',7]];
+  var STEP=[['Verification enabled',0],['Reverify started',2],['Joining-day photo',3],['Photo uploaded',3],['Photo taken',3],['Quality check',4],['Comparison run',5],['Review ',6],['Report submitted',7]];
   function stepOf(e){ if(e.k==='ext') return 1; for(var i=0;i<STEP.length;i++){ if(e.t.indexOf(STEP[i][0])===0) return STEP[i][1]; } return 6; }
   function add(day, time, e){ e.day=day; e.time=time; e.key=alKey(day,time); e.step=stepOf(e); e.seq=seq++; evs.push(e); }
   var actor=function(n){ return 'by <span class="actor">'+h(n)+'</span>'; };
@@ -2784,7 +2840,7 @@ function activityLog(s, c){
     var ran = e.ranAt ? alSplit(e.ranAt) : {day:(dec?alSplit(dec.at,c.joining).day:c.joining), time:'09:42'};
     var up  = e.ranAt ? ran : {day:ran.day, time:'09:41'};
     if(i===0) add(ran.day, '09:38', {k:'human', ic:'&#9873;', t:'Verification enabled (Onboarding round)', m:actor((dec&&dec.by)||'A. Sharma'), ts:h(tzTime(ran.day,'09:38'))});
-    add(up.day, up.time, {k:'human', ic:'&#8593;', t:(e.reverify?'Photo uploaded':'Joining-day photo uploaded'), m:actor('A. Sharma'), ts:h(tzTime(up.day,up.time))});
+    add(up.day, up.time, {k:'human', ic:'&#8593;', t:photoEventText(e.reverify, e.photoSource), m:actor('A. Sharma'), ts:h(tzTime(up.day,up.time))});
     add(up.day, up.time, {k:'sys', ic:'&#9737;', t:'Quality check passed', m:'system', ts:h(tzTime(up.day,up.time))});
     add(ran.day, ran.time, {k:'sys', ic:'&#9737;', t:'Comparison run: '+n+' photo'+(n===1?'':'s'), m:'system', ts:h(tzTime(ran.day,ran.time))});
     if(dec){
@@ -2803,7 +2859,7 @@ function activityLog(s, c){
   // a fresh joining-day photo picked for the current check, not compared yet
   if(s.cand===c && s.photo && !s.entry && !s.done){
     var np=alSplit(nowStamp().replace(/ IST$/,''));
-    add(np.day, np.time, {k:'human', ic:'&#8593;', t:'Joining-day photo uploaded', m:actor('A. Sharma')+' &middot; not compared yet', ts:h(tzTime(np.day,np.time))});
+    add(np.day, np.time, {k:'human', ic:'&#8593;', t:photoEventText(!!s.reverifyRun, s.photoSource), m:actor('A. Sharma')+' &middot; not compared yet', ts:h(tzTime(np.day,np.time))});
   }
   // photo changes, resolved or not
   (c.pastChanges||[]).concat(staleList(c)).forEach(function(si){
@@ -2949,7 +3005,7 @@ function synthCompletedEntry(c){
   window.addEventListener('resize', function(){ var m=isMobile(); if(m!==state.hasCamera) setState({hasCamera:m}); });
   window.addEventListener('popstate', function(){ if(reverifyUnsubmitted()) state.cand.reverifying=true; wlApplyUrl(); });
   // Esc closes the full-screen photo viewer
-  document.addEventListener('keydown', function(e){ if(e.key!=='Escape') return; if(state.repPreview!=null){ closeReportView(); return; } if(state.lightbox!==null && state.lightbox!==undefined) closeLightbox(); });
+  document.addEventListener('keydown', function(e){ if(e.key!=='Escape') return; if(state.camOpen){ closeWebcam(); return; } if(state.repPreview!=null){ closeReportView(); return; } if(state.lightbox!==null && state.lightbox!==undefined) closeLightbox(); });
   // a11y: make role="button" divs (candidate rows, pick lists) keyboard-operable
   document.addEventListener('keydown', function(e){
     var t=e.target;
