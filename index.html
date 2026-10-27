@@ -364,6 +364,15 @@
   .wl-sectitle{margin:0 0 4px;font-size:17px;font-weight:700;color:#2A2A2A}
   .wl-secdesc{display:flex;align-items:center;gap:7px;font-size:12.5px;color:#5A6473}
   .wl-secdesc svg{flex:0 0 auto}
+  .rh-ph-acts{margin-left:auto;display:flex;gap:8px}
+  .wl-tabs{display:flex;align-items:flex-end;gap:28px;border-bottom:1px solid #E5E5E5;margin:0 0 16px}
+  .wl-tab{border:0;background:none;cursor:pointer;padding:12px 2px;margin-bottom:-1px;border-bottom:3px solid transparent;font-family:inherit;font-size:16px;color:#747474;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+  .wl-tab.on{color:#2A2A2A;font-weight:600;border-bottom-color:#0076FB}
+  .wl-tab .cnt{font-size:12px;font-weight:600;line-height:1;padding:4px 8px;border-radius:999px;background:#EFF1F5;color:#5A6473}
+  .wl-tab.on .cnt{background:#EAF2FE;color:#0B5CC7}
+  .wl-tabhint{margin-left:auto;padding-bottom:13px;font-size:13px;color:#667085;white-space:nowrap}
+  .wl-tabhint.warn{color:#8A6414}
+  @media (max-width:680px){ .wl-hact .lbl{display:none} .wl-hact{padding:0 10px} .wl-tabs{gap:20px} .wl-tabhint{display:none} .rh-ph{height:auto} }
   .wl-export{border:1px solid #DCE2EB;background:#fff;color:#2A2A2A;border-radius:6px;height:38px;padding:0 14px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;flex-shrink:0}
   .wl-export:hover{background:#F7F8FA}
   .wl-stat{text-align:left;cursor:pointer;font-family:inherit;background:#fff;border:1px solid #E5E9F0;border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:5px;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:box-shadow 150ms ease}
@@ -757,6 +766,7 @@ function pageheader(){
   return '<div class="rh-ph">'+
     back+
     '<div><h1>Verify identity</h1><div class="sub">Joining-day identity check</div></div>'+
+    (state.cand ? '' : '<div class="rh-ph-acts">'+wlHeadActions()+'</div>')+
   '</div>';
 }
 
@@ -1887,25 +1897,15 @@ function findCandidateCard(ok){
   return html;
 }
 
+/* worklist actions, shown in the page header */
+function wlHeadActions(){ return '<a class="wl-export wl-hact" href="admin.html" style="text-decoration:none" aria-label="Identity check settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="lbl">Settings</span></a>'+
+      '<button type="button" class="wl-export wl-hact" onclick="wlExportExcel()" aria-label="Export to Excel"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg><span class="lbl">Export to Excel</span></button>'; }
 function worklistView(){
   if(!IDV.enabled) return '<div class="rh-card wl-content" style="text-align:center;padding:48px 24px"><div style="font-size:17px;font-weight:600;margin-bottom:6px">The joining-day identity check is turned off</div>'+
     '<div style="font-size:13.5px;color:#747474;margin-bottom:18px">An admin can turn it on in the identity check settings.</div><a class="rh-btn secondary sm" href="admin.html" style="text-decoration:none;display:inline-flex;align-items:center">Open settings</a></div>';
   var s=state, view=s.wlView||'pending', when=s.wlWhen||'all';
   var nPending=wlStatusRows('pending').length, nDone=wlStatusRows('completed').length;
   var fctrl='height:34px;border:1px solid #DCE2EB;border-radius:9px;background:#fff;font-family:inherit;font-size:13px;padding:0 10px;color:#2A2A2A;cursor:pointer';
-
-  /* status stat cards (Agents-style: number + dot + label + sub-line); also the status filter */
-  var STAT_META={pending:{dot:'#F59E0B',sub:'Awaiting a check'},completed:{dot:'#12B76A',sub:'Report submitted'}};
-  function statCard(key,label,n){
-    var on=view===key, m=STAT_META[key], sub=m.sub;
-    if(key==='pending'){ var nr=wlStatusRows('pending').filter(function(c){return stageInfo(c).label==='Ready to check';}).length; sub=nr+' ready to check'; }
-    if(key==='completed'){ var ns=wlStatusRows('completed').filter(function(c){return c.staleInfo;}).length; if(ns) sub=ns+' need'+(ns===1?'s':'')+' reverifying'; }
-    return '<button type="button" class="wl-stat'+(on?' on':'')+'" onclick="setWlView(\''+key+'\')" aria-pressed="'+on+'">'+
-      '<span class="num">'+n+'</span>'+
-      '<span class="lab"><span class="dot" style="background:'+m.dot+'"></span>'+h(label)+'</span>'+
-      '<span class="sub">'+h(sub)+'</span>'+
-    '</button>';
-  }
 
   /* sub-filter values (timing for open work, outcome for completed) */
   var statusRows=wlStatusRows(view);
@@ -1960,15 +1960,10 @@ function worklistView(){
       '<h2 class="wl-sectitle">Candidates</h2>'+
       '<div class="wl-secdesc"><svg viewBox="0 0 24 24" width="16" height="16" fill="#0076FB" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>Verify each joining candidate against the photos on file before they start.</div>'+
     '</div>'+
-      '<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="wl-export" href="admin.html" style="text-decoration:none" aria-label="Identity check settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</a>'+
-      '<button type="button" class="wl-export" onclick="wlExportExcel()" aria-label="Export to Excel"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>Export to Excel</button>'+'</div>'+
     '</div>';
 
   /* stat cards */
-  html+='<div class="wl-stats" role="group" aria-label="Filter candidates by status">'+
-    statCard('pending','To verify',nPending)+
-    statCard('completed','Completed',nDone)+
-  '</div>';
+
 
   /* single unified filter bar: search + Filter (To verify) or Outcome (Completed) dropdown + Sort dropdown + search icon */
   html+='<div class="wlf-bar">'+
@@ -1986,6 +1981,14 @@ function worklistView(){
     '<div class="wlf-div"></div>'+
     '<button type="button" class="wlf-btn" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>'+
   '</div>';
+  /* To verify / Completed as underline tabs, under the search */
+  var nReady=wlStatusRows('pending').filter(function(c){return stageInfo(c).label==='Ready to check';}).length;
+  var nStale=wlStatusRows('completed').filter(function(c){return c.staleInfo;}).length;
+  function wlTab(key,label,n){ var on=view===key;
+    return '<button type="button" role="tab" aria-selected="'+on+'" class="wl-tab'+(on?' on':'')+'" onclick="setWlView(\''+key+'\')">'+h(label)+'<span class="cnt">'+n+'</span></button>'; }
+  var hint = view==='pending' ? (nReady+' ready to check') : (nStale ? nStale+' need'+(nStale===1?'s':'')+' reverifying' : '');
+  html+='<div class="wl-tabs" role="tablist" aria-label="Candidates by status">'+wlTab('pending','To verify',nPending)+wlTab('completed','Completed',nDone)+
+    (hint?'<span class="wl-tabhint'+(view==='completed'?' warn':'')+'">'+h(hint)+'</span>':'')+'</div>';
 
   /* list */
   var full=wlList(), shown=Math.min(s.wlShown||WL_PAGE, full.length);

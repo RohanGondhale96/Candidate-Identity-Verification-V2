@@ -6,6 +6,27 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Worklist: search first, To verify / Completed as tabs, actions in the page header (2026-10-27)
+
+Mocked on the real screen, then chosen based on what was observed during the demo.
+- **Settings** and **Export to Excel** moved out of the Candidates card into the page header, right of
+  "Verify identity" (`wlHeadActions`, shown only on the worklist, not on a candidate). On phones they are
+  icon-only.
+- **Search** (with Filter / Outcome and Sort) is now the first thing in the card.
+- **To verify** and **Completed** are underline tabs below the search (were the two stat cards above it):
+  16px labels, active tab black and bold with a 3px `#0076FB` underline, inactive grey, a count badge in
+  each tab (`wl-tab`, `.cnt`). The old cards' sub-line sits at the right end of the tab row: "N ready to
+  check" on To verify, "N need(s) reverifying" (amber) on Completed; hidden on phones.
+- Removed the stat-card code (`statCard`, `STAT_META`).
+- **For the product (Angular):** build the tabs with `mat-tab-group` (`mat-stretch-tabs="false"`,
+  `mat-align-tabs="start"`, count via `ng-template mat-tab-label`, like `deletion-avtivity.component.html`).
+  admin-angular's Material theme shows the active label in the theme blue (`#005CBB`); to match this look,
+  override `--mat-tab-header-active-label-text-color` (and the focus/hover variants) to `#2A2A2A`,
+  `--mat-tab-header-inactive-label-text-color` to `#747474`, and set the active label to 600.
+- Tried and not chosen: the tabs styled exactly as stock `mat-tab` (48px, blue active label).
+- Trade-off accepted: the cards' big numbers are gone; counts live in the tab badges.
+- Harness: 184 pass (5 new layout checks).
+
 ## Take photo on desktop: the laptop camera (2026-10-21)
 
 The PM asked for a Take photo button next to Upload file on desktop. Three options were mocked on the real
