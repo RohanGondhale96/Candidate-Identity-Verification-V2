@@ -794,7 +794,8 @@ var IDV_DEFAULTS = {
     run:      { roles:['Admin','Recruiter','Onboarding user'], users:[] }   // runs checks, submits reports and reverifies (same person)
   },
   photos: { application:true, interviews:true, interviewMode:'all', interviewRounds:['Round 1','Round 2','Round 3','Round 4'],
-            documents:true, documentList:['Aadhaar card','PAN card','Driving licence'], documentTypes:['Aadhaar card','PAN card','Driving licence'] },
+            documents:true, documentList:['Aadhaar card','PAN card','Driving licence'], documentTypes:['Aadhaar card','PAN card','Driving licence'],
+            docSel:null, hideRules:[{p:'bill', re:false}, {p:'^(gg|gh|12|dob|nda|abc|xyz|test|misc|others)$', re:true}] },
   thresholds: { photoMatch:85, photoReview:50, docMatch:65, docReview:40 },
   upload: { allowCamera:true, allowFile:true },
   reverify: { outdatedOn:{ replaced:true, deleted:true, added:true }, requireReason:false, notify:{ roles:['Recruiter'], users:[] } },

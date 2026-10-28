@@ -84,6 +84,44 @@
   .tok{display:inline-block;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:#F1F3F6;border:1px solid #E1E4EA;border-radius:4px;padding:1px 6px;margin:2px 4px 2px 0;cursor:pointer}
   .preview{margin-top:10px;font-size:13px;color:var(--muted)}
   .preview b{font-family:ui-monospace,Consolas,monospace;font-weight:500;color:var(--ink)}
+  :root{color-scheme:light}
+  /* documents by kit */
+  .drs{display:flex;flex-direction:column;gap:14px;margin-top:8px}
+  .dr-k{font-size:13px;color:var(--muted);margin:3px 0 0 25px;line-height:1.5}
+  .dr-k .off{color:#8A97A8}
+  .rx{display:flex;align-items:center;gap:8px;border-bottom:1px solid #9AA1AC;padding:2px 0}
+  .rx:focus-within{border-bottom-color:var(--blue)}
+  .rx input{flex:1;min-width:0;border:0;outline:0;font-size:14.5px;padding:7px 0;background:none;color:var(--ink)}
+  .rx.re input{font-family:ui-monospace,Consolas,monospace;font-size:13.5px}
+  .rxt{border:1px solid #C7CCD4;background:#fff;border-radius:4px;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;padding:2px 7px;cursor:pointer;color:var(--muted);flex-shrink:0}
+  .rxt[aria-pressed="true"]{background:#EAF2FE;border-color:var(--blue);color:var(--blue)}
+  .rules{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .rule{display:flex;align-items:center;gap:10px;background:#F5F6F8;border:1px solid #E7E9ED;border-radius:6px;padding:8px 10px}
+  .rule code{font-family:ui-monospace,Consolas,monospace;font-size:13px;color:var(--ink)}
+  .rule .kind{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#8A97A8;min-width:42px}
+  .rule .n{margin-left:auto;font-size:12.5px;color:var(--muted);white-space:nowrap}
+  .rule button{border:0;background:none;color:#6E7683;cursor:pointer;width:26px;height:26px;border-radius:5px;flex-shrink:0}
+  .rule button:hover{background:#E7E9ED;color:var(--ink)}
+  .rule-add{display:flex;align-items:flex-end;gap:12px;margin-top:14px;max-width:560px}
+  .rule-add .rx{flex:1}
+  .btn.sm{height:34px;padding:0 14px;font-size:14px}
+  .matchprev{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.5;max-width:560px}
+  .hidlist{margin-top:8px;font-size:13px;color:var(--muted);line-height:1.7;columns:3 180px;max-width:760px}
+  .dlg.wide{width:720px;height:min(760px,calc(100vh - 32px))}
+  .dlg.wide .dbody{display:flex;flex-direction:column;overflow:hidden;flex:1;padding-bottom:0}
+  .dp-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px;color:var(--muted);margin:10px 0 4px}
+  .dp-meta .cb{font-size:13px}
+  .dp-list{display:flex;flex-direction:column;overflow:auto;flex:1;min-height:0;border-top:1px solid #EEF0F3;margin:0 -20px;padding:0 20px}
+  .dp-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #EEF0F3}
+  .dp-row .cb{flex:1;min-width:0;font-size:14.5px}
+  .dp-kits{border:0;background:none;color:var(--muted);font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:4px 6px;border-radius:4px;white-space:nowrap}
+  .dp-kits:hover{background:#F1F2F4}
+  .dp-kits.one{cursor:default}.dp-kits.one:hover{background:none}
+  .dp-kits svg{transition:transform .15s}
+  .dp-kits[aria-expanded="true"] svg{transform:rotate(180deg)}
+  .dp-sub{display:flex;flex-direction:column;gap:10px;padding:4px 0 14px 26px;border-bottom:1px solid #EEF0F3}
+  .dp-sub .cb{font-size:14px}
+  .dp-empty{padding:22px 0;color:var(--soft);font-size:13.5px}
   /* RippleHire toaster: top centre */
   .toaster{position:fixed;top:24px;left:0;right:0;margin:0 auto;width:420px;max-width:calc(100vw - 32px);background:#fff;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.12);border-left:2px solid #12B76A;display:flex;gap:12px;padding:16px;z-index:50;animation:tin .2s ease-out}
   .toaster.bad{border-left-color:#D93025}
@@ -136,7 +174,8 @@ var IDV_DEFAULTS = {
     run:      { roles:['Admin','Recruiter','Onboarding user'], users:[] }   // runs checks, submits reports and reverifies (same person)
   },
   photos: { application:true, interviews:true, interviewMode:'all', interviewRounds:['Round 1','Round 2','Round 3','Round 4'],
-            documents:true, documentList:['Aadhaar card','PAN card','Driving licence'], documentTypes:['Aadhaar card','PAN card','Driving licence'] },
+            documents:true, documentList:['Aadhaar card','PAN card','Driving licence'], documentTypes:['Aadhaar card','PAN card','Driving licence'],
+            docSel:null, hideRules:[{p:'bill', re:false}, {p:'^(gg|gh|12|dob|nda|abc|xyz|test|misc|others)$', re:true}] },
   thresholds: { photoMatch:85, photoReview:50, docMatch:65, docReview:40 },
   upload: { allowCamera:true, allowFile:true },
   reverify: { outdatedOn:{ replaced:true, deleted:true, added:true }, requireReason:false, notify:{ roles:['Recruiter'], users:[] } },
@@ -218,29 +257,151 @@ function secPhotos(){
         (S.photos.interviewMode==='selected' ? '<div style="padding-left:26px">'+cbList('photos.interviewRounds', IDV_INTERVIEW_ROUNDS)+(ERR['photos.interviewRounds']?'<div class="err">'+ERR['photos.interviewRounds']+'</div>':'')+'</div>' : '')+
       '</div>' : '')+
     toggle('photos.documents','Identity documents','Photo on an ID document the candidate uploaded.')+
-    (S.photos.documents ? '<div class="sub" style="padding-bottom:10px"><div class="lbl">Documents compared <span class="req">*</span></div>'+cbList('photos.documentTypes', S.photos.documentList, true)+
+    (S.photos.documents ? '<div class="sub" style="padding-bottom:10px"><div class="lbl">Documents compared <span class="req">*</span></div>'+docRows()+
       (ERR['photos.documentTypes']?'<div class="err">'+ERR['photos.documentTypes']+'</div>':'')+
-      (IDV_ALL_DOCUMENTS.some(function(d){ return S.photos.documentList.indexOf(d)<0; }) ? '<button type="button" class="addmore" onclick="openDocs()">+ Add more</button>' : '')+'</div>' : '')+
+      '<button type="button" class="addmore" onclick="openDocs()">+ Add more</button></div>'+
+      hiddenBlock() : '')+
     (ERR.photos?'<div class="err">'+ERR.photos+'</div>':'');
 }
-/* "Add more" documents pop-up */
-var DOCPICK = null;
-function openDocs(){ DOCPICK = []; draw(); setTimeout(function(){ var f=document.querySelector('.dlg input'); if(f) f.focus(); }, 0); }
-function closeDocs(){ DOCPICK = null; draw(); }
-function pickDoc(d, on){ var i=DOCPICK.indexOf(d); if(on&&i<0) DOCPICK.push(d); if(!on&&i>=0) DOCPICK.splice(i,1); draw(); }
-function addDocs(){
-  DOCPICK.forEach(function(d){ if(S.photos.documentList.indexOf(d)<0) S.photos.documentList.push(d); if(S.photos.documentTypes.indexOf(d)<0) S.photos.documentTypes.push(d); });
-  delete ERR['photos.documentTypes']; DOCPICK = null; draw();
+/* Candidate Portal documents (demo data, about 150): each upload's document name and the kits that collect it.
+   Names are free text in the kits, so the same document appears under several spellings. */
+var CP_KIT_NAMES = ['Onboarding kit','Pre-joining kit','BGV kit','Joining formalities','Vendor kit','Campus kit','Lateral hires kit','Interns kit'];
+var CP_FIXED = {
+  'Aadhaar card':['Onboarding kit','Pre-joining kit','BGV kit'], 'Aadhaar card (Front and back)':['BGV kit'], 'Aadhar card':['Joining formalities'],
+  'Aadhar masked':['Onboarding kit'], 'PAN card':['Onboarding kit','BGV kit'], 'Driving licence':['Onboarding kit','Joining formalities'],
+  'Driver license':['Vendor kit'], 'Passport':['Onboarding kit','BGV kit','Vendor kit'], 'Voter ID card':['BGV kit'], 'Employee ID card':['Joining formalities']
+};
+var CP_NAMES = ['12','Aadhaar','Aadhaar card','Aadhaar card (Front and back)','aadhaar upload','Aadhar','Aadhar card','Aadhar masked','Anything','BSc',
+  'Candidate driver license','Certificate/Marksheet','custom documents','dob','Driver license','Driving licence','Driving license','Education Certificate',
+  'educational','Educational certificate','Electiricity bill','Electric Bill','Electricity bill','Electricity bill 1','EPFO service history / UAN statement',
+  'Extra doc','Faisal Fk Test','Final Report','gg','gh','Graduation','Identification documents','MSc','nda','Number of pages','Pan','Pan 2','PAN card',
+  'Passport','Payslip','PF passbook statement','Passport size photo','Photograph','Recent photo','Selfie','Voter ID','Voter ID card','Election card',
+  'Ration card','Employee ID card','Previous employer ID card','Student ID card','OCI card','National ID card','Birth certificate','10th marksheet',
+  '12th marksheet','Diploma certificate','Degree certificate','Provisional certificate','Post graduation certificate','PhD certificate','Offer letter',
+  'Signed offer letter','Appointment letter','Relieving letter','Experience letter','Resignation acceptance','Salary slip (last 3 months)','Payslip 1',
+  'Payslip 2','Payslip 3','Form 16','Bank statement','Cancelled cheque','Bank passbook','Rent agreement','Address proof','Permanent address proof',
+  'Current address proof','Gas bill','Water bill','Telephone bill','Medical certificate','Fitness certificate','Vaccination certificate',
+  'COVID certificate','Police verification','Background check consent','BGV authorization form','NDA signed','Code of conduct','Gratuity nomination',
+  'PF nomination form','ESIC form','Form 2','Form 11','Form F','Insurance nomination','Marriage certificate','Caste certificate','Disability certificate',
+  'Passport (first and last page)','Visa','Work permit','Gap certificate','Affidavit','Name change gazette','Spouse ID','Father ID proof',
+  'Emergency contact form','Bank details form','Joining form','Declaration form','Self declaration','Reference letter','CV','Resume','Updated resume',
+  'Cover letter','Portfolio','Certification 1','Certification 2','AWS certificate','Training certificate','Internship certificate','Transfer certificate',
+  'Migration certificate','Character certificate','Domicile certificate','Income certificate','Sports certificate','Others','Misc','test','Test doc',
+  'abc','xyz','New document','Document 1','Upload 2'];
+var CP_DOCS = CP_NAMES.map(function(n, i){
+  if(CP_FIXED[n]) return [n, CP_FIXED[n]];
+  var h=0; for(var j=0;j<n.length;j++) h=(h*31+n.charCodeAt(j))>>>0;
+  var kits=[CP_KIT_NAMES[h%8]]; if(h%3===0) kits.push(CP_KIT_NAMES[(h>>3)%8]); if(h%7===0) kits.push(CP_KIT_NAMES[(h>>5)%8]);
+  return [n, kits.filter(function(k,x){ return kits.indexOf(k)===x; })];
+});
+/* picked documents: {name: {off:[kits left out]}} (null in the defaults = not set yet); hide rules (S.photos.hideRules): [{p:pattern, re:isRegex}] */
+if(!S.photos.docSel) S.photos.docSel = {'Aadhaar card':{off:['BGV kit']}, 'PAN card':{off:[]}, 'Driving licence':{off:[]}};
+function syncDocTypes(){ S.photos.documentTypes = Object.keys(S.photos.docSel); }
+syncDocTypes();
+function kitsOf(name){ for(var i=0;i<CP_DOCS.length;i++){ if(CP_DOCS[i][0]===name) return CP_DOCS[i][1]; } return []; }
+function jsq(t){ return esc(String(t).replace(/\\/g,'\\\\').replace(/'/g,"\\'")); }
+/* a rule as a test; null when a regex doesn't compile */
+function ruleTest(r){
+  if(r.re){ try{ var x=new RegExp(r.p,'i'); return function(n){ return x.test(n); }; }catch(e){ return null; } }
+  var q=String(r.p).toLowerCase(); return function(n){ return n.toLowerCase().indexOf(q)>=0; };
 }
+function ruleMatches(r){ var t=ruleTest(r); return t ? CP_DOCS.filter(function(d){ return t(d[0]); }).map(function(d){ return d[0]; }) : null; }
+function hiddenNames(rules){
+  var tests=(rules||S.photos.hideRules).map(ruleTest).filter(Boolean);
+  return CP_DOCS.filter(function(d){ return tests.some(function(t){ return t(d[0]); }); }).map(function(d){ return d[0]; });
+}
+function docRows(){
+  var names=Object.keys(S.photos.docSel).sort(function(a,b){ return a.localeCompare(b); });
+  if(!names.length) return '<div class="hint">No documents yet.</div>';
+  return '<div class="drs">'+names.map(function(n){
+    var all=kitsOf(n), off=S.photos.docSel[n].off||[], on=all.filter(function(k){ return off.indexOf(k)<0; });
+    var line = (off.length ? esc(on.join(', '))+' <span class="off">· '+esc(off.join(', '))+' left out</span>' : (all.length>1?'All '+all.length+' kits: ':'')+esc(all.join(', ')));
+    return '<div><label class="cb"><input type="checkbox" checked onchange="dropDoc(\''+jsq(n)+'\')">'+esc(n)+'</label>'+
+      '<div class="dr-k">'+line+'</div></div>';
+  }).join('')+'</div>';
+}
+function dropDoc(n){ delete S.photos.docSel[n]; syncDocTypes(); draw(); }
+
+/* "Hide documents from the list": rules in plain text or regex, with a live preview */
+var RULE = {p:'', re:false}, SHOW_HIDDEN = false;
+function previewLine(r){
+  if(!r.p) return '';
+  var m=ruleMatches(r);
+  if(m===null) return '<div class="err">Not a valid regular expression.</div>';
+  if(!m.length) return '<div class="matchprev">Matches no documents.</div>';
+  return '<div class="matchprev">Matches '+m.length+' document'+(m.length===1?'':'s')+': '+esc(m.slice(0,8).join(', '))+(m.length>8?' and '+(m.length-8)+' more':'')+'</div>';
+}
+function hiddenBlock(){
+  var R=S.photos.hideRules, hid=hiddenNames();
+  return '<div class="block" style="margin-top:18px"><h3 style="margin-bottom:2px">Hide documents from the list</h3>'+
+    '<div class="hint" style="margin:0 0 4px">Documents whose name matches a rule don’t appear in Add more, for example bills or test uploads. Turn on <b>.*</b> to write a regular expression. Documents already compared stay compared.</div>'+
+    (R.length ? '<div class="rules">'+R.map(function(r,i){ var m=ruleMatches(r);
+        return '<div class="rule"><span class="kind">'+(r.re?'Regex':'Text')+'</span><code>'+esc(r.p)+'</code><span class="n">'+(m===null?'invalid':'hides '+m.length)+'</span><button type="button" aria-label="Remove rule '+esc(r.p)+'" onclick="rmRule('+i+')">&#10005;</button></div>'; }).join('')+'</div>' : '')+
+    '<div class="rule-add"><div style="flex:1"><div class="lbl">Add a rule</div><div class="rx'+(RULE.re?' re':'')+'"><input id="rule-in" type="text" placeholder="'+(RULE.re?'e.g. ^(marksheet|certificate)':'e.g. certificate')+'" value="'+esc(RULE.p)+'" oninput="ruleType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addRule()}">'+
+      '<button type="button" class="rxt" aria-pressed="'+RULE.re+'" title="Use a regular expression" onclick="ruleRe()">.*</button></div></div>'+
+      '<button type="button" class="btn sec sm" onclick="addRule()" '+(RULE.p && ruleMatches(RULE)!==null?'':'disabled')+'>Add</button></div>'+
+    '<div id="rule-prev">'+previewLine(RULE)+'</div>'+
+    '<div style="margin-top:14px;font-size:13px;color:var(--muted)">'+hid.length+' of '+CP_DOCS.length+' documents hidden'+(hid.length?' · <button type="button" class="lnk" style="font-size:13px" onclick="SHOW_HIDDEN=!SHOW_HIDDEN;draw()">'+(SHOW_HIDDEN?'Hide list':'Show list')+'</button>':'')+'</div>'+
+    (SHOW_HIDDEN && hid.length ? '<div class="hidlist">'+hid.map(esc).join('<br>')+'</div>' : '')+
+  '</div>';
+}
+function ruleType(v){ RULE.p=v; var pv=document.getElementById('rule-prev'); if(pv) pv.innerHTML=previewLine(RULE);
+  var btn=document.querySelector('.rule-add .btn'); if(btn) btn.disabled=!(RULE.p && ruleMatches(RULE)!==null); }
+function ruleRe(){ RULE.re=!RULE.re; draw(); var f=document.getElementById('rule-in'); if(f){ f.focus(); f.setSelectionRange(f.value.length,f.value.length); } }
+function addRule(){ if(!RULE.p || ruleMatches(RULE)===null) return; S.photos.hideRules.push({p:RULE.p, re:RULE.re}); RULE={p:'',re:false}; draw(); }
+function rmRule(i){ S.photos.hideRules.splice(i,1); draw(); }
+
+/* "Add more" pop-up: documents with their kits underneath; search (plain or regex), counts, selected only */
+var DOCPICK = null;
+function openDocs(){
+  var sel={}; Object.keys(S.photos.docSel).forEach(function(n){ sel[n]={off:(S.photos.docSel[n].off||[]).slice()}; });
+  DOCPICK = {sel:sel, open:{}, q:'', only:false};
+  draw(); setTimeout(function(){ var f=document.getElementById('dp-q'); if(f) f.focus(); }, 0);
+}
+function closeDocs(){ DOCPICK = null; draw(); }
+function norm(t){ return String(t).toLowerCase().replace(/[^a-z0-9]/g,'').replace(/(.)\1+/g,'$1'); }   // "Aadhar" finds "Aadhaar"
+function dpSearchTest(){
+  if(!DOCPICK.q) return function(){ return true; };
+  var q=norm(DOCPICK.q); return function(n, kits){ return norm(n).indexOf(q)>=0 || kits.some(function(k){ return norm(k).indexOf(q)>=0; }); };
+}
+function dpPool(){   // what the pop-up offers: every document not hidden by a rule, plus anything already ticked
+  var hid=hiddenNames();
+  return CP_DOCS.filter(function(d){ return hid.indexOf(d[0])<0 || DOCPICK.sel[d[0]]; });
+}
+function dpDoc(n, on){ if(on) DOCPICK.sel[n]={off:[]}; else delete DOCPICK.sel[n]; draw(); }
+function dpKit(n, k, on){
+  var all=kitsOf(n), cur=DOCPICK.sel[n] || {off:all.slice()}, off=cur.off.slice(), i=off.indexOf(k);
+  if(on && i>=0) off.splice(i,1); if(!on && i<0) off.push(k);
+  if(off.length>=all.length) delete DOCPICK.sel[n]; else DOCPICK.sel[n]={off:off};
+  draw();
+}
+function dpOpen(n){ DOCPICK.open[n]=!DOCPICK.open[n]; draw(); }
+function dpSearch(v){ DOCPICK.q=v; drawKeep('dp-q'); }
+function drawKeep(id){ var lst=document.querySelector('.dp-list'), st=lst?lst.scrollTop:0; draw(); var f=document.getElementById(id); if(f){ f.focus(); f.setSelectionRange(f.value.length,f.value.length); } var l2=document.querySelector('.dp-list'); if(l2) l2.scrollTop=st; }
+function saveDocs(){ S.photos.docSel = DOCPICK.sel; syncDocTypes(); delete ERR['photos.documentTypes']; DOCPICK = null; draw(); }
+var I_CHEV='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 function docDialog(){
   if(DOCPICK===null) return '';
-  var rest = IDV_ALL_DOCUMENTS.filter(function(d){ return S.photos.documentList.indexOf(d)<0; });
-  return '<div class="scrim" onclick="if(event.target===this)closeDocs()"><div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-t">'+
+  var pool=dpPool(), test=dpSearchTest(), n=Object.keys(DOCPICK.sel).length, hidN=CP_DOCS.length-pool.length;
+  var rows = pool.filter(function(d){ return test(d[0], d[1]) && (!DOCPICK.only || DOCPICK.sel[d[0]]); }).sort(function(a,b){ return a[0].localeCompare(b[0]); });
+  var list = rows.length ? rows.map(function(d){
+    var name=d[0], kits=d[1], cur=DOCPICK.sel[name], off=cur?cur.off:[], partial=cur && off.length>0, open=!!DOCPICK.open[name];
+    var kitBtn = kits.length>1
+      ? '<button type="button" class="dp-kits" aria-expanded="'+open+'" onclick="dpOpen(\''+jsq(name)+'\')">'+(partial?(kits.length-off.length)+' of '+kits.length+' kits':kits.length+' kits')+I_CHEV+'</button>'
+      : '<span class="dp-kits one">'+esc(kits[0])+'</span>';
+    return '<div class="dp-row"><label class="cb"><input type="checkbox" '+(cur?'checked':'')+(partial?' data-ind="1"':'')+' onchange="dpDoc(\''+jsq(name)+'\',this.checked)">'+esc(name)+'</label>'+kitBtn+'</div>'+
+      (open && kits.length>1 ? '<div class="dp-sub">'+kits.map(function(k){ var on=!!cur && off.indexOf(k)<0;
+        return '<label class="cb"><input type="checkbox" '+(on?'checked':'')+' onchange="dpKit(\''+jsq(name)+'\',\''+jsq(k)+'\',this.checked)">'+esc(k)+'</label>'; }).join('')+'</div>' : '');
+  }).join('') : '<div class="dp-empty">'+(DOCPICK.only&&!DOCPICK.q?'No documents selected yet.':'No documents match “'+esc(DOCPICK.q)+'”.')+'</div>';
+  return '<div class="scrim" onclick="if(event.target===this)closeDocs()"><div class="dlg wide" role="dialog" aria-modal="true" aria-labelledby="dlg-t">'+
     '<header><h2 id="dlg-t">Add documents</h2><button type="button" class="x" onclick="closeDocs()" aria-label="Close">&#10005;</button></header>'+
-    '<div class="dbody"><p class="hint" style="margin:0 0 12px">Select the documents to compare against the joining-day photo.</p><div class="cbs col">'+
-      rest.map(function(d){ return '<label class="cb"><input type="checkbox" '+(DOCPICK.indexOf(d)>=0?'checked':'')+' onchange="pickDoc(\''+esc(d)+'\',this.checked)">'+esc(d)+'</label>'; }).join('')+
-    '</div></div>'+
-    '<footer><button type="button" class="btn sec" onclick="closeDocs()">Cancel</button><button type="button" class="btn pri" '+(DOCPICK.length?'':'disabled')+' onclick="addDocs()">Add'+(DOCPICK.length?' ('+DOCPICK.length+')':'')+'</button></footer>'+
+    '<div class="dbody"><p class="hint" style="margin:0 0 12px">Documents collected in Candidate Portal kits. Tick a document to compare it in every kit that collects it, or open it to choose kits.</p>'+
+      '<div class="rx"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A97A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>'+
+        '<input id="dp-q" type="text" placeholder="Search documents or kits" value="'+esc(DOCPICK.q)+'" oninput="dpSearch(this.value)"></div>'+
+      '<div class="dp-meta"><span>'+(DOCPICK.q||DOCPICK.only?'Showing '+rows.length+' of '+pool.length:pool.length+' documents')+(hidN?' · '+hidN+' hidden by rules':'')+'</span>'+
+        '<label class="cb"><input type="checkbox" '+(DOCPICK.only?'checked':'')+' onchange="DOCPICK.only=this.checked;drawKeep(\'dp-q\')">Selected only ('+n+')</label></div>'+
+      '<div class="dp-list">'+list+'</div></div>'+
+    '<footer><button type="button" class="btn sec" onclick="closeDocs()">Cancel</button><button type="button" class="btn pri" onclick="saveDocs()">Save'+(n?' ('+n+')':'')+'</button></footer>'+
   '</div></div>';
 }
 function secMatch(){
@@ -311,6 +472,7 @@ function draw(){
   var body={basic:secBasic,photos:secPhotos,match:secMatch,upload:secUpload,reverify:secReverify,report:secReport}[SEC]||secBasic;
   document.getElementById('card').innerHTML=body()+
     '<div class="foot">'+(SEC==='match'?'<button type="button" class="lnk" onclick="resetDefaults()">Reset to defaults</button>':'<span></span>')+'<button type="button" class="btn pri" onclick="submit()">Submit</button></div>'+docDialog();
+  Array.prototype.forEach.call(document.querySelectorAll('input[data-ind]'), function(el){ el.indeterminate=true; });
   window.scrollTo(0,y);
 }
 function go(k){ SEC=k; try{ history.replaceState(null,'','#'+k); }catch(e){} draw(); window.scrollTo(0,0); }

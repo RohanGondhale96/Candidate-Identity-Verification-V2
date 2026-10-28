@@ -6,6 +6,38 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Admin: identity documents by kit, and hide rules (2026-10-28)
+
+The same document (e.g. Aadhaar) can be uploaded in several Candidate Portal kits, and document names are free
+text, so one tenant can have 100-200 names with duplicates ("Aadhaar", "Aadhar card", "aadhaar upload") and
+noise ("gg", bills, test uploads). Brainstormed (A: kit in brackets, B: group by kit, C: group by document),
+chose **C**, mocked, then iterated on a clickable prototype before building.
+
+- **Documents compared** (Photos to compare → Identity documents): each chosen document shows its kits, e.g.
+  "Onboarding kit, Pre-joining kit · BGV kit left out" or "All 2 kits: Onboarding kit, BGV kit".
+  Untick to remove. (A "Change kits" link and a hint about kits added later were removed.)
+- **"+ Add more" pop-up** (720px wide, fixed search and counts, the list scrolls): one row per document;
+  a document in one kit just names the kit, one in several shows "3 kits ▾" and opens to a checkbox per kit.
+  Ticking a document ticks every kit that collects it, including kits added later; leaving a kit out shows
+  the document as partly ticked and "2 of 3 kits". Already-chosen documents show ticked (the pop-up is also
+  where kits are changed), so the button is **Save (n)**. Plain search over documents and kit names that
+  ignores spelling ("aadhar" finds Aadhaar card, Aadhar card, aadhaar upload…); "Showing x of y · n hidden by
+  rules"; **Selected only (n)**.
+  - Removed during iteration: a Hide icon per row, a regex toggle in the pop-up search, hiding whole kits.
+- **"Hide documents from the list"** (below): rules in plain text or, with the **.*** toggle, a regular
+  expression; each rule shows how many documents it hides; adding one previews the matches as you type
+  ("Matches 7 documents: …"); an invalid pattern can't be added; "17 of 141 documents hidden · Show list".
+  Hidden documents never appear in Add more; documents already compared stay compared.
+- **Settings:** `photos.docSel` ({name: {off:[kits left out]}}, `null` in the defaults so `idvMerge` passes
+  the map through) and `photos.hideRules` ([{p, re}], defaults: `bill` and
+  `^(gg|gh|12|dob|nda|abc|xyz|test|misc|others)$`). `photos.documentTypes` stays in sync with the chosen
+  documents, so the check page is unchanged.
+- **Demo data:** about 140 document names across 8 kits (`CP_DOCS` in the admin), including the messy names
+  from a real tenant. The real list would come from CP (document name and kit per upload field).
+- `color-scheme: light` on the admin, so native checkboxes don't turn dark in a dark-mode browser.
+- **Not done yet:** the check page doesn't use kits (a document is compared wherever it is); open question:
+  if the same Aadhaar is uploaded in two kits, one comparison row or two?
+
 ## Reverify can reuse the joining-day photo (2026-10-28)
 
 Raised in a stakeholder discussion: weeks after Submit the recruiter wants to reverify, but the candidate
