@@ -6,6 +6,43 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## A photo changes after the check ran, before Submit: only that photo is checked (2026-10-28)
+
+Mocked on the real screens, then approved. **Replaces the 2026-09-18 rule** that a photo change during an
+in-progress check voids the whole check and restarts it.
+
+| When a photo on file changes | What happens |
+|---|---|
+| Before Submit (check run, report not submitted) | Only that photo is flagged; the recruiter runs the check for just that photo. Submit waits for it. |
+| After Submit | Unchanged: the whole report goes out of date ("Needs reverifying") and Reverify runs a fresh check. |
+
+- **Replaced or added photo:** when the in-progress check is opened, the change is applied to it
+  (`applyMidChanges`): the row shows the new photo next to the joining-day photo, a "Not checked" badge,
+  "Photo replaced / New photo added by <who> · <when>", and a **Run check** button (`runOne`), which compares
+  only that photo with the same joining-day photo. The other comparisons are kept. A replaced photo's
+  earlier review is cleared. After the run it is a normal row, with "Replaced / Added after the check ran,
+  checked separately" under its name.
+- **Deleted photo:** dropped from the check with a note in the notice ("… was deleted by … It's left out of
+  this check."); it doesn't block Submit.
+- **Notice** at the top of the check: "N photos changed after the check ran. Run the check for each one
+  before you submit. The other comparisons are kept." + Go to photos.
+- **Bottom bar:** same rule as Needs review (no Submit until nothing is left). While a changed photo is
+  unchecked the button is **Run check** (`runNextPending`: runs the next unchecked photo and scrolls to it;
+  "Checking…" while the last one runs), then **Review photo** if anything needs review, then **Submit
+  report**. Changed photos come first because a single run can itself come back as Needs review. The text
+  counts the unchecked photos: "2 not checked yet · 2 of 4 checked · 1 matched · 1 left to review"
+  (`pendingFooterText`). The submit dialog can't open while anything is unchecked.
+  - CTA wording iterated: "Run check for N changed photos" (overpromised: it only jumped), then "Go to
+    (next) changed photo" (disliked), then **Run check** (same action as the photo's own button).
+  - The photo's own button was "Run check for this photo"; shortened to **Run check**.
+- **Activity:** "Round 1: screening photo replaced · Candidate profile · after the check ran", "New photo
+  added: Round 3: manager round · Recruiter", and "Comparison run: Round 1: screening only · photo replaced
+  after the check ran". The original run keeps its own count ("Comparison run: 3 photos", `runCount`).
+- **Demo seed:** Imran Shaikh now has a real in-progress check (run on his joining day, 13 Aug 09:42, not
+  submitted; Round 2 needs review). After it ran, his Round 1 photo was replaced (11:20) and a Round 3 photo
+  added (12:05); both are crops of his own photo. Before this, opening Imran showed the upload step.
+- Harness: 196 pass (12 new checks, some after the single runs settle).
+
 ## Worklist: search first, To verify / Completed as tabs, actions in the page header (2026-10-27)
 
 Mocked on the real screen, then chosen based on what was observed during the demo.

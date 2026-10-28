@@ -871,6 +871,57 @@ function codeOutcome(code){ return code==='same'?'pos':(code==='notmatch'?'neg':
 function rowExcluded(r){ return photoState(r)==='cant' || codeOutcome((r&&r.review)||'')==='excluded'; }
 /* only a Needs-review row still needs a human. A Not a match is an accepted AI verdict (like a Match):
    it is collapsed by default, does not block submit, and can be overridden via Change. */
+/* A photo on file that changed (replaced / added) after the check ran, before the report was submitted:
+   only that photo needs checking. status 'pending' = not compared yet, 'running' = comparing now. */
+function isPendingRow(r){ return !!(r && r.change && (r.status==='pending' || r.status==='running')); }
+function pendingCount(rows){ return (rows||[]).filter(isPendingRow).length; }
+function applyMidChanges(hh){
+  var c=hh&&hh.cand; if(!c || hh.decision || !c.midChanges) return;
+  var rows=hh.rows;
+  if(hh.runCount==null) hh.runCount=rows.length;   // what the original run compared (Activity)
+  c.midChanges.forEach(function(ch){
+    if(ch.applied) return; ch.applied=true;
+    var when=ch.date+', '+ch.time;
+    var k=-1; for(var i=0;i<rows.length;i++){ if(rows[i].label===ch.what){ k=i; break; } }
+    var pk=-1; for(var j=0;j<c.photos.length;j++){ if(c.photos[j].label===ch.what){ pk=j; break; } }
+    if(ch.verb==='deleted'){
+      if(k>=0){ (hh.dropped=hh.dropped||[]).push(ch); rows.splice(k,1); }
+      if(pk>=0) c.photos.splice(pk,1);
+    } else if(ch.verb==='replaced' && k>=0){
+      ch.oldImg=rows[k].img;
+      rows[k]=Object.assign({}, rows[k], {img:ch.newImg||rows[k].img, date:when, status:'pending', score:null, err:'', review:null, reasonLabel:null, reasonNote:'', reviewedBy:null, reviewedAt:null, change:ch});
+      if(pk>=0) c.photos[pk]=Object.assign({}, c.photos[pk], {img:ch.newImg||c.photos[pk].img, date:when});
+    } else if(ch.verb==='added'){
+      var np={label:ch.what, src:ch.src||'interview', date:when, by:ch.interviewer||null, img:ch.newImg};
+      c.photos.push(np);
+      rows.push(Object.assign({}, np, {status:'pending', score:null, review:null, change:ch}));
+    }
+  });
+}
+/* "Run check": compare just this photo with the same joining-day photo */
+function runOne(i){
+  var r=state.rows[i]; if(!r || !isPendingRow(r) || r.status==='running' || !state.photo) return;
+  var token=_runToken, rows=state.rows.slice(); rows[i]=Object.assign({}, r, {status:'running'});
+  if(state.entry) state.entry.rows=rows;
+  setState({rows:rows});
+  var done=function(res, err){
+    if(token!==_runToken) return;
+    var rr=state.rows.slice(), cur=rr[i];
+    if(err) rr[i]=Object.assign({}, cur, {status:'error', err:(err&&err.message)||String(err), score:null});
+    else rr[i]=Object.assign({}, cur, {status:'done', score:Math.round(res.similarity), reason:res.reason, samePerson:res.samePerson, confidence:Math.round(res.confidence)});
+    rr[i].checkedAfterChange=true;
+    if(state.entry) state.entry.rows=rr;
+    var c=state.cand, nowP=nowStamp().replace(/ IST$/,'').split(', ');
+    if(c) (c.singleRuns=c.singleRuns||[]).push({day:nowP[0], time:nowP[1], what:cur.label, verb:cur.change?cur.change.verb:''});
+    var open=Object.assign({}, state.openRows); open[i]=true;
+    setState({rows:rr, openRows:open});
+  };
+  if(USE_LIVE_SCORING){ (r.img ? geminiCompare(state.photo, r.img) : Promise.reject(new Error('No stored photo on file for this round.'))).then(function(res){ done(res,null); }).catch(function(e){ done(null,e); }); }
+  else { var t=setTimeout(function(){ done({similarity:r.score||90, confidence:90, samePerson:true, reason:''}, null); }, 600); _steptimers.push(t); }
+}
+/* bottom bar "Run check": run the next changed photo that hasn't run yet, and scroll to it so the result shows */
+function runNextPending(){ var rows=state.rows||[]; for(var i=0;i<rows.length;i++){ if(rows[i].change && rows[i].status==='pending'){ runOne(i); smoothScrollToEl('rpt-round-'+i, 12, 520); return; } } }
+function jumpToPending(){ var rows=state.rows||[]; for(var i=0;i<rows.length;i++){ if(isPendingRow(rows[i])){ smoothScrollToEl('rpt-round-'+i, 12, 520); return; } } }
 function rowUnresolved(r){ if(photoState(r)!=='review') return false; return codeOutcome(r.review||'')==='open'; }
 
 /* single per-row badge: the model finding, replaced by the human answer once acted on */
@@ -1314,6 +1365,14 @@ function reviewNext(){
 }
 /* in-progress report footer copy (B2): "{matched} of {total} photos match" + only the non-zero details.
    total = compared photos (set-aside included, couldn't-compare excluded); matched = system + "Same person". */
+function pendingFooterText(rows, v){
+  var n=pendingCount(rows), total=(rows||[]).length, det=[];
+  det.push((total-n)+' of '+total+' checked');
+  det.push(v.matched+' matched');
+  if(v.unresolved>0) det.push(v.unresolved+' left to review');
+  if(v.notMatch>0) det.push(v.notMatch+(v.notMatch===1?' doesn\u2019t match':' don\u2019t match'));
+  return '<span style="color:#8A6414;font-weight:600">'+n+' not checked yet</span><span style="color:#5A6473"> · '+h(det.join(' · '))+'</span>';
+}
 function reportFooterText(v){
   var total = v.total + v.ignored;               // couldn't-compare already excluded from v.total
   var matched = v.matched;
@@ -1348,10 +1407,30 @@ function reportThumbs(r, seed){
   return '<span style="display:inline-flex;flex-shrink:0"><span style="'+t+'">'+photoTile(r,seed,'cover')+'</span><span style="'+t+';margin-left:-12px">'+uploadedImg('cover')+'</span></span>';
 }
 var V2CARD='background:#fff;border:1px solid #E5E9F0;border-radius:16px;box-shadow:0 1px 2px rgba(20,30,50,.06),0 8px 22px rgba(20,30,50,.08);margin-bottom:14px;overflow:hidden';
+function pendingCard(i, r, c){
+  var ch=r.change, seed=(c?c.id:'')+r.label, running=r.status==='running';
+  var what = ch.verb==='added' ? 'New photo added' : 'Photo replaced';
+  var sub = what+' by '+h(ch.by)+' · '+h(tz(ch.date+', '+ch.time));
+  var chip = running ? '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#5A6473;background:#EFF1F5;border-radius:999px;padding:4px 10px"><span class="stp-spin" style="width:13px;height:13px"></span>Checking</span>'
+                     : _pill('Not checked','#8A6414','#FBF1DE');
+  return '<article id="rpt-round-'+i+'" style="'+V2CARD+';scroll-margin-top:12px;border-color:#F0DFB8">'+
+    '<div style="display:flex;align-items:center;gap:13px;padding:14px 16px">'+
+      '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.35">'+h(r.label)+'</div><div style="font-size:12px;color:#8A6414;margin-top:1px">'+sub+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+chip+'<span style="width:30px;flex-shrink:0"></span></div>'+
+    '</div>'+
+    '<div style="padding:0 16px 16px">'+comparePanes(r,seed,i,c)+
+      '<div style="margin-top:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#FBF1DE;border:1px solid #F0DFB8;border-radius:10px;padding:12px 14px">'+
+        '<div style="flex:1 1 260px;font-size:13px;color:#6B4E0F;line-height:1.5"><b>'+(ch.verb==='added'?'This photo was added after the check ran.':'This photo was replaced after the check ran.')+'</b> It hasn’t been compared yet. Run the check for this photo before you submit.</div>'+
+        '<button type="button" class="rh-btn primary sm" '+(running?'disabled':'')+' onclick="runOne('+i+')" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>'+(running?'Checking…':'Run check')+'</button>'+
+      '</div>'+
+    '</div>'+
+  '</article>';
+}
 function reportCard(i, r, c){
+  if(isPendingRow(r)) return pendingCard(i, r, c);
   var st=photoState(r), flagged=(st==='review'||st==='nomatch'), isCant=(st==='cant');
   var open=effectiveOpen(i,r), seed=(c?c.id:'')+r.label, chip=rowBadge(r), clickable=!isCant;
-  var subline = h(tz(r.date));
+  var subline = h(tz(r.date)) + (r.checkedAfterChange && r.change ? ' · <span style="color:#5A6473">'+(r.change.verb==='added'?'Added':'Replaced')+' after the check ran, checked separately</span>' : '');
   var caret = isCant ? '<span style="width:30px;flex-shrink:0"></span>'
     : '<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" style="width:30px;height:30px;border:0;background:none;cursor:pointer;display:grid;place-items:center;border-radius:7px;flex-shrink:0">'+chevron(open?'180deg':'0deg')+'</button>';
   var head='<div style="display:flex;align-items:center;gap:13px;padding:14px 16px'+(clickable?';cursor:pointer':'')+'"'+(clickable?(' onclick="toggleRow('+i+')"'):'')+'>'+
@@ -1411,6 +1490,17 @@ function reportFeed(s, c){
     s.shared.forEach(function(u){ html += '<span style="display:inline-flex;align-items:center;gap:6px;background:#F7F8FA;border:1px solid #DDD;border-radius:16px;padding:3px 6px 3px 10px;font-size:12.5px">'+h(u.name)+'<button type="button" onclick="revoke(\''+u.id+'\')" aria-label="Revoke access" style="border:0;background:none;padding:2px;line-height:0;color:#747474;border-radius:50%;cursor:pointer"><svg viewBox="25 25 22 22" width="13" height="13" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></span>'; });
     html += '</div>';
   }
+  var nPend=s.decision?0:pendingCount(rows), dropped=(!s.decision && s.entry && s.entry.dropped) || [];
+  if(nPend || dropped.length){
+    html += '<div class="rh-card" style="margin-top:14px;display:flex;gap:12px;align-items:flex-start;background:#FFFBF2;border:1px solid #F0DFB8;padding:14px 16px">'+
+      '<span style="color:#B7791F;flex-shrink:0;margin-top:1px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>'+
+      '<div style="flex:1;min-width:0;font-size:13.5px;color:#2A2A2A;line-height:1.55">'+
+        (nPend ? '<b>'+nPend+' photo'+(nPend===1?'':'s')+' changed after the check ran.</b> Run the check for '+(nPend===1?'it':'each one')+' before you submit. The other comparisons are kept.' : '')+
+        dropped.map(function(ch){ return '<div style="'+(nPend?'margin-top:6px;':'')+'color:#5A6473">'+h(ch.what)+' was deleted by '+h(ch.by)+' on '+h(tz(ch.date+', '+ch.time))+'. It’s left out of this check.</div>'; }).join('')+
+      '</div>'+
+      (nPend ? '<button type="button" class="rh-btn secondary sm" onclick="jumpToPending()" style="flex-shrink:0">Go to '+(nPend===1?'photo':'photos')+'</button>' : '')+
+    '</div>';
+  }
   html += '<div style="height:14px"></div>';
   var groups=[{title:'Application &amp; interview photos', test:function(r){return r.src!=='document';}},{title:'Identity documents', test:function(r){return r.src==='document';}}];
   groups.forEach(function(g){
@@ -1433,14 +1523,19 @@ function reportFeed(s, c){
     var arrow='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
     var tick='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>';
     var btnStyle='border:0;color:#fff;background:#0076FB;border-radius:8px;padding:11px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:8px;white-space:nowrap';
-    var reviewCta = left===0
+    var nPend2=pendingCount(rows);
+    var reviewCta = nPend2>0
+      ? ((rows||[]).some(function(r){ return r.change && r.status==='pending'; })
+          ? '<button type="button" onclick="runNextPending()" style="'+btnStyle+'"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Run check</button>'
+          : '<button type="button" disabled style="'+btnStyle+';opacity:.6;cursor:default"><span class="stp-spin" style="width:13px;height:13px;border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>Checking…</button>')
+      : left===0
       ? (canDo('run') ? '<button type="button" onclick="openSubmit()" style="'+btnStyle+'">'+tick+'Submit report</button>' : '<span style="font-size:13px;color:#747474">Only people with access to run identity checks can submit this report.</span>')
       : (left===1
         ? '<button type="button" onclick="reviewNext()" style="'+btnStyle+'">'+arrow+'Review photo</button>'
         : '<button type="button" onclick="reviewNext()" style="'+btnStyle+'">'+arrow+'Review next photo</button>');
     html += '<div class="rpt-subbar" style="margin-top:16px;padding:14px 18px;background:#fff;border:1px solid #E5E9F0;border-radius:16px;box-shadow:0 1px 2px rgba(20,30,50,.06),0 8px 22px rgba(20,30,50,.08);display:flex;align-items:center;gap:14px">'+
       '<div class="rpt-subbar-info" style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
-        '<span style="font-size:13.5px;line-height:1.4">'+reportFooterText(dv)+'</span>'+
+        '<span style="font-size:13.5px;line-height:1.4">'+(pendingCount(rows)?pendingFooterText(rows,dv):reportFooterText(dv))+'</span>'+
       '</div>'+
       '<div class="rpt-subbar-actions" style="display:flex;align-items:center;gap:10px;flex-shrink:0">'+reviewCta+'</div>'+
     '</div>';
@@ -2587,7 +2682,7 @@ function rhSuccess(title, msg, action){ clearTimeout(_rhtt); setState({rhToast:{
 /* toaster action after a submit: back to the worklist, Completed tab */
 function viewCompleted(){ closeRhToast(); changeCandidate(); setWlView('completed'); }
 function closeRhToast(){ clearTimeout(_rhtt); setState({rhToast:null}); }
-function openSubmit(){ setState({submitModal:{confirmed:false, note:'', err:''}}); }
+function openSubmit(){ if(pendingCount(state.rows)){ jumpToPending(); return; } setState({submitModal:{confirmed:false, note:'', err:''}}); }
 function toggleSubmitConfirm(){ var m=state.submitModal; if(!m) return; var el=document.getElementById('rh-submit-note'); setState({submitModal:Object.assign({}, m, {confirmed:!m.confirmed, note:el?el.value:m.note, err:''})}); }
 function cancelSubmit(){ setState({submitModal:null}); }
 function scrimSubmit(e){ if(e.target===e.currentTarget) cancelSubmit(); }
@@ -2595,6 +2690,7 @@ function confirmSubmit(){
   var m=state.submitModal; if(!m) return;
   var el=document.getElementById('rh-submit-note'); var note=el?el.value.trim():((m.note||'').trim());
   var v=reportSummary(state.rows);
+  if(pendingCount(state.rows)){ setState({submitModal:null}); return; }
   if(!m.confirmed){ setState({submitModal:Object.assign({}, m, {note:note, err:'Confirm you’ve reviewed all comparisons.'})}); return; }
   if(v.unresolved>0 && !note){ setState({submitModal:Object.assign({}, m, {note:note, err:'Add a note. '+v.unresolved+' comparison'+(v.unresolved>1?'s are':' is')+' still unreviewed.'})}); return; }
   // same shape as the seeded reports: "15 Aug 2026, 15:42" (24h, day-first)
@@ -2845,7 +2941,7 @@ function activityLog(s, c){
     if(i===0) add(ran.day, '09:38', {k:'human', ic:'&#9873;', t:'Verification enabled (Onboarding round)', m:actor((dec&&dec.by)||'A. Sharma'), ts:h(tzTime(ran.day,'09:38'))});
     add(up.day, up.time, {k:'human', ic:'&#8593;', t:photoEventText(e.reverify, e.photoSource), m:actor('A. Sharma'), ts:h(tzTime(up.day,up.time))});
     add(up.day, up.time, {k:'sys', ic:'&#9737;', t:'Quality check passed', m:'system', ts:h(tzTime(up.day,up.time))});
-    add(ran.day, ran.time, {k:'sys', ic:'&#9737;', t:'Comparison run: '+n+' photo'+(n===1?'':'s'), m:'system', ts:h(tzTime(ran.day,ran.time))});
+    add(ran.day, ran.time, {k:'sys', ic:'&#9737;', t:'Comparison run: '+(e.runCount||n)+' photo'+((e.runCount||n)===1?'':'s'), m:'system', ts:h(tzTime(ran.day,ran.time))});
     if(dec){
       var sub=alSplit(dec.at, ran.day), ver=reportVersion(e);
       add(sub.day, sub.time, {k:'human', ic:'&#10003;', t:'Report submitted: '+h(outcomeLabel(dec.status||'match').t)+(entries.filter(function(x){return x.decision;}).length>1?' <span class="bext">Version '+ver+'</span>':''),
@@ -2864,6 +2960,14 @@ function activityLog(s, c){
     var np=alSplit(nowStamp().replace(/ IST$/,''));
     add(np.day, np.time, {k:'human', ic:'&#8593;', t:photoEventText(!!s.reverifyRun, s.photoSource), m:actor('A. Sharma')+' &middot; not compared yet', ts:h(tzTime(np.day,np.time))});
   }
+  // photos that changed while a check was in progress, and the single-photo runs that followed
+  (c.midChanges||[]).forEach(function(ch){
+    var t = ch.verb==='added' ? ('New photo added: '+ch.what) : (cap(ch.what)+' photo '+ch.verb);
+    add(ch.date, ch.time, {k:'ext', ic:'&#9998;', t:h(t)+' <span class="bext">'+(ch.byRole==='recruiter'?'Recruiter':'Candidate profile')+'</span>', m:actor(ch.by)+' &middot; after the check ran', ts:h(tzTime(ch.date,ch.time))});
+  });
+  (c.singleRuns||[]).forEach(function(x){
+    add(x.day, x.time, {k:'sys', ic:'&#9737;', t:'Comparison run: '+h(x.what)+' only', m:'system &middot; '+(x.verb==='added'?'photo added':'photo replaced')+' after the check ran', ts:h(tzTime(x.day,x.time))});
+  });
   // photo changes, resolved or not
   (c.pastChanges||[]).concat(staleList(c)).forEach(function(si){
     var src=si.byRole==='recruiter'?'Recruiter':'Candidate profile', tm=si.time||'16:40';
@@ -2882,7 +2986,7 @@ function activityLog(s, c){
   }).join(''); }).join('');
 }
 function verifyAnother(){ reset({roundsConfigured:state.roundsConfigured}); window.scrollTo({top:0,behavior:'smooth'}); }
-function openHistory(idx, noPush){ var hh=state.history[idx]; setState({ repPreview:null, reverifyRun:false, cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, attest:!!hh.attest, quality:hh.quality||null, searchOpen:false, running:false, done:true, open:null, openRows:{}, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'', activityOpen:false, reverifyOpen:false, cropOpen:false }); if(!noPush) wlSyncUrl(false); }
+function openHistory(idx, noPush){ var hh=state.history[idx]; applyMidChanges(hh); setState({ repPreview:null, reverifyRun:false, cand:hh.cand, photo:hh.photo, rows:hh.rows, shared:hh.shared, consent:true, attest:!!hh.attest, quality:hh.quality||null, searchOpen:false, running:false, done:true, open:null, openRows:{}, q:'', upErr:'', viewingHistory:true, entry:hh, decision:hh.decision||null, decisionErr:'', activityOpen:false, reverifyOpen:false, cropOpen:false }); if(!noPush) wlSyncUrl(false); }
 
 /* ---------- seeded demo worklist data ---------- */
 function fmtLong(iso){ var d=new Date(Date.parse(iso+'T00:00:00Z')); var mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return d.getUTCDate()+' '+mo[d.getUTCMonth()]+' '+d.getUTCFullYear(); }
@@ -2999,6 +3103,25 @@ function synthCompletedEntry(c){
       var cw=Math.round(im.width*0.82), ch=Math.round(im.height*0.82), cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
       var g=cv.getContext('2d'); g.translate(cw,0); g.scale(-1,1); g.drawImage(im, Math.round(im.width*0.09), Math.round(im.height*0.04), cw, ch, 0, 0, cw, ch);
       si.newImg=cv.toDataURL('image/jpeg',0.9); }catch(e){ si.newImg=src; } }; im.src=src; })(_stale.staleInfo, _stale.photos[0] && _stale.photos[0].img);
+  }
+  // DEMO: Imran Shaikh's check ran on his joining day (13 Aug, 09:42) and was not submitted; afterwards his
+  // Round 1 photo was replaced and a Round 3 photo was added, so those two need checking before he can be submitted
+  var _im = CANDIDATES.find(function(x){ return x.name==='Imran Shaikh'; });
+  if(_im && _im.photos && _im.photos.length && !latestCheck(_im.id)){
+    var _sc=[93, 91, 63];
+    var _rows=_im.photos.map(function(p,i){ return Object.assign({}, p, {status:'done', score:_sc[i]!=null?_sc[i]:90, confidence:92, review:null, asked:true}); });
+    state.history.push({cand:_im, photo:_im.photos[0].img, rows:_rows, shared:[], at:'09:42', ranAt:_im.joining+', 09:42', reverify:false, photoSource:'file', decision:null, attest:true, quality:{usable:true, reason:'ok', message:''}});
+    var _src=_im.photos[0].img;
+    _im.midChanges=[
+      {what:'Round 1: screening', verb:'replaced', date:_im.joining, time:'11:20', by:'Imran Shaikh', byRole:'candidate', newImg:null},
+      {what:'Round 3: manager round', verb:'added', src:'interview', interviewer:'K. Rao', date:_im.joining, time:'12:05', by:'A. Sharma', byRole:'recruiter', newImg:null}
+    ];
+    // the seed has one image per candidate: use crops of it so each changed photo looks different
+    (function(list, src){ if(!src) return; var im=new Image(); im.onload=function(){ try{
+      list.forEach(function(ch, n){ var f=n?0.74:0.86, cw=Math.round(im.width*f), ch2=Math.round(im.height*f), cv=document.createElement('canvas'); cv.width=cw; cv.height=ch2;
+        var g=cv.getContext('2d'); if(!n){ g.translate(cw,0); g.scale(-1,1); } g.drawImage(im, Math.round(im.width*(1-f)/2), Math.round(im.height*(n?0.06:0.03)), cw, ch2, 0, 0, cw, ch2);
+        ch.newImg=cv.toDataURL('image/jpeg',0.9); });
+    }catch(e){ list.forEach(function(ch){ ch.newImg=src; }); } }; im.src=src; })(_im.midChanges, _src);
   }
   var params = new URLSearchParams(location.search);
   if((params.get('entry')||'')==='norounds') state.roundsConfigured=false;
