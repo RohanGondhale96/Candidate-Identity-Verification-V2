@@ -6,6 +6,24 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Reverify pop-up: a text list of what changed, no photos (2026-10-28)
+
+Mocked on the real screens, then approved.
+
+- The pop-up used to show a **Before / Updated photo pair** per change. Dropped: a removed photo still showed
+  its old photo as "Before" (against the rule above), several changes made the pop-up scroll, and the pop-up
+  is a confirm step, not a comparison.
+- **Now one text row per change** (`reverifyChanges`, `.rv-list` / `.rv-row`): the photo name, then
+  "Replaced by <who> · <date, time> IST", "Added by …" or "Removed from file by …".
+  - A middle version showed a small thumbnail of the photo on file now; dropped too, because people would ask
+    whether it was the new photo or the old one.
+- **Opening line counts the changes** (`reverifyIntro`): "1 photo on file changed after the report was
+  submitted. Reverifying starts a fresh check against all the current photos on file." / "3 photos …".
+- The old photo isn't lost: the current report is kept as a previous version (open it from Activity).
+- Unchanged: the three bullets, the optional reason field, Cancel / Start reverify, the out-of-date banner.
+- The old `.rv-chg*` styles were removed.
+- Harness: 201 pass.
+
 ## A photo removed from the file before Submit stays as a Removed row (2026-10-28)
 
 Mocked on the real screens, then approved. **Replaces the "Deleted photo" bullet of the section below**
