@@ -712,7 +712,7 @@ function settleRow(i, token, res, err){
     var allSettled = rows.every(function(r){ return r.status==='done' || r.status==='error'; });
     if(!allSettled) return {rows:rows};
     var at = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-    var entry = {cand:prev.cand, photo:prev.photo, rows:rows, shared:prev.shared, at:at, ranAt:nowStamp().replace(/ IST$/,''), reverify:!!prev.reverifyRun, photoSource:prev.photoSource||'file', decision:null, attest:prev.attest, quality:prev.quality};
+    var entry = {cand:prev.cand, photo:prev.photo, rows:rows, shared:prev.shared, at:at, ranAt:nowStamp().replace(/ IST$/,''), reverify:!!prev.reverifyRun, photoSource:prev.photoSource||'file', photoTakenAt:(prev.photoSource==='reused'&&prev.reusedFrom)?prev.reusedFrom.takenAt:null, decision:null, attest:prev.attest, quality:prev.quality};
     return {rows:rows, running:false, done:true, history:prev.history.concat([entry]), entry:entry, decision:null, decisionErr:''};
   }, function(){
     // run just finished - glide up to the top of the results instead of snapping mid-report
@@ -993,6 +993,33 @@ function joinStamp(c){ return c ? (c.joining||fmtLong(c.joiningISO))+', 09:41' :
 /* when THIS check's joining-day photo was taken: a live run stamps ranAt; a reverify not yet
    compared is happening now; seeded reports were taken on the joining day */
 /* a check started from Reverify (its photo could be from the joining day or later, so we don't claim a date) */
+/* Reverify can reuse the photo of the report being reverified (the candidate doesn't need to be there),
+   whether or not anything on file changed since that report. */
+function reuseSource(c){
+  if(!c || !state.reverifyRun) return null;
+  var reps=submittedReports(c.id), last=reps[reps.length-1]; if(!last || !last.photo) return null;
+  var ru=reusedInfo(last);
+  var at=ru ? ru.takenAt : photoStamp(c, last);
+  var joiningDay=!last.reverify || !!ru;   // the original joining-day photo (or a reuse of it)
+  return {img:last.photo, takenAt:at, day:shortDay(String(at).split(', ')[0]), joiningDay:joiningDay};
+}
+/* a check that reused an earlier photo: {takenAt} of the original photo */
+function reusedInfo(hh){
+  if(hh && hh.photoSource==='reused') return {takenAt:hh.photoTakenAt};
+  if((!hh || hh===state.entry) && state.photoSource==='reused' && state.reusedFrom) return {takenAt:state.reusedFrom.takenAt};
+  return null;
+}
+/* the joining-day side of a comparison */
+function joinPhotoLabel(hh){
+  var ru=reusedInfo(hh);
+  if(ru) return 'Joining-day photo from '+shortDay(String(ru.takenAt).split(', ')[0])+' (reused)';
+  return isReverifyCheck(hh) ? 'Photo uploaded' : 'Photo taken on joining day';
+}
+function useReusedPhoto(){
+  var src=reuseSource(state.cand); if(!src) return;
+  setState({photo:src.img, photoOriginal:null, cropRect:null, photoName:null, photoSource:'reused', reusedFrom:{takenAt:src.takenAt, joiningDay:src.joiningDay}, consent:true, attest:true, quality:null, qualityChecking:false, upErr:''});
+}
+function clearReusedPhoto(){ setState({photo:null, photoSource:null, reusedFrom:null, consent:false, attest:false, quality:null}); }
 function isReverifyCheck(hh){ return !!((hh && hh.reverify) || (state.reverifyRun && (!hh || hh===state.entry))); }
 /* Times are labelled with the company's timezone (tenant setting in the product; IST in this prototype).
    Only a date that carries a time gets the label: "18 Apr 2026, 10:30" -> "18 Apr 2026, 10:30 IST". */
@@ -1013,6 +1040,7 @@ function tz(t){
 /* "HH:MM" on a given day, in the company timezone (Activity) */
 function tzTime(day, time){ var x=tz(day+', '+time); var k=x.lastIndexOf(', '); return k>=0 ? x.slice(k+2) : x; }
 function photoStamp(c, hh){
+  var ru=reusedInfo(hh); if(ru) return ru.takenAt;   // a reused photo keeps the time it was taken
   // reverify: we only know when the photo was uploaded, so that is the time on record
   if(isReverifyCheck(hh)) return (hh && hh.ranAt) || nowStamp().replace(/ IST$/,'');
   if(hh && hh.ranAt) return hh.ranAt;
@@ -1401,7 +1429,7 @@ function comparePanes(r, seed, i, c){
   var refPane='<div class="rpt-pane" onclick="openLightbox('+i+')" style="'+paneStyle+'">'+photoTile(r,seed,'contain')+
     '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+capPrimary+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:2px">'+h(tz(r.date))+'</div></div></div>';
   var todayPane='<div class="rpt-pane" onclick="openLightbox(\'join\')" style="'+paneStyle+'">'+uploadedImg('contain')+
-    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+(isReverifyCheck(state.entry)?'Photo uploaded':'Photo taken on joining day')+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(tz(photoStamp(c, state.entry)))+'</div></div></div>';
+    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+joinPhotoLabel(state.entry)+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(tz(photoStamp(c, state.entry)))+'</div></div></div>';
   return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+refPane+todayPane+'</div>';
 }
 function reportThumbs(r, seed){
@@ -1436,7 +1464,7 @@ function removedPanes(r, c){
     '<div style="font-size:13.5px;font-weight:600;color:#475467">Photo removed from file</div>'+
   '</div>';
   var todayPane='<div class="rpt-pane" onclick="openLightbox(\'join\')" style="'+paneStyle+';background:#EFEFEF;border:1px solid #DDD">'+uploadedImg('contain')+
-    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+(isReverifyCheck(state.entry)?'Photo uploaded':'Photo taken on joining day')+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(tz(photoStamp(c, state.entry)))+'</div></div></div>';
+    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+joinPhotoLabel(state.entry)+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(tz(photoStamp(c, state.entry)))+'</div></div></div>';
   return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+gone+todayPane+'</div>';
 }
 function removedNote(r){
@@ -1502,9 +1530,9 @@ function reportFeed(s, c){
   }
   html += '<div id="rpt-top" class="rh-card" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 18px;scroll-margin-top:16px">'+
     '<div style="width:48px;height:60px;border-radius:8px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;flex-shrink:0;position:relative">'+uploadedImg('cover')+'</div>'+
-    '<div style="flex:1 1 180px;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.4">'+(isReverifyCheck(s.entry)?'Photo uploaded':'Photo taken on joining day')+'</div>'+
-      '<div style="font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · '+h(photoStamp(c, s.entry))+' IST</div>'+
-      ((s.attest||(s.entry&&s.entry.attest)) ? '<div style="font-size:12px;color:#1a6b34;margin-top:4px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'+(isReverifyCheck(s.entry)?'Confirmed as a photo of the person who reported to join':'Confirmed as the joining-day photo of the person who reported to join')+'</div>':'')+
+    '<div style="flex:1 1 180px;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.4">'+h(joinPhotoLabel(s.entry))+'</div>'+
+      '<div style="font-size:12.5px;color:#747474;margin-top:2px">'+(reusedInfo(s.entry)?('Taken '+h(tz(photoStamp(c, s.entry)))+' · reused by A. Sharma'):('Run by A. Sharma · '+h(photoStamp(c, s.entry))+' IST'))+'</div>'+
+      ((s.attest||(s.entry&&s.entry.attest)) ? '<div style="font-size:12px;color:#1a6b34;margin-top:4px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'+(reusedInfo(s.entry)?'Confirmed on the joining day as the person who reported to join':isReverifyCheck(s.entry)?'Confirmed as a photo of the person who reported to join':'Confirmed as the joining-day photo of the person who reported to join')+'</div>':'')+
     '</div>'+
     '<div class="rpt-headacts" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
       (!s.decision ? '<button class="rh-btn secondary sm" onclick="askReshoot()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Use a different photo</button>' : '')+
@@ -1708,7 +1736,7 @@ function completedReport(s, c){
     }).join('')+'</div>'+
   '</div>';
   if(hh.attest||s.attest){
-    html+='<div class="rpt-attest"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'+(isReverifyCheck(hh)?'Photo uploaded and confirmed by ':'Joining-day photo taken and confirmed by ')+''+h(by)+' · '+h(uploadStamp)+'</div>';
+    html+='<div class="rpt-attest"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'+(reusedInfo(hh)?('Joining-day photo from '+h(shortDay(String(reusedInfo(hh).takenAt).split(', ')[0]))+' reused by '+h(by)+' · taken '+h(uploadStamp)):((isReverifyCheck(hh)?'Photo uploaded and confirmed by ':'Joining-day photo taken and confirmed by ')+''+h(by)+' · '+h(uploadStamp)))+'</div>';
   }
   html+='</div></div>';
   html+='<div class="rpt-seclabel">'+(stale?('Photos compared on '+h(submitShort(dec))):'Photo comparisons')+'</div>';
@@ -1749,8 +1777,8 @@ function startReverify(){
   (c.reverifyLog=c.reverifyLog||[]).push({day:nowP[0], time:nowP[1], by:'A. Sharma', fromVersion:last&&last.decision?reportVersion(last):null, changed:!!c.staleInfo, reason:why});
   applyPhotoChanges(c);
   clearTimers(); _runToken++; _qtoken++;
-  setState({ done:false, running:false, photo:null, photoOriginal:null, cropRect:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false, reverifyOpen:false, repPreview:null, reverifyRun:true });
-  toast('Reverify: upload a photo of the candidate');
+  setState({ done:false, running:false, photo:null, photoOriginal:null, cropRect:null, photoName:null, photoSource:null, reusedFrom:null, consent:false, attest:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false, reverifyOpen:false, repPreview:null, reverifyRun:true });
+  toast('Reverify: choose the photo to check');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 /* ---- downloadable report (browser print-to-PDF; A4, black & white) ---- */
@@ -2207,19 +2235,22 @@ function render(){
   /* 3. UPLOAD (hidden once a report is shown; re-open via "Use a different photo") */
   if(c && c.photos.length && !s.done && !isFuture(c)){
     html += '<div class="rh-card">'+
-      '<div style="margin-bottom:16px"><div style="font-size:16px;font-weight:600;line-height:1.5">Upload joining day photo</div>'+
-        (s.photo?'':'<p style="margin:4px 0 0;font-size:14px;color:#747474;line-height:1.55">'+(camAvailable()?'Frame the photo from the chest up, with the face clearly visible and looking at the camera.':'Choose a clear, front-facing photo with the face fully visible.')+'</p>')+
+      '<div style="margin-bottom:16px"><div style="font-size:16px;font-weight:600;line-height:1.5">'+(s.reverifyRun?'Choose the photo to check':'Upload joining day photo')+'</div>'+
+        (s.photo||s.reverifyRun?'':'<p style="margin:4px 0 0;font-size:14px;color:#747474;line-height:1.55">'+(camAvailable()?'Frame the photo from the chest up, with the face clearly visible and looking at the camera.':'Choose a clear, front-facing photo with the face fully visible.')+'</p>')+
       '</div>';
     if(!canDo('run')){
       html += noAccessNote('You don\u2019t have access to run identity checks. Ask your admin to add you in the identity check settings.');
     } else if(!s.photo){
+      var _ru=reuseSource(c);
       html += '<div ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)" style="border:1.5px dashed '+(s.drag?'#0076FB':'#C6C6C6')+';border-radius:6px;padding:30px 20px;text-align:center;background:'+(s.drag?'#EBF5FF':'#F7F8FA')+'">'+
         '<svg viewBox="25 25 22 22" width="28" height="28" fill="#929292" style="margin-bottom:6px"><path d="M32.7143 40.2353H38.2857V34.5882H42L35.5 28L29 34.5882H32.7143V40.2353ZM29 42.1176H42V44H29V42.1176Z"></path></svg>'+
-        '<p style="margin:0 0 16px;font-size:13.5px;color:#747474">'+(camAvailable()?'Take a photo, or choose one from this device':'Choose one from this device')+'</p>'+
+        '<p style="margin:0 0 16px;font-size:13.5px;color:#747474">'+(_ru?(camAvailable()?'Use the joining-day photo again, take a new photo, or choose one from this device':'Use the joining-day photo again, or choose a new one from this device'):(camAvailable()?'Take a photo, or choose one from this device':'Choose one from this device'))+'</p>'+
         '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">'+
+          (_ru?'<button type="button" class="rh-btn secondary sm" onclick="useReusedPhoto()">'+h(_ru.joiningDay?('Use joining-day photo ('+_ru.day+')'):('Use photo from '+_ru.day))+'</button>':'')+
           (camAvailable()?'<button class="rh-btn secondary sm" onclick="takePhoto()">Take photo</button>':'')+
           (IDV.upload.allowFile?'<button class="rh-btn secondary sm" onclick="openPicker()">Upload file</button>':'')+
-        '</div></div>';
+        '</div>'+
+        '</div>';
     } else {
       var busy = s.qualityChecking || s.running;
       var failed = s.quality && s.quality.usable===false && !busy;
@@ -2227,7 +2258,7 @@ function render(){
       var overlay = busy ? (s.running ? faceMesh() : scanOverlay()) : '';
       var photoBox = '<div style="width:132px;flex-shrink:0;display:flex;min-height:190px">'+
         '<div style="flex:1;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;position:relative">'+uploadedImg('cover')+overlay+
-          ((!busy && !(failed && s.quality && s.quality.reason==='multiple_faces')) ? '<button type="button" class="rh-cropchip" onclick="openCrop(\'pre\')" aria-label="Crop photo"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>Crop</button>' : '')+
+          ((!busy && s.photoSource!=='reused' && !(failed && s.quality && s.quality.reason==='multiple_faces')) ? '<button type="button" class="rh-cropchip" onclick="openCrop(\'pre\')" aria-label="Crop photo"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>Crop</button>' : '')+
         '</div></div>';
       var fileName = s.photoName ? '<div style="font-size:14px;color:#2A2A2A;word-break:break-all">'+h(s.photoName)+'</div>' : '';
       var right;
@@ -2252,7 +2283,12 @@ function render(){
               '<span style="flex:1">'+h(qualityErrorText(s.quality))+'</span></div>'
           : '';
         var rv = !!s.reverifyRun, jd = s.cand ? (s.cand.joining||fmtLong(s.cand.joiningISO)) : '';
-        var checks = '<div style="display:flex;flex-direction:column">'+
+        var reusedNow = s.photoSource==='reused' && s.reusedFrom;
+        var checks = reusedNow
+          ? '<div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:14px;font-weight:600;color:#2A2A2A">'+h(joinPhotoLabel())+'</div>'+
+              '<div style="font-size:13px;color:#667085">Taken '+h(tz(s.reusedFrom.takenAt))+'</div>'+
+              '<div style="display:flex;align-items:flex-start;gap:6px;font-size:13px;color:#1a6b34;line-height:1.5"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="margin-top:3px;flex-shrink:0"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Consent and the joining-day confirmation carry over from that check.</span></div></div>'
+          : '<div style="display:flex;flex-direction:column">'+
           '<label class="rh-cb"><input type="checkbox" '+(s.consent?'checked':'')+' onchange="toggleConsent()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>I have obtained consent from the candidate to use this photo for identity verification.</span></label>'+
           '<label class="rh-cb" style="margin-top:14px"><input type="checkbox" '+(s.attest?'checked':'')+' onchange="toggleAttest()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>'+(rv?h('This is a photo of '+s.cand.name+', the person who reported to join on '+jd+'.'):'This photo was taken on the joining date, of the person who reported to join.')+'</span></label>'+
         '</div>';
@@ -2265,7 +2301,7 @@ function render(){
             '</div>'
           : '<div style="display:flex;gap:12px">'+
               '<button type="button" class="rh-btn primary" style="flex:1" '+(canSubmit?'':'disabled')+' onclick="submitPhoto()">Submit</button>'+
-              '<button type="button" class="rh-btn secondary" style="flex:1" onclick="changePhoto()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Change photo</button>'+
+              (reusedNow ? '<button type="button" class="rh-btn secondary" style="flex:1" onclick="clearReusedPhoto()">Choose a different photo</button>' : '<button type="button" class="rh-btn secondary" style="flex:1" onclick="changePhoto()"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>Change photo</button>')+
             '</div>';
         right = '<div style="flex:1;min-width:250px;display:flex;flex-direction:column">'+
           '<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px">'+fileName+errBlock+checks+'</div>'+
@@ -2589,7 +2625,7 @@ function render(){
       '<div class="dbody">'+
         '<p style="margin:0 0 12px;font-size:13.5px;color:#2A2A2A;line-height:1.55">'+h(s.rerunMode?'This starts a fresh check against all the current photos on file.':reverifyIntro(c))+'</p>'+
         (s.rerunMode?'':reverifyChanges(c))+
-        '<ul style="margin:6px 0 0;padding-left:18px;color:#5A6473;font-size:13px;line-height:1.7"><li>You&#39;ll upload a <b>new joining-day photo</b> and it will be compared against every photo on file again.</li><li>This <b>current report is kept</b> as a previous version, open it any time from Activity.</li><li>The new run <b>becomes the current report</b> once you submit it.</li></ul>'+
+        '<ul style="margin:6px 0 0;padding-left:18px;color:#5A6473;font-size:13px;line-height:1.7"><li>Next, you&#39;ll <b>choose the photo to check</b>: the joining-day photo again, or a new photo of the candidate. It will be compared against every photo on file.</li><li>This <b>current report is kept</b> as a previous version, open it any time from Activity.</li><li>The new run <b>becomes the current report</b> once you submit it.</li></ul>'+
       '</div>'+
       (IDV.reverify.requireReason ? '<div style="padding:0 20px 4px"><label for="rv-reason" style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Reason for reverifying <span style="color:#D93025">*</span></label>'+
         '<textarea id="rv-reason" rows="2" style="width:100%;border:1px solid #DCE2EB;border-radius:6px;padding:8px 10px;font-family:inherit;font-size:13.5px;resize:vertical" placeholder="For example: new application photo uploaded"></textarea>'+
@@ -2649,7 +2685,7 @@ function pick(id){ var c=CANDIDATES.find(function(x){return x.id===id;}); if(!c)
 /* reopen a reverify's upload step (no new Activity entry: it was logged when the reverify started) */
 function resumeReverify(){
   clearTimers(); _runToken++; _qtoken++;
-  setState({ done:false, running:false, photo:null, photoOriginal:null, cropRect:null, photoName:null, consent:false, attest:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false, reverifyOpen:false, repPreview:null, reverifyRun:true });
+  setState({ done:false, running:false, photo:null, photoOriginal:null, cropRect:null, photoName:null, photoSource:null, reusedFrom:null, consent:false, attest:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false, reverifyOpen:false, repPreview:null, reverifyRun:true });
 }
 function setTab(t){ setState({tab:t}); }
 /* Back during a reverify that isn't submitted yet: confirm first, the candidate moves to Check in progress */
@@ -2827,7 +2863,7 @@ function openLightbox(i){ setState({lightbox:i}); }
 /* full-screen viewer item: a photo on file (index) or the joining-day photo ('join') */
 function viewerItem(c){
   var k=state.lightbox;
-  if(k==='join') return state.photo ? {label:(isReverifyCheck(state.entry)?'Photo uploaded':'Photo taken on joining day'), date:tz(photoStamp(c, state.entry)), src:state.photo} : null;
+  if(k==='join') return state.photo ? {label:joinPhotoLabel(state.entry), date:tz(photoStamp(c, state.entry)), src:state.photo} : null;
   var p=(state.rows && state.rows[k]) || comparePhotos(c)[k]; if(!p) return null;
   return {label:p.label, date:tz(p.date)+(p.by?' · '+p.by:''), src:p.img||null};
 }
@@ -2938,7 +2974,8 @@ function alKey(day, time){
 }
 function alSplit(at, fallbackDay){ var p=String(at||'').split(', '); return p.length>1 ? {day:p[0], time:p[1]} : {day:fallbackDay, time:p[0]||'10:00'}; }
 /* Activity wording for the joining-day photo: uploaded from a file, or taken with the laptop camera */
-function photoEventText(reverify, source){
+function photoEventText(reverify, source, takenAt){
+  if(source==='reused') return 'Joining-day photo from '+shortDay(String(takenAt||'').split(', ')[0])+' reused';
   if(source==='webcam') return reverify ? 'Photo taken with the laptop camera' : 'Joining-day photo taken with the laptop camera';
   return reverify ? 'Photo uploaded' : 'Joining-day photo uploaded';
 }
@@ -2956,7 +2993,7 @@ function activityLog(s, c){
     var ran = e.ranAt ? alSplit(e.ranAt) : {day:(dec?alSplit(dec.at,c.joining).day:c.joining), time:'09:42'};
     var up  = e.ranAt ? ran : {day:ran.day, time:'09:41'};
     if(i===0) add(ran.day, '09:38', {k:'human', ic:'&#9873;', t:'Verification enabled (Onboarding round)', m:actor((dec&&dec.by)||'A. Sharma'), ts:h(tzTime(ran.day,'09:38'))});
-    add(up.day, up.time, {k:'human', ic:'&#8593;', t:photoEventText(e.reverify, e.photoSource), m:actor('A. Sharma'), ts:h(tzTime(up.day,up.time))});
+    add(up.day, up.time, {k:'human', ic:'&#8593;', t:photoEventText(e.reverify, e.photoSource, e.photoTakenAt), m:actor('A. Sharma'), ts:h(tzTime(up.day,up.time))});
     add(up.day, up.time, {k:'sys', ic:'&#9737;', t:'Quality check passed', m:'system', ts:h(tzTime(up.day,up.time))});
     add(ran.day, ran.time, {k:'sys', ic:'&#9737;', t:'Comparison run: '+(e.runCount||n)+' photo'+((e.runCount||n)===1?'':'s'), m:'system', ts:h(tzTime(ran.day,ran.time))});
     if(dec){
@@ -2975,7 +3012,7 @@ function activityLog(s, c){
   // a fresh joining-day photo picked for the current check, not compared yet
   if(s.cand===c && s.photo && !s.entry && !s.done){
     var np=alSplit(nowStamp().replace(/ IST$/,''));
-    add(np.day, np.time, {k:'human', ic:'&#8593;', t:photoEventText(!!s.reverifyRun, s.photoSource), m:actor('A. Sharma')+' &middot; not compared yet', ts:h(tzTime(np.day,np.time))});
+    add(np.day, np.time, {k:'human', ic:'&#8593;', t:photoEventText(!!s.reverifyRun, s.photoSource, s.reusedFrom&&s.reusedFrom.takenAt), m:actor('A. Sharma')+' &middot; not compared yet', ts:h(tzTime(np.day,np.time))});
   }
   // photos that changed while a check was in progress, and the single-photo runs that followed
   (c.midChanges||[]).forEach(function(ch){

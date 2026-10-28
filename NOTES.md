@@ -6,6 +6,34 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Reverify can reuse the joining-day photo (2026-10-28)
+
+Raised in a stakeholder discussion: weeks after Submit the recruiter wants to reverify, but the candidate
+isn't with them. Mocked on the real screens, iterated, then approved.
+
+- **One flow for both Reverify paths** (a photo on file changed after Submit, or Reverify clicked by choice):
+  Reverify → confirm → choose the photo → run.
+- **Pop-up:** the first bullet is now "Next, you'll choose the photo to check: the joining-day photo again,
+  or a new photo of the candidate. It will be compared against every photo on file."
+- **Photo step** ("Choose the photo to check", was "Upload joining day photo" on a reverify): the same dashed
+  box as the normal upload, with three buttons: **Use joining-day photo (14 Aug)**, Take photo, Upload file
+  (`reuseSource`, `useReusedPhoto`). Enabled in both paths.
+  - Iterations: a separate card with the photo + "or" + the upload box was merged into one box; the small
+    thumbnail on the button was removed; a version that disabled the button when nothing on file had
+    changed ("would give the same result") was dropped: it stays enabled in both.
+  - The photo offered is the one from the current report. If that report used a later photo, the button
+    says "Use photo from 30 Aug".
+- **After choosing it:** no consent / "person who reported to join" checkboxes (confirmed for this photo
+  on the joining day; "Consent and the joining-day confirmation carry over from that check."), no Crop,
+  **Choose a different photo** goes back (`clearReusedPhoto`). It still goes through the quality check.
+- **The report says which photo was used** (`photoSource:'reused'`, `photoTakenAt` on the entry;
+  `reusedInfo`, `joinPhotoLabel`): header "Joining-day photo from 14 Aug (reused) · Taken 14 Aug 2026,
+  09:41 IST · reused by A. Sharma"; comparison panes and the viewer use the same label; submitted report
+  "Joining-day photo from 14 Aug reused by A. Sharma · taken …"; Activity "Joining-day photo from 14 Aug
+  reused". `photoStamp` keeps the time the photo was taken.
+- Toast after Start reverify: "Reverify: choose the photo to check".
+- Harness: 206 pass.
+
 ## Reverify pop-up: a text list of what changed, no photos (2026-10-28)
 
 Mocked on the real screens, then approved.
