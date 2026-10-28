@@ -6,6 +6,32 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## A photo removed from the file before Submit stays as a Removed row (2026-10-28)
+
+Mocked on the real screens, then approved. **Replaces the "Deleted photo" bullet of the section below**
+(the row used to disappear, with only a grey line in the notice).
+
+- **The row stays in its place** (`applyMidChanges` turns it into `status:'removed'` instead of splicing it
+  out; the photo still leaves `c.photos`). `removedCard`: the reference side is a dashed placeholder with
+  "Photo removed from file" (`removedPanes`), the joining-day photo stays on the other side, a grey
+  **Removed** badge, "Removed from file by <who> · <when>" under the name, no button. A grey note:
+  "Removed after the check ran: … left out of the result and doesn't need checking. Its earlier result
+  (Match) isn't counted." (`wasResult`).
+  - The placeholder only says "Photo removed from file"; the label / who / when line inside it was dropped
+    (already in the row header).
+- **Left out of the result:** `photoState` is null for it, so the verdict and counts ignore it. Footers say
+  "1 of 3 checked" (not "of 4") and add "1 removed" (`removedCount`, `reportSummary().removed`). It never
+  blocks Submit.
+- **Notice:** "1 photo was removed from the file. It stays in the report as removed and is left out of the
+  result." Shown with the changed-photos line, or alone (bold, no button) once nothing else is pending.
+- **Submit dialog and completed report:** "Removed" in both columns of the dialog, in the completed
+  summary rows (`badgeInfo`) and the same placeholder card (`completedCard`).
+- **Activity:** "Application photo removed from file · Recruiter · by A. Sharma · after the check ran".
+- **After Submit:** unchanged, a removal still puts the whole report out of date and needs Reverify.
+- **Demo seed:** Imran's Application photo is removed by A. Sharma at 11:45 (between the 11:20 replace and
+  the 12:05 add).
+- Harness: 198 pass.
+
 ## A photo changes after the check ran, before Submit: only that photo is checked (2026-10-28)
 
 Mocked on the real screens, then approved. **Replaces the 2026-09-18 rule** that a photo change during an

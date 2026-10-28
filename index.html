@@ -875,6 +875,9 @@ function rowExcluded(r){ return photoState(r)==='cant' || codeOutcome((r&&r.revi
    only that photo needs checking. status 'pending' = not compared yet, 'running' = comparing now. */
 function isPendingRow(r){ return !!(r && r.change && (r.status==='pending' || r.status==='running')); }
 function pendingCount(rows){ return (rows||[]).filter(isPendingRow).length; }
+/* a photo removed from the file after the check ran: the row stays, with a placeholder where the photo was */
+function isRemovedRow(r){ return !!(r && r.status==='removed'); }
+function removedCount(rows){ return (rows||[]).filter(isRemovedRow).length; }
 function applyMidChanges(hh){
   var c=hh&&hh.cand; if(!c || hh.decision || !c.midChanges) return;
   var rows=hh.rows;
@@ -885,7 +888,8 @@ function applyMidChanges(hh){
     var k=-1; for(var i=0;i<rows.length;i++){ if(rows[i].label===ch.what){ k=i; break; } }
     var pk=-1; for(var j=0;j<c.photos.length;j++){ if(c.photos[j].label===ch.what){ pk=j; break; } }
     if(ch.verb==='deleted'){
-      if(k>=0){ (hh.dropped=hh.dropped||[]).push(ch); rows.splice(k,1); }
+      if(k>=0){ var was=photoState(rows[k])?badgeInfo(rows[k]).t:null;
+        rows[k]=Object.assign({}, rows[k], {img:null, status:'removed', wasResult:was, score:null, err:'', review:null, reasonLabel:null, reasonNote:'', reviewedBy:null, reviewedAt:null, change:ch}); }
       if(pk>=0) c.photos.splice(pk,1);
     } else if(ch.verb==='replaced' && k>=0){
       ch.oldImg=rows[k].img;
@@ -964,7 +968,7 @@ function reportSummary(rows){
   var reviewedCount = vouchPos + vouchNeg;
   var extras=[]; if(cant) extras.push(cant+" couldn’t be read"); if(ignored) extras.push(ignored+' set aside');
   var extraNote = extras.length ? (' · '+extras.join(' · ')) : '';
-  var base = {matched:matched, total:Y, cant:cant, ignored:ignored, unresolved:unresolved, reviewedCount:reviewedCount, vouchPos:vouchPos, notMatch:(vouchNeg+openNoMatch)};
+  var base = {matched:matched, total:Y, cant:cant, ignored:ignored, unresolved:unresolved, reviewedCount:reviewedCount, vouchPos:vouchPos, notMatch:(vouchNeg+openNoMatch), removed:removedCount(rows)};
   function out(o){ for(var k in base) o[k]=base[k]; return o; }
   if(Y===0){
     return out({tier:'inconclusive', color:'#5F5E5A', bg:'#F1EFE8', title:"Couldn’t run the check", sub:'No readable photos to compare against.'+extraNote, suggest:"Can’t verify, nothing to compare"});
@@ -1186,11 +1190,14 @@ function nomatchOverride(i, r){
   return notMatchBand(r, change);
 }
 /* A5: verdict pills for the submit confirmation table */
+var REMOVED_PILL={t:'Removed',c:'#5F5E5A',bg:'#EFEFEF'};
 function aiVerdictLabel(r){
+  if(isRemovedRow(r)) return REMOVED_PILL;
   var st=photoState(r);
   return ({match:{t:'Match',c:'#1a8a3a',bg:'#E7F4EC'},review:{t:'Needs review',c:'#8a6414',bg:'#FBF1DE'},nomatch:{t:'Not a match',c:'#B42318',bg:'#FDECEC'},cant:{t:'Couldn’t compare',c:'#5F5E5A',bg:'#EFEFEF'}})[st] || {t:'-',c:'#747474',bg:'#EFEFEF'};
 }
 function reviewedVerdictLabel(r){
+  if(isRemovedRow(r)) return REMOVED_PILL;
   if(r.review==='same')     return {t:'Match',c:'#1a8a3a',bg:'#E7F4EC'};
   if(r.review==='notmatch') return {t:'Not a match',c:'#B42318',bg:'#FDECEC'};
   if(r.review==='ignore')   return {t:'Set aside',c:'#5F5E5A',bg:'#EFEFEF'};
@@ -1366,11 +1373,12 @@ function reviewNext(){
 /* in-progress report footer copy (B2): "{matched} of {total} photos match" + only the non-zero details.
    total = compared photos (set-aside included, couldn't-compare excluded); matched = system + "Same person". */
 function pendingFooterText(rows, v){
-  var n=pendingCount(rows), total=(rows||[]).length, det=[];
+  var n=pendingCount(rows), total=(rows||[]).length-removedCount(rows), det=[];
   det.push((total-n)+' of '+total+' checked');
   det.push(v.matched+' matched');
   if(v.unresolved>0) det.push(v.unresolved+' left to review');
   if(v.notMatch>0) det.push(v.notMatch+(v.notMatch===1?' doesn\u2019t match':' don\u2019t match'));
+  if(v.removed>0) det.push(v.removed+' removed');
   return '<span style="color:#8A6414;font-weight:600">'+n+' not checked yet</span><span style="color:#5A6473"> · '+h(det.join(' · '))+'</span>';
 }
 function reportFooterText(v){
@@ -1385,6 +1393,7 @@ function reportFooterText(v){
   if(v.notMatch>0)  det.push(v.notMatch+(v.notMatch===1?' doesn’t match':' don’t match'));
   if(v.cant>0)      det.push(v.cant+' couldn’t be compared');
   if(v.unresolved>0) det.push(v.unresolved+' left to review');
+  if(v.removed>0)   det.push(v.removed+' removed');
   return main + (det.length ? '<span style="color:#5A6473"> · '+h(det.join(' · '))+'</span>' : '');
 }
 /* underline tab, matching the worklist tabs: active = dark/bold text + blue underline; grey count badge */
@@ -1426,8 +1435,33 @@ function pendingCard(i, r, c){
     '</div>'+
   '</article>';
 }
+function removedPanes(r, c){
+  var paneStyle='position:relative;width:100%;aspect-ratio:4/5;border-radius:10px;overflow:hidden';
+  var capStyle='position:absolute;left:0;right:0;bottom:0;padding:20px 11px 9px;background:linear-gradient(to top,rgba(0,0,0,.68),rgba(0,0,0,0));color:#fff';
+  var gone='<div class="rpt-pane rpt-gone" style="'+paneStyle+';background:#F7F8FA;border:1.5px dashed #C9D1DE;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;text-align:center">'+
+    '<span style="width:46px;height:46px;border-radius:50%;background:#EAEDF2;display:grid;place-items:center;color:#8A97A8"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.4 5H19a2 2 0 0 1 2 2v8.6"/><path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2"/><path d="M3 16l5-5 4 4"/></svg></span>'+
+    '<div style="font-size:13.5px;font-weight:600;color:#475467">Photo removed from file</div>'+
+  '</div>';
+  var todayPane='<div class="rpt-pane" onclick="openLightbox(\'join\')" style="'+paneStyle+';background:#EFEFEF;border:1px solid #DDD">'+uploadedImg('contain')+
+    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+(isReverifyCheck(state.entry)?'Photo uploaded':'Photo taken on joining day')+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(tz(photoStamp(c, state.entry)))+'</div></div></div>';
+  return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+gone+todayPane+'</div>';
+}
+function removedNote(r){
+  return reasonNote('cant', 'Removed after the check ran:', 'This photo was taken off the candidate’s file, so it’s left out of the result and doesn’t need checking.'+(r.wasResult?(' Its earlier result ('+r.wasResult+') isn’t counted.'):''));
+}
+function removedCard(i, r, c, completed){
+  var ch=r.change||{};
+  var sub='Removed from file by '+h(ch.by)+' · '+h(tz(ch.date+', '+ch.time));
+  var head='<div style="display:flex;align-items:center;gap:13px;padding:14px 16px">'+
+      '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.35;color:#475467">'+h(r.label)+'</div><div style="font-size:12px;color:#667085;margin-top:1px">'+sub+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+_pill('Removed','#5F5E5A','#EFEFEF')+'<span style="width:30px;flex-shrink:0"></span></div>'+
+    '</div>';
+  var body='<div style="padding:0 16px 16px">'+removedPanes(r,c)+removedNote(r)+'</div>';
+  return '<article id="rpt-round-'+i+'" '+(completed?'class="rpt-card"':'style="'+V2CARD+';scroll-margin-top:12px"')+'>'+head+body+'</article>';
+}
 function reportCard(i, r, c){
   if(isPendingRow(r)) return pendingCard(i, r, c);
+  if(isRemovedRow(r)) return removedCard(i, r, c);
   var st=photoState(r), flagged=(st==='review'||st==='nomatch'), isCant=(st==='cant');
   var open=effectiveOpen(i,r), seed=(c?c.id:'')+r.label, chip=rowBadge(r), clickable=!isCant;
   var subline = h(tz(r.date)) + (r.checkedAfterChange && r.change ? ' · <span style="color:#5A6473">'+(r.change.verb==='added'?'Added':'Replaced')+' after the check ran, checked separately</span>' : '');
@@ -1490,13 +1524,13 @@ function reportFeed(s, c){
     s.shared.forEach(function(u){ html += '<span style="display:inline-flex;align-items:center;gap:6px;background:#F7F8FA;border:1px solid #DDD;border-radius:16px;padding:3px 6px 3px 10px;font-size:12.5px">'+h(u.name)+'<button type="button" onclick="revoke(\''+u.id+'\')" aria-label="Revoke access" style="border:0;background:none;padding:2px;line-height:0;color:#747474;border-radius:50%;cursor:pointer"><svg viewBox="25 25 22 22" width="13" height="13" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></span>'; });
     html += '</div>';
   }
-  var nPend=s.decision?0:pendingCount(rows), dropped=(!s.decision && s.entry && s.entry.dropped) || [];
-  if(nPend || dropped.length){
+  var nPend=s.decision?0:pendingCount(rows), nGone=s.decision?0:removedCount(rows);
+  if(nPend || nGone){
     html += '<div class="rh-card" style="margin-top:14px;display:flex;gap:12px;align-items:flex-start;background:#FFFBF2;border:1px solid #F0DFB8;padding:14px 16px">'+
       '<span style="color:#B7791F;flex-shrink:0;margin-top:1px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>'+
       '<div style="flex:1;min-width:0;font-size:13.5px;color:#2A2A2A;line-height:1.55">'+
         (nPend ? '<b>'+nPend+' photo'+(nPend===1?'':'s')+' changed after the check ran.</b> Run the check for '+(nPend===1?'it':'each one')+' before you submit. The other comparisons are kept.' : '')+
-        dropped.map(function(ch){ return '<div style="'+(nPend?'margin-top:6px;':'')+'color:#5A6473">'+h(ch.what)+' was deleted by '+h(ch.by)+' on '+h(tz(ch.date+', '+ch.time))+'. It’s left out of this check.</div>'; }).join('')+
+        (nGone ? '<div style="'+(nPend?'margin-top:6px;':'')+'color:#5A6473">'+(nPend?'':'<b style="color:#2A2A2A">')+nGone+' photo'+(nGone===1?' was':'s were')+' removed from the file.'+(nPend?'':'</b>')+' '+(nGone===1?'It stays in the report as removed and is':'They stay in the report as removed and are')+' left out of the result.</div>' : '')+
       '</div>'+
       (nPend ? '<button type="button" class="rh-btn secondary sm" onclick="jumpToPending()" style="flex-shrink:0">Go to '+(nPend===1?'photo':'photos')+'</button>' : '')+
     '</div>';
@@ -1594,6 +1628,7 @@ function staleSentence(c){ var si=c.staleInfo; if(!si) return ''; var list=si.ch
 function reportVerdict(rows){ var v=reportSummary(rows); return {confirmed:(v.tier==='match'||v.tier==='reviewed'), tier:v.tier}; }
 /* single source for a row's result label + colours (mirrors rowBadge, but re-usable as a grey variant) */
 function badgeInfo(r){
+  if(isRemovedRow(r)) return REMOVED_PILL;
   var st=photoState(r), o=r.review?codeOutcome(r.review):null;
   if(o==='pos'||(o==null&&st==='match')) return {t:'Match',c:'#1a8a3a',bg:'#E7F4EC'};
   if(o==='neg'||(o==null&&st==='nomatch')) return {t:'Not a match',c:'#D93025',bg:'#FDECEC'};
@@ -1616,6 +1651,7 @@ function completedRowNote(r, c){
 }
 /* photo pair for the completed report - captions are just "Reference" / "Joining day" */
 function completedCard(i, r, c, stale){
+  if(isRemovedRow(r)) return removedCard(i, r, c, true);
   var open=effectiveOpen(i,r), seed=(c?c.id:'')+r.label, isCant=(photoState(r)==='cant'), changed=isChangedRow(c,r);
   var caret=isCant?'<span style="width:30px;flex-shrink:0"></span>'
     :'<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" class="rpt-caret">'+chevron(open?'180deg':'0deg')+'</button>';
@@ -2962,7 +2998,7 @@ function activityLog(s, c){
   }
   // photos that changed while a check was in progress, and the single-photo runs that followed
   (c.midChanges||[]).forEach(function(ch){
-    var t = ch.verb==='added' ? ('New photo added: '+ch.what) : (cap(ch.what)+' photo '+ch.verb);
+    var t = ch.verb==='added' ? ('New photo added: '+ch.what) : (ch.verb==='deleted' ? (cap(photoPhrase(ch.what))+' removed from file') : (cap(ch.what)+' photo '+ch.verb));
     add(ch.date, ch.time, {k:'ext', ic:'&#9998;', t:h(t)+' <span class="bext">'+(ch.byRole==='recruiter'?'Recruiter':'Candidate profile')+'</span>', m:actor(ch.by)+' &middot; after the check ran', ts:h(tzTime(ch.date,ch.time))});
   });
   (c.singleRuns||[]).forEach(function(x){
@@ -3114,14 +3150,15 @@ function synthCompletedEntry(c){
     var _src=_im.photos[0].img;
     _im.midChanges=[
       {what:'Round 1: screening', verb:'replaced', date:_im.joining, time:'11:20', by:'Imran Shaikh', byRole:'candidate', newImg:null},
+      {what:'Application photo', verb:'deleted', date:_im.joining, time:'11:45', by:'A. Sharma', byRole:'recruiter'},
       {what:'Round 3: manager round', verb:'added', src:'interview', interviewer:'K. Rao', date:_im.joining, time:'12:05', by:'A. Sharma', byRole:'recruiter', newImg:null}
     ];
     // the seed has one image per candidate: use crops of it so each changed photo looks different
     (function(list, src){ if(!src) return; var im=new Image(); im.onload=function(){ try{
-      list.forEach(function(ch, n){ var f=n?0.74:0.86, cw=Math.round(im.width*f), ch2=Math.round(im.height*f), cv=document.createElement('canvas'); cv.width=cw; cv.height=ch2;
+      list.filter(function(ch){ return ch.verb!=='deleted'; }).forEach(function(ch, n){ var f=n?0.74:0.86, cw=Math.round(im.width*f), ch2=Math.round(im.height*f), cv=document.createElement('canvas'); cv.width=cw; cv.height=ch2;
         var g=cv.getContext('2d'); if(!n){ g.translate(cw,0); g.scale(-1,1); } g.drawImage(im, Math.round(im.width*(1-f)/2), Math.round(im.height*(n?0.06:0.03)), cw, ch2, 0, 0, cw, ch2);
         ch.newImg=cv.toDataURL('image/jpeg',0.9); });
-    }catch(e){ list.forEach(function(ch){ ch.newImg=src; }); } }; im.src=src; })(_im.midChanges, _src);
+    }catch(e){ list.forEach(function(ch){ if(ch.verb!=='deleted') ch.newImg=src; }); } }; im.src=src; })(_im.midChanges, _src);
   }
   var params = new URLSearchParams(location.search);
   if((params.get('entry')||'')==='norounds') state.roundsConfigured=false;
