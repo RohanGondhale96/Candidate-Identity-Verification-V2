@@ -35,8 +35,16 @@ chose **C**, mocked, then iterated on a clickable prototype before building.
 - **Demo data:** about 140 document names across 8 kits (`CP_DOCS` in the admin), including the messy names
   from a real tenant. The real list would come from CP (document name and kit per upload field).
 - `color-scheme: light` on the admin, so native checkboxes don't turn dark in a dark-mode browser.
-- **Not done yet:** the check page doesn't use kits (a document is compared wherever it is); open question:
-  if the same Aadhaar is uploaded in two kits, one comparison row or two?
+- **Not done yet:** the check page doesn't use kits (a document is compared wherever it is).
+- **Decided 2026-10-29 (with the developer): one entry per kit upload.** An Aadhaar uploaded in the Onboarding
+  kit and another in the Pre-joining kit are two separate CP records, so the check shows two entries,
+  "Aadhaar card · Onboarding kit" and "Aadhaar card · Pre-joining kit", each compared and counted on its own.
+  The kit name goes after the document name on the comparison card, submit dialog, report, PDF and Activity.
+  - Known trade-off: the same image uploaded in both kits is compared and counted twice. CP doesn't store
+    file hashes; a later option is to hash both files in memory at check time (they're read anyway to send to
+    AWS), show "Same image as …" and not count it twice. Not a blocker.
+  - To confirm with the developer: a ticked kit that wasn't filled in gives no entry; a re-upload inside the
+    same kit replaces the earlier file (one entry).
 
 ## Reverify can reuse the joining-day photo (2026-10-28)
 
