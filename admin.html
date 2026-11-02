@@ -129,6 +129,20 @@
   .dp-sub{display:flex;flex-direction:column;gap:10px;padding:4px 0 14px 26px;border-bottom:1px solid #EEF0F3}
   .dp-sub .cb{font-size:14px}
   .dp-empty{padding:22px 0;color:var(--soft);font-size:13.5px}
+  /* review reasons */
+  .rs-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;max-width:620px}
+  .rs-row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #E1E4EA;border-radius:6px;padding:6px 8px}
+  .rs-row.drag{opacity:.4}
+  .rs-row.over{border-color:var(--blue);box-shadow:0 0 0 2px rgba(0,118,251,.15)}
+  .rs-grip{cursor:grab;color:#9AA1AC;display:grid;place-items:center;width:20px;flex-shrink:0}
+  .rs-row input{flex:1;min-width:0;border:0;border-bottom:1px solid transparent;outline:0;font-size:14.5px;padding:6px 2px;background:none;color:var(--ink)}
+  .rs-row input:focus{border-bottom-color:var(--blue)}
+  .rs-row .rm{border:0;background:none;color:#6E7683;cursor:pointer;width:28px;height:28px;border-radius:5px;flex-shrink:0}
+  .rs-row .rm:hover{background:#F1F2F4;color:var(--ink)}
+  .rs-row.fixed{background:#F7F8FA;border-style:dashed}
+  .rs-row.fixed .t{flex:1;font-size:14.5px;color:var(--muted);padding:6px 2px}
+  .rs-row.fixed .n{font-size:12.5px;color:#8A97A8;white-space:nowrap;padding-right:6px}
+  .rs-row.bad{border-color:#D93025}
   /* RippleHire toaster: top centre */
   .toaster{position:fixed;top:24px;left:0;right:0;margin:0 auto;width:420px;max-width:calc(100vw - 32px);background:#fff;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.12);border-left:2px solid #12B76A;display:flex;gap:12px;padding:16px;z-index:50;animation:tin .2s ease-out}
   .toaster.bad{border-left-color:#D93025}
@@ -147,6 +161,45 @@
     .grid2{grid-template-columns:1fr}
     .toaster{top:16px;left:16px;right:16px;width:auto;margin:0}
   }
+
+  /* ===== RH design system layer (D:\Codebase\RH DEsign system) ===== */
+  /* Switch (forms/Switch.jsx): 46x28, on = --rh-toggle-on #41CE5E, off = white with a #ddd outline, 20px thumb */
+  .tg{width:46px;height:28px}
+  .tg span{background:#fff;border:1px solid #ddd;transition:background .15s ease,border-color .15s ease}
+  .tg span::after{top:3px;left:3px;width:20px;height:20px;border:1px solid #ddd;box-sizing:border-box;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:left .15s ease}
+  .tg input:checked+span{background:#41CE5E;border-color:#41CE5E}
+  .tg input:checked+span::after{left:21px}
+  /* Checkbox (forms/Checkbox.jsx): 16px, 2px #747474, radius 2, brand blue when on; indeterminate = white bar */
+  .cb{font-size:14px;color:#2A2A2A}
+  .cb input[type=checkbox]{-webkit-appearance:none;appearance:none;width:16px;height:16px;margin:0;flex-shrink:0;border:2px solid #747474;border-radius:2px;background:transparent center/12px 12px no-repeat;cursor:pointer;transition:all .12s ease}
+  .cb input[type=checkbox]:checked{background-color:#0076FB;border-color:#0076FB;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M4 9.5l3 3 7-7' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+  .cb input[type=checkbox]:indeterminate{background-color:#0076FB;border-color:#0076FB;background-image:linear-gradient(#fff,#fff);background-size:8px 2px}
+  /* Radio (forms/Radio.jsx): 16px ring, 2px rgba(0,0,0,.54), brand blue with an 8px dot when chosen */
+  .cb input[type=radio]{-webkit-appearance:none;appearance:none;width:16px;height:16px;margin:0;flex-shrink:0;border:2px solid rgba(0,0,0,.54);border-radius:50%;background:transparent;cursor:pointer;transition:border-color .12s ease}
+  .cb input[type=radio]:checked{border-color:#0076FB;background:radial-gradient(circle,#0076FB 0 4px,transparent 4.5px)}
+  .cb input:focus-visible{outline:2px solid #0076FB;outline-offset:2px}
+  /* Button (core/Button.jsx): radius 4, bold, large 16px; colours never change on hover, the lift shadow does */
+  .btn{border-radius:4px;font-size:16px;font-weight:700;transition:box-shadow .15s ease}
+  .btn.pri:hover{background:#0076FB;box-shadow:0 3px 6px rgba(0,0,0,.2),0 3px 6px rgba(0,0,0,.26)}
+  .btn.sec{border-color:#CCCCCC;font-weight:700}   /* --border-strong */
+  .btn.sec:hover{background:#fff;box-shadow:0 3px 6px rgba(0,0,0,.2),0 3px 6px rgba(0,0,0,.26)}
+  .btn[disabled],.btn[disabled]:hover{opacity:.65;box-shadow:none}
+  .btn.sm{font-size:14px;padding:0 16px}   /* size small */
+  /* Input (forms/Input.jsx): label 14px #555; value 14px; 1px #A5A5A5 underline, 2px blue on focus; error 12px #F44336 */
+  .lbl{font-size:14px;color:#555555}
+  .req{color:#F44336}
+  .err{font-size:12px;color:#F44336;margin-top:4px}
+  .fld input,.fld select,.ta,.chips input,.rx input{font-size:14px;color:#2A2A2A}
+  .fld input,.fld select,.ta{border-bottom:1px solid #A5A5A5}
+  .fld input:focus,.fld select:focus,.ta:focus{border-bottom:2px solid #0076FB;padding-bottom:6px}
+  .chips,.rx{border-bottom-color:#A5A5A5}
+  .chips:focus-within,.rx:focus-within{border-bottom:2px solid #0076FB}
+  /* hide-rule rows: Card elevation "border" (data/Card): white, 4px radius, #EFEFEF hairline */
+  .rule{background:#fff;border:1px solid #EFEFEF;border-radius:4px;box-shadow:0 1px 1px rgba(0,0,0,.05)}
+  .rule button{border-radius:50%;width:28px;height:28px}
+  .rule button:hover{background:#EBE8E8}
+  /* Hint text (Input hint): 12px --rh-text-secondary */
+  .hint{color:#747474}
 </style>
 </head>
 <body>
@@ -186,7 +239,9 @@ var IDV_DEFAULTS = {
   thresholds: { photoMatch:85, photoReview:50, docMatch:65, docReview:40 },
   upload: { allowCamera:true, allowFile:true },
   reverify: { outdatedOn:{ replaced:true, deleted:true, added:true }, requireReason:false, notify:{ roles:['Recruiter'], users:[] } },
-  report: { timezone:'IST' }
+  report: { timezone:'IST' },
+  reasons: { notmatch:['Clearly a different person','Facial features don\'t match'],
+             ignore:['The source photo is blurry','Appearance changed (age)','The document photo isn\u2019t clear'] }   // "Other" is always added last
 };
 function idvMerge(base, over){
   if(Array.isArray(base)) return Array.isArray(over) ? over.slice() : base.slice();
@@ -200,7 +255,7 @@ function idvSave(s){ try{ localStorage.setItem('rhIdvSettings', JSON.stringify(s
 var S = idvLoad(), SEC = 'basic', ERR = {};
 /* Photo upload, Reverify and Report are hidden for now (focus on the first three); their sections are kept
    below and their settings keep their defaults, so they can be shown again by adding them back here. */
-var SECTIONS = [['basic','Basic setup'],['photos','Photos to compare'],['match','Match rules']];
+var SECTIONS = [['basic','Basic setup'],['photos','Photos to compare'],['match','Match rules'],['reasons','Review reasons']];
 try{ var h=(location.hash||'').slice(1); if(h && SECTIONS.some(function(x){ return x[0]===h; })) SEC=h; }catch(e){}
 function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 var I_INFO='<svg width="16" height="16" viewBox="0 0 24 24" fill="#0076FB" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>';
@@ -433,6 +488,36 @@ function secReverify(){
     '<div class="block"><h3>Notify when a report goes out of date</h3><div class="lbl">Select role:</div>'+cbList('reverify.notify.roles', IDV_ROLES)+
       '<div class="lbl" style="margin-top:14px">Notify specific users:</div>'+chips('reverify.notify.users','Type email...','email')+'</div>';
 }
+var RS_MAX=60, RS_DRAG=null;
+function rsList(key, title, hint){
+  var list=S.reasons[key];
+  var grip='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
+  return '<div class="block"><h3 style="margin-bottom:2px">'+title+'</h3><div class="hint" style="margin:0">'+hint+'</div>'+
+    '<div class="rs-list" ondragover="event.preventDefault()">'+list.map(function(r,i){
+      var bad=ERR['reasons.'+key+'.'+i];
+      return '<div class="rs-row'+(bad?' bad':'')+'" draggable="true" ondragstart="rsStart(event,\''+key+'\','+i+')" ondragend="rsEnd()" ondragover="rsOver(event,this)" ondragleave="this.classList.remove(\'over\')" ondrop="rsDrop(event,\''+key+'\','+i+')">'+
+        '<span class="rs-grip" title="Drag to reorder">'+grip+'</span>'+
+        '<input type="text" maxlength="'+RS_MAX+'" value="'+esc(r)+'" aria-label="Reason '+(i+1)+'" placeholder="Type a reason" oninput="S.reasons[\''+key+'\']['+i+']=this.value" onchange="draw()">'+
+        '<button type="button" class="rm" aria-label="Remove reason" onclick="rsRemove(\''+key+'\','+i+')">&#10005;</button></div>'+
+        (bad?'<div class="err" style="margin:-4px 0 0 32px">'+bad+'</div>':'');
+    }).join('')+
+    '<div class="rs-row fixed"><span class="rs-grip" aria-hidden="true"></span><span class="t">Other</span><span class="n">Always last · asks for a note</span></div></div>'+
+    (ERR['reasons.'+key]?'<div class="err">'+ERR['reasons.'+key]+'</div>':'')+
+    (list.length<10?'<button type="button" class="addmore" onclick="rsAdd(\''+key+'\')">+ Add reason</button>':'<div class="hint">Up to 10 reasons.</div>')+
+  '</div>';
+}
+function rsAdd(key){ S.reasons[key].push(''); draw(); var ins=document.querySelectorAll('.rs-list')[key==='notmatch'?0:1].querySelectorAll('input'); if(ins.length) ins[ins.length-1].focus(); }
+function rsRemove(key,i){ S.reasons[key].splice(i,1); Object.keys(ERR).forEach(function(k){ if(k.indexOf('reasons.'+key)===0) delete ERR[k]; }); draw(); }
+function rsStart(e,key,i){ RS_DRAG={key:key,i:i}; e.dataTransfer.effectAllowed='move'; try{ e.dataTransfer.setData('text/plain',String(i)); }catch(x){} e.currentTarget.classList.add('drag'); }
+function rsEnd(){ RS_DRAG=null; Array.prototype.forEach.call(document.querySelectorAll('.rs-row'),function(r){ r.classList.remove('drag','over'); }); }
+function rsOver(e,el){ if(!RS_DRAG) return; e.preventDefault(); el.classList.add('over'); }
+function rsDrop(e,key,to){ e.preventDefault(); if(!RS_DRAG || RS_DRAG.key!==key) return rsEnd(); var a=S.reasons[key], it=a.splice(RS_DRAG.i,1)[0]; a.splice(to,0,it); RS_DRAG=null; draw(); }
+function secReasons(){
+  return '<h2 class="sec-title">Review reasons</h2>'+info('When a recruiter marks a photo <b>Not a match</b> or <b>Can’t confirm</b>, they pick one of these reasons. It’s recorded against their name in the report. Drag to change the order.')+
+    rsList('notmatch','Not a match','Shown when the recruiter says the photo is of a different person.')+
+    rsList('ignore','Can’t confirm (set aside)','Shown when the recruiter sets a photo aside because it can’t be judged.')+
+    '<div class="hint" style="margin-top:6px">Changes apply to new reviews. Reports already submitted keep the reason they were given.</div>';
+}
 function secReport(){
   return '<h2 class="sec-title">Report</h2>'+info('How the identity check report shows times.')+
     '<div class="block"><h3>Company timezone <span class="req">*</span></h3><div class="fld"><select onchange="set(\'report.timezone\',this.value);draw()">'+
@@ -443,6 +528,15 @@ function secReport(){
 /* ---------- validate + save ---------- */
 function validate(){
   ERR={}; var first=null; function bad(k,msg,sec){ ERR[k]=msg; if(!first) first=sec; }
+  ['notmatch','ignore'].forEach(function(key){
+    var a=S.reasons[key], seen={};
+    a.forEach(function(r,i){ var t=String(r||'').trim(), low=t.toLowerCase();
+      if(!t) bad('reasons.'+key+'.'+i,'Type a reason, or remove this row.','reasons');
+      else if(low==='other') bad('reasons.'+key+'.'+i,'“Other” is already the last option.','reasons');
+      else if(seen[low]) bad('reasons.'+key+'.'+i,'This reason is already in the list.','reasons');
+      seen[low]=1; a[i]=t; });
+    if(!a.length) bad('reasons.'+key,'Add at least one reason besides Other.','reasons');
+  });
   if(S.enabled){
     if(!S.rounds.length) bad('rounds','Select at least one round.','basic');
     ['run'].forEach(function(k){ var a=S.access[k]; if(!a.roles.length && !a.users.length) bad('access.'+k,'Select at least one role or add a user.','basic'); });
@@ -465,6 +559,7 @@ function submit(){
   if(idvSave(S)){ toast('Settings saved','The joining-day identity check now uses these settings.'); } else { toast('Couldn’t save','Your browser blocked saving these settings.',true); }
   draw();
 }
+function resetReasons(){ S.reasons=idvMerge(IDV_DEFAULTS.reasons,null); Object.keys(ERR).forEach(function(k){ if(k.indexOf('reasons.')===0) delete ERR[k]; }); draw(); toast('Review reasons reset to defaults','Submit to save them.'); }
 function resetDefaults(){ S.thresholds=idvMerge(IDV_DEFAULTS.thresholds,null); Object.keys(ERR).forEach(function(k){ if(k.indexOf('thresholds.')===0) delete ERR[k]; }); draw(); toast('Match rules reset to defaults','Submit to save them.'); }
 var _tt;
 function toast(t,m,bad){
@@ -476,9 +571,9 @@ function toast(t,m,bad){
 function draw(){
   var y=window.scrollY;
   document.getElementById('side').innerHTML=SECTIONS.map(function(x){ return '<button type="button" role="tab" aria-selected="'+(x[0]===SEC)+'" class="'+(x[0]===SEC?'on':'')+'" onclick="go(\''+x[0]+'\')">'+x[1]+'</button>'; }).join('');
-  var body={basic:secBasic,photos:secPhotos,match:secMatch,upload:secUpload,reverify:secReverify,report:secReport}[SEC]||secBasic;
+  var body={basic:secBasic,photos:secPhotos,match:secMatch,reasons:secReasons,upload:secUpload,reverify:secReverify,report:secReport}[SEC]||secBasic;
   document.getElementById('card').innerHTML=body()+
-    '<div class="foot">'+(SEC==='match'?'<button type="button" class="lnk" onclick="resetDefaults()">Reset to defaults</button>':'<span></span>')+'<button type="button" class="btn pri" onclick="submit()">Submit</button></div>'+docDialog();
+    '<div class="foot">'+(SEC==='match'||SEC==='reasons'?'<button type="button" class="lnk" onclick="'+(SEC==='reasons'?'resetReasons()':'resetDefaults()')+'">Reset to defaults</button>':'<span></span>')+'<button type="button" class="btn pri" onclick="submit()">Submit</button></div>'+docDialog();
   Array.prototype.forEach.call(document.querySelectorAll('input[data-ind]'), function(el){ el.indeterminate=true; });
   window.scrollTo(0,y);
 }

@@ -6,6 +6,36 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Admin: Review reasons, and the admin on the RH design system (2026-11-02)
+
+Both mocked as a clickable prototype (admin + check page), then approved. Design system = `D:\Codebase\RH DEsign system`.
+
+**Review reasons** (new section in the admin's left menu, after Match rules)
+- Two lists: **Not a match** and **Can't confirm (set aside)**, starting with the old hard-coded reasons
+  (now `reasons.notmatch` / `reasons.ignore` in the settings).
+- Each reason is a bordered row: drag handle, editable text (max 60 characters), ✕ to remove; "+ Add reason"
+  (up to 10). The order is the order recruiters see. **Other** is a fixed dashed row, always last, asks for a
+  note; it's now offered under Can't confirm too (it had none).
+- Submit flags an empty row, a duplicate (ignoring capitals) or a second "Other"; each list needs one reason
+  besides Other. "Reset to defaults" restores the lists. Past reports keep the reason they were given.
+- Check page: `reasonList(action)` builds the pop-up from `IDV.reasons`, in order, with Other last (the old
+  `NOTMATCH_REASONS` / `IGNORE_REASONS` constants are gone).
+- A version with design-system Input rows and up / down IconButtons was mocked and not chosen; the bordered
+  rows with drag were kept.
+
+**Admin page on the design system** (one CSS layer at the end of the admin styles, values from
+`components/forms/{Switch,Checkbox,Radio,Input}.jsx`, `core/Button.jsx`, `data/Card`, `tokens/colors.css`)
+- Toggles 46×28, `#41CE5E` on, white with a `#ddd` outline off.
+- Checkboxes 16px, 2px `#747474`, blue when ticked (white bar when partly ticked); radios 16px ring, blue with an
+  8px dot.
+- Buttons 4px, bold, 16px (small 14px); colours don't change on hover, the lift shadow does; secondary `#CCC`
+  border; disabled 65%.
+- Fields: `#A5A5A5` underline, 2px blue on focus, 14px text; labels 14px `#555`; errors 12px `#F44336`.
+- Hide-rule rows are cards: white, 4px, `#EFEFEF` hairline.
+- Not changed: the top nav (86px, purple bar) and page header (70px); the design system says 64px + a 6px tenant
+  accent bar and a 64px header. They mirror the admin screenshot this page was built from.
+- Harness: 212 pass.
+
 ## Pop-ups on the RippleHire design system Dialog (2026-11-02)
 
 Mocked (before / after for every pop-up), then approved. Source of truth: the `ripplehire-design` skill

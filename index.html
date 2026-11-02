@@ -824,7 +824,9 @@ var IDV_DEFAULTS = {
   thresholds: { photoMatch:85, photoReview:50, docMatch:65, docReview:40 },
   upload: { allowCamera:true, allowFile:true },
   reverify: { outdatedOn:{ replaced:true, deleted:true, added:true }, requireReason:false, notify:{ roles:['Recruiter'], users:[] } },
-  report: { timezone:'IST' }
+  report: { timezone:'IST' },
+  reasons: { notmatch:['Clearly a different person','Facial features don\'t match'],
+             ignore:['The source photo is blurry','Appearance changed (age)','The document photo isn\u2019t clear'] }   // "Other" is always added last
 };
 function idvMerge(base, over){
   if(Array.isArray(base)) return Array.isArray(over) ? over.slice() : base.slice();
@@ -880,7 +882,8 @@ function aiStateLabel(r){ var st=photoState(r); return st==='cant'?"Couldn’t c
 
 /* the human's action on a flagged row (structured, non-binding on the number) */
 var ACTIONS = { same:'Same person', notmatch:'Not a match', ignore:'Can\'t confirm' };
-var IGNORE_REASONS = ['The source photo is blurry','Appearance changed (age)','The document photo isn’t clear'];
+/* reasons come from the admin (Review reasons); "Other" is always the last option and asks for a note */
+function reasonList(action){ var r=(IDV.reasons||{})[action==='notmatch'?'notmatch':'ignore']||[]; return r.filter(function(x){ return x && String(x).toLowerCase()!=='other'; }).concat(['Other']); }
 /* the submitted report's status chip, keyed by the banner tier */
 var SUBMIT_STATUS = { match:{t:'Verified',c:'#1a8a3a',bg:'#E7F4EC'}, reviewed:{t:'Verified',c:'#1a8a3a',bg:'#E7F4EC'}, review:{t:'Needs review',c:'#B7791F',bg:'#FBF1DE'}, mismatch:{t:'Not verified',c:'#D93025',bg:'#FDECEC'}, inconclusive:{t:'Inconclusive',c:'#5F5E5A',bg:'#F1EFE8'} };
 /* completed report speaks in Match / Not a match, not Verified / Not verified (a finished check is one or the other) */
@@ -1073,7 +1076,6 @@ function photoStamp(c, hh){
   if(c && c.reverifyLog && c.reverifyLog.length && !(hh && hh.decision)) return nowStamp().replace(/ IST$/,'');
   return joinStamp(c);
 }
-var NOTMATCH_REASONS = ['Clearly a different person','Facial features don\'t match','Other'];
 /* full-sentence "likely cause" - seeded per flagged photo for the demo; live version comes from the model */
 function causeText(r){ return aiReason(r); }   // fixed text from the score band only (AWS returns a score, not an explanation)
 /* positive explanation for a model match (seeded per-photo via r.matchCause; the live version comes from the model) */
@@ -2547,7 +2549,7 @@ function render(){
   /* REASON POPUP - Not a match / Can't confirm (set aside) */
   if(s.rmodal){
     var rm = s.rmodal;
-    var rmReasons = rm.action==='notmatch' ? NOTMATCH_REASONS : IGNORE_REASONS;
+    var rmReasons = reasonList(rm.action);
     var rmTitle = rm.action==='notmatch' ? 'Why is this not a match?' : 'Why set this photo aside?';
     html += '<div class="rh-scrim" onclick="scrimReason(event)"><div class="rh-dialog" style="width:420px">'+
       '<header><h2>'+rmTitle+'</h2><button class="x" onclick="cancelReason()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
@@ -2811,7 +2813,7 @@ function clearRowVerdict(i){
 function openReasonModal(i, action){ setState({rmodal:{i:i, action:action, reason:null, note:''}}); }
 function pickModalReason(idx){
   var m=state.rmodal; if(!m) return;
-  var list = m.action==='notmatch' ? NOTMATCH_REASONS : IGNORE_REASONS;
+  var list = reasonList(m.action);
   var el=document.getElementById('rh-reason-note'); var note=el?el.value:(m.note||'');
   setState({rmodal:Object.assign({}, m, {reason:list[idx], note:note, err:''})});
 }
