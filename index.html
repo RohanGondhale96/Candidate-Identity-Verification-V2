@@ -138,14 +138,39 @@
   .chip-flag{font-size:11.5px;padding:2px 8px;border-radius:var(--radius-pill);background:var(--chip-neutral-bg);color:#333;white-space:nowrap}
 
   /* ===== Dialog ===== */
-  .rh-scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
-  .rh-dialog{background:#fff;border-radius:var(--radius-md);box-shadow:var(--shadow-menu);width:480px;max-width:100%;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
-  .rh-dialog header{display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--divider)}
-  .rh-dialog header h2{margin:0;font-size:16px;font-weight:600}
-  .rh-dialog header .x{margin-left:auto;background:none;border:none;cursor:pointer;color:#747474;line-height:0;padding:4px;border-radius:4px}
-  .rh-dialog header .x:hover{color:#333;background:var(--rh-grey-100)}
-  .rh-dialog .dbody{padding:18px 20px;overflow:auto}
-  .rh-dialog footer{padding:8px 20px 16px;display:flex;align-items:center;gap:12px}
+  /* ===== Dialog: RH design system (components/feedback/Dialog; AA src/styles.scss:290-330) ===== */
+  .rh-scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px}   /* --rh-screen-50 */
+  .rh-dialog{background:#fff;border-radius:6px;box-shadow:0 11px 15px -7px rgba(0,0,0,.2),0 24px 38px 3px rgba(0,0,0,.14);width:520px;max-width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+  .rh-dialog header{display:flex;align-items:center;gap:12px;padding:20px 24px;border-bottom:1px solid #D8D8D8}   /* --divider-dialog */
+  .rh-dialog header h2{margin:0;font-size:18px;font-weight:600;line-height:1.4;color:var(--rh-text-primary)}
+  .rh-dialog header .x{margin:-8px -10px -8px auto;width:40px;height:40px;border-radius:50%;background:none;border:none;cursor:pointer;color:var(--rh-text-primary);display:grid;place-items:center;flex-shrink:0;padding:0}
+  .rh-dialog header .x:hover{background:#EBE8E8}   /* --icon-btn-hover: grey round hover on icon buttons */
+  .rh-dialog header .x svg{width:18px;height:18px}
+  .rh-dialog .dbody{padding:24px 24px 0;overflow:auto;font-size:16px;line-height:1.6;color:var(--rh-text-primary)}
+  .rh-dialog footer{padding:32px 24px 24px;display:flex;align-items:center;justify-content:flex-end;gap:12px}
+  /* buttons in dialogs: 4px, bold, colours don't change on hover, the lift shadow does (components/core/Button) */
+  .rh-dialog .rh-btn{height:40px;padding:0 20px;font-size:16px;font-weight:700;border-radius:4px;transition:box-shadow .12s}
+  .rh-dialog .rh-btn.primary:hover{background:var(--rh-primary);box-shadow:0 3px 6px rgba(0,0,0,.2),0 3px 6px rgba(0,0,0,.26)}
+  .rh-dialog .rh-btn.secondary{border-color:#CCCCCC}
+  .rh-dialog .rh-btn.secondary:hover{background:#fff;box-shadow:0 3px 6px rgba(0,0,0,.2),0 3px 6px rgba(0,0,0,.26)}
+  .rh-dialog .rh-btn.primary:disabled{background:var(--rh-primary);opacity:.65;box-shadow:none}
+  .rh-dialog .rh-btn.tertiary{font-size:16px;padding:0 4px}
+  /* radio (components/forms/Radio): 16px ring, 2px border, blue with an 8px dot when chosen */
+  .rh-radios{display:flex;flex-direction:column;gap:14px}
+  .rh-radio{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:16px;color:var(--rh-text-primary)}
+  .rh-radio input{position:absolute;opacity:0;width:0;height:0}
+  .rh-radio .dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(0,0,0,.54);box-sizing:border-box;flex-shrink:0;display:grid;place-items:center;transition:border-color .12s}
+  .rh-radio input:checked+.dot{border-color:var(--rh-primary)}
+  .rh-radio input:checked+.dot::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--rh-primary)}
+  .rh-radio input:focus-visible+.dot{box-shadow:0 0 0 3px rgba(0,118,251,.3)}
+  /* underlined field (components/forms/Input): #A5A5A5 underline, blue on focus, #F44336 on error */
+  .rh-ufld label{display:block;font-size:13px;color:#5F6B7A;margin-bottom:2px}
+  .rh-ufld textarea{width:100%;box-sizing:border-box;border:0;border-bottom:1px solid #A5A5A5;padding:6px 0;font-family:inherit;font-size:16px;line-height:1.5;color:var(--rh-text-primary);background:none;outline:0;resize:vertical;min-height:34px}
+  .rh-ufld textarea:focus{border-bottom:2px solid var(--rh-primary);padding-bottom:5px}
+  .rh-ufld.err textarea{border-bottom:2px solid #F44336;padding-bottom:5px}
+  .rh-ufld .msg{font-size:13px;color:#F44336;margin-top:4px}
+  .rh-utext{display:block;width:100%;box-sizing:border-box;border:0;border-bottom:1px solid #A5A5A5;padding:6px 0;margin-top:12px;font-family:inherit;font-size:16px;line-height:1.5;color:var(--rh-text-primary);background:none;outline:0;resize:vertical;min-height:34px}
+  .rh-utext:focus{border-bottom:2px solid var(--rh-primary);padding-bottom:5px}
 
   /* ===== Activity (audit) icon + drawer, stale banner ===== */
   .rh-actbtn{position:relative;margin-left:auto;width:40px;height:40px;border-radius:10px;border:1px solid var(--divider);background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#5A6473;flex-shrink:0}
@@ -2473,7 +2498,7 @@ function render(){
     html += '<div class="rh-scrim" onclick="scrim(event)"><div class="rh-dialog">'+
       '<header><h2>Share report</h2><button class="x" onclick="closeShare()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<div style="padding:0 0 14px;border-bottom:1px solid #E0E0E0"><p style="margin:0;font-size:13px;color:#747474;line-height:1.45">Recipients get an email with a link to this report. The email contains no photos and no scores.</p>'+
+        '<div style="padding:0 0 14px;border-bottom:1px solid #E0E0E0"><p style="margin:0;font-size:14px;color:#747474;line-height:1.45">Recipients get an email with a link to this report. The email contains no photos and no scores.</p>'+
           '<div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid #A5A5A5;padding:6px 0;margin-top:14px">'+searchIcon(17)+'<input id="rh-pick" type="search" placeholder="Search by name, role or email" autocomplete="off" value="'+h(s.pickQ)+'" oninput="onPickQuery(this.value)" style="flex:1;min-width:0;border:0;outline:0;background:none;font-family:inherit;font-size:14px;font-weight:500;color:#2A2A2A"></div>'+
         '</div>';
     if(pickNote){ html += '<div class="note" style="margin:14px 0">'+h(pickNote)+'</div>'; }
@@ -2514,7 +2539,7 @@ function render(){
   if(s.confirmReshoot){
     html += '<div class="rh-scrim" onclick="scrimReshoot(event)"><div class="rh-dialog" style="width:420px">'+
       '<header><h2>Use a different photo?</h2><button class="x" onclick="cancelReshoot()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
-      '<div class="dbody"><p style="margin:0;font-size:13.5px;color:#2A2A2A;line-height:1.55">This deletes the current joining-day photo and its result. You’ll need to upload a new photo and run the check again.</p></div>'+
+      '<div class="dbody"><p style="margin:0;font-size:16px;color:#2A2A2A;line-height:1.55">This deletes the current joining-day photo and its result. You’ll need to upload a new photo and run the check again.</p></div>'+
       '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="cancelReshoot()">Cancel</button><button class="rh-btn primary sm" onclick="doReshoot()">Use a different photo</button></footer>'+
     '</div></div>';
   }
@@ -2527,10 +2552,12 @@ function render(){
     html += '<div class="rh-scrim" onclick="scrimReason(event)"><div class="rh-dialog" style="width:420px">'+
       '<header><h2>'+rmTitle+'</h2><button class="x" onclick="cancelReason()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<p style="margin:0 0 6px;font-size:12.5px;color:#747474">Pick a reason, recorded against your name.</p>'+
-        rmReasons.map(function(rz,idx){ var on=rm.reason===rz; return '<button type="button" onclick="pickModalReason('+idx+')" style="display:block;width:100%;box-sizing:border-box;text-align:left;border:'+(on?'1.5px solid #378ADD':'1px solid #DDD')+';background:'+(on?'#E6F1FB':'#fff')+';color:'+(on?'#185FA5':'#2A2A2A')+';border-radius:8px;margin-top:7px;padding:9px 11px;font-size:13px;font-weight:'+(on?'600':'400')+';cursor:pointer;font-family:inherit">'+h(rz)+'</button>'; }).join('')+
-        '<textarea id="rh-reason-note" placeholder="'+(rm.reason==='Other'?'Add a note (required)':'Add a note (optional)')+'" style="width:100%;box-sizing:border-box;margin-top:10px;min-height:48px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid '+(rm.err?'#EB4040':'#DDD')+';border-radius:8px">'+h(rm.note||'')+'</textarea>'+
-        (rm.err ? '<div style="font-size:12.5px;color:#EB4040;margin-top:6px">'+h(rm.err)+'</div>' : '')+
+        '<p style="margin:0 0 16px;font-size:14px;color:#5A6473">Pick a reason. It’s recorded against your name.</p>'+
+        '<div class="rh-radios" role="radiogroup" aria-label="Reason">'+rmReasons.map(function(rz,idx){ var on=rm.reason===rz;
+          return '<label class="rh-radio"><input type="radio" name="rh-reason" '+(on?'checked':'')+' onchange="pickModalReason('+idx+')"><span class="dot"></span><span>'+h(rz)+'</span></label>'; }).join('')+'</div>'+
+        '<div class="rh-ufld'+(rm.err?' err':'')+'" style="margin-top:24px"><label for="rh-reason-note">Note'+(rm.reason==='Other'?' (required)':' (optional)')+'</label>'+
+          '<textarea id="rh-reason-note" rows="1" placeholder="Add a note">'+h(rm.note||'')+'</textarea>'+
+          (rm.err ? '<div class="msg">'+h(rm.err)+'</div>' : '')+'</div>'+
       '</div>'+
       '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="cancelReason()">Cancel</button><button class="rh-btn primary sm" '+(rm.reason?'':'disabled')+' onclick="confirmReason()">Confirm</button></footer>'+
     '</div></div>';
@@ -2542,10 +2569,10 @@ function render(){
     html += '<div class="rh-scrim" onclick="scrimSubmit(event)"><div class="rh-dialog" style="width:680px;max-width:calc(100vw - 32px)">'+
       '<header><h2>Submit report</h2><button class="x" onclick="cancelSubmit()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<p style="margin:0 0 12px;font-size:13px;color:#747474;line-height:1.55">Submitting the identity check for <b style="color:#333;font-weight:600">'+h(s.cand?s.cand.name:'')+'</b>.</p>'+
+        '<p style="margin:0 0 12px;font-size:14px;color:#747474;line-height:1.55">Submitting the identity check for <b style="color:#333;font-weight:600">'+h(s.cand?s.cand.name:'')+'</b>.</p>'+
         submitReviewTable(s.rows)+
         '<label class="rh-cb" style="align-items:flex-start"><input type="checkbox" '+(su.confirmed?'checked':'')+' onchange="toggleSubmitConfirm()"><span class="box"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span>I’ve reviewed all the comparisons for this candidate before submitting.</span></label>'+
-        '<textarea id="rh-submit-note" placeholder="Add a note (optional)" style="width:100%;box-sizing:border-box;margin-top:10px;min-height:48px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid '+(su.err?'#EB4040':'#DDD')+';border-radius:8px">'+h(su.note||'')+'</textarea>'+
+        '<textarea id="rh-submit-note" class="rh-utext" placeholder="Add a note (optional)">'+h(su.note||'')+'</textarea>'+
         (su.err ? '<div style="font-size:12.5px;color:#EB4040;margin-top:6px">'+h(su.err)+'</div>' : '')+
       '</div>'+
       '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="cancelSubmit()">Cancel</button><button class="rh-btn primary sm" '+(su.confirmed?'':'disabled')+' onclick="confirmSubmit()">Submit report</button></footer>'+
@@ -2558,10 +2585,10 @@ function render(){
     html += '<div class="rh-scrim" onclick="scrimDate(event)"><div class="rh-dialog" style="width:400px">'+
       '<header><h2>Change joining date</h2><button class="x" onclick="cancelDate()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<p style="margin:0 0 10px;font-size:13px;color:#747474">Update the joining date for <b style="color:#333;font-weight:600">'+h(dm.name)+'</b> (e.g., they called to reschedule).</p>'+
+        '<p style="margin:0 0 10px;font-size:14px;color:#747474">Update the joining date for <b style="color:#333;font-weight:600">'+h(dm.name)+'</b> (e.g., they called to reschedule).</p>'+
         '<label style="font-size:12.5px;font-weight:600;color:#555;display:block;margin-bottom:5px">New joining date</label>'+
-        '<input type="date" id="rh-date-input" value="'+h(dm.date)+'" style="width:100%;box-sizing:border-box;height:38px;border:1px solid #DDD;border-radius:8px;padding:0 11px;font-family:inherit;font-size:14px;color:#2A2A2A">'+
-        '<textarea id="rh-date-note" placeholder="Add a comment (optional)" style="width:100%;box-sizing:border-box;margin-top:10px;min-height:52px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid #DDD;border-radius:8px"></textarea>'+
+        '<input type="date" id="rh-date-input" class="rh-utext" value="'+h(dm.date)+'" style="margin-top:0;height:38px;resize:none">'+
+        '<textarea id="rh-date-note" class="rh-utext" placeholder="Add a comment (optional)"></textarea>'+
       '</div>'+
       '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="cancelDate()">Cancel</button><button class="rh-btn primary sm" onclick="saveDate()">Save</button></footer>'+
     '</div></div>';
@@ -2573,8 +2600,8 @@ function render(){
     html += '<div class="rh-scrim" onclick="scrimNotJoin(event)"><div class="rh-dialog" style="width:400px">'+
       '<header><h2>Not joining</h2><button class="x" onclick="cancelNotJoin()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<p style="margin:0 0 10px;font-size:13px;color:#747474">Mark <b style="color:#333;font-weight:600">'+h(nj.name)+'</b> as not joining and clear them from Needs your attention.</p>'+
-        '<textarea id="rh-notjoin-note" placeholder="Add a comment (optional)" style="width:100%;box-sizing:border-box;min-height:60px;resize:vertical;font-family:inherit;font-size:13px;padding:9px 11px;border:1px solid #DDD;border-radius:8px"></textarea>'+
+        '<p style="margin:0 0 10px;font-size:14px;color:#747474">Mark <b style="color:#333;font-weight:600">'+h(nj.name)+'</b> as not joining and clear them from Needs your attention.</p>'+
+        '<textarea id="rh-notjoin-note" class="rh-utext" placeholder="Add a comment (optional)"></textarea>'+
       '</div>'+
       '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="cancelNotJoin()">Cancel</button><button class="rh-btn primary sm" onclick="confirmNotJoin()">Mark not joining</button></footer>'+
     '</div></div>';
@@ -2598,7 +2625,7 @@ function render(){
     html += '<div class="rh-scrim" onclick="scrimWebcam(event)"><div class="rh-dialog" role="dialog" aria-labelledby="cam-t" style="width:640px;max-width:calc(100vw - 32px)">'+
       '<header><h2 id="cam-t">Take photo</h2><button class="x" onclick="closeWebcam()" aria-label="Close"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<p style="margin:0 0 12px;font-size:13px;color:#5A6473;line-height:1.5">Ask the candidate to look at the laptop camera. Frame the photo from the chest up, with the face inside the outline.</p>'+
+        '<p style="margin:0 0 12px;font-size:14px;color:#5A6473;line-height:1.5">Ask the candidate to look at the laptop camera. Frame the photo from the chest up, with the face inside the outline.</p>'+
         '<div class="rh-cam-box">'+
           (s.camErr ? '<div class="rh-cam-msg err">'+h(s.camErr)+'</div>'
             : '<video id="rh-webcam" autoplay playsinline muted></video>'+
@@ -2613,8 +2640,8 @@ function render(){
   if(s.leaveOpen && c){
     html += '<div class="rh-scrim" onclick="scrimLeave(event)"><div class="rh-dialog" role="alertdialog" aria-labelledby="lv-t" style="width:480px;max-width:calc(100vw - 32px)">'+
       '<header><h2 id="lv-t">Leave this reverify?</h2><button class="x" onclick="closeLeave()" aria-label="Close"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
-      '<div class="dbody"><p style="margin:0;font-size:13.5px;color:#2A2A2A;line-height:1.6">'+h(c.name)+' will move to <b>Check in progress</b> on the To verify tab. You can continue the reverify from there.</p>'+
-        '<p style="margin:10px 0 0;font-size:13px;color:#5A6473;line-height:1.6">'+(s.rows&&s.rows.length?'The comparisons so far are saved. ':(s.photo?'The photo you added isn’t saved yet. ':''))+'The current report stays as it is until you submit the new one.</p></div>'+
+      '<div class="dbody"><p style="margin:0;font-size:16px;color:#2A2A2A;line-height:1.6">'+h(c.name)+' will move to <b>Check in progress</b> on the To verify tab. You can continue the reverify from there.</p>'+
+        '<p style="margin:10px 0 0;font-size:14px;color:#5A6473;line-height:1.6">'+(s.rows&&s.rows.length?'The comparisons so far are saved. ':(s.photo?'The photo you added isn’t saved yet. ':''))+'The current report stays as it is until you submit the new one.</p></div>'+
       '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeLeave()">Stay</button><button class="rh-btn primary sm" onclick="confirmLeave()">Leave</button></footer>'+
     '</div></div>';
   }
@@ -2624,12 +2651,12 @@ function render(){
     html += '<div class="rh-scrim" onclick="scrimReverify(event)"><div class="rh-dialog" style="width:560px;max-width:calc(100vw - 32px)">'+
       '<header><h2>'+'Reverify this candidate?'+'</h2><button class="x" onclick="closeReverify()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<p style="margin:0 0 12px;font-size:13.5px;color:#2A2A2A;line-height:1.55">'+h(s.rerunMode?'This starts a fresh check against all the current photos on file.':reverifyIntro(c))+'</p>'+
+        '<p style="margin:0 0 12px;font-size:16px;color:#2A2A2A;line-height:1.55">'+h(s.rerunMode?'This starts a fresh check against all the current photos on file.':reverifyIntro(c))+'</p>'+
         (s.rerunMode?'':reverifyChanges(c))+
-        '<ul style="margin:6px 0 0;padding-left:18px;color:#5A6473;font-size:13px;line-height:1.7"><li>Next, you&#39;ll <b>choose the photo to check</b>: the joining-day photo again, or a new photo of the candidate. It will be compared against every photo on file.</li><li>This <b>current report is kept</b> as a previous version, open it any time from Activity.</li><li>The new run <b>becomes the current report</b> once you submit it.</li></ul>'+
+        '<ul style="margin:6px 0 0;padding-left:18px;color:#5A6473;font-size:14px;line-height:1.7"><li>Next, you&#39;ll <b>choose the photo to check</b>: the joining-day photo again, or a new photo of the candidate. It will be compared against every photo on file.</li><li>This <b>current report is kept</b> as a previous version, open it any time from Activity.</li><li>The new run <b>becomes the current report</b> once you submit it.</li></ul>'+
       '</div>'+
       (IDV.reverify.requireReason ? '<div style="padding:0 20px 4px"><label for="rv-reason" style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Reason for reverifying <span style="color:#D93025">*</span></label>'+
-        '<textarea id="rv-reason" rows="2" style="width:100%;border:1px solid #DCE2EB;border-radius:6px;padding:8px 10px;font-family:inherit;font-size:13.5px;resize:vertical" placeholder="For example: new application photo uploaded"></textarea>'+
+        '<textarea id="rv-reason" class="rh-utext" rows="2" placeholder="For example: new application photo uploaded"></textarea>'+
         (s.reverifyErr?'<div style="color:#D93025;font-size:12.5px;margin-top:4px">'+h(s.reverifyErr)+'</div>':'')+'</div>' : '')+
       '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeReverify()">Cancel</button><button class="rh-btn primary sm rpt-reverify" onclick="startReverify()">Start reverify</button></footer>'+
     '</div></div>';
@@ -2640,7 +2667,7 @@ function render(){
     html += '<div class="rh-scrim" onclick="scrimCrop(event)"><div class="rh-dialog" style="width:540px;max-width:calc(100vw - 32px)">'+
       '<header><h2>Crop photo</h2><button class="x" onclick="closeCrop()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<p style="margin:0 0 12px;font-size:13px;color:#5A6473;line-height:1.5">'+(s.cropMode==='pre'?'Drag the box to keep just the candidate’s face, then apply the crop. You can check the photo before you submit.':'Drag the box to keep just the candidate’s face, then crop and submit. We’ll re-run the checks on the cropped photo.')+'</p>'+
+        '<p style="margin:0 0 12px;font-size:14px;color:#5A6473;line-height:1.5">'+(s.cropMode==='pre'?'Drag the box to keep just the candidate’s face, then apply the crop. You can check the photo before you submit.':'Drag the box to keep just the candidate’s face, then crop and submit. We’ll re-run the checks on the cropped photo.')+'</p>'+
         '<div style="display:flex;justify-content:center"><div id="rh-crop-stage" style="position:relative;display:inline-block;line-height:0">'+
           '<img id="rh-crop-img" src="'+h(s.photoOriginal||s.photo)+'" alt="" draggable="false" style="display:block;max-width:100%;max-height:54vh;width:auto;height:auto;border-radius:8px;user-select:none;-webkit-user-drag:none;background:#EFEFEF">'+
           '<div id="rh-crop-box" class="rh-crop-box"><span class="h tl"></span><span class="h tr"></span><span class="h bl"></span><span class="h br"></span></div>'+

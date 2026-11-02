@@ -6,6 +6,31 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Pop-ups on the RippleHire design system Dialog (2026-11-02)
+
+Mocked (before / after for every pop-up), then approved. Source of truth: the `ripplehire-design` skill
+(components/feedback/Dialog, forms/Radio, forms/Input, core/Button). One shared change, so all pop-ups follow it:
+the 10 on the check page (reason, Submit report, Reverify, Use a different photo, Leave this reverify, Change
+joining date, Not joining, Share report, Take photo, Crop) and the admin's Add documents.
+
+- **Shell** (`.rh-scrim` / `.rh-dialog`; admin `.scrim` / `.dlg`): 50% black scrim, white surface with 6px radius
+  and the mat-dialog shadow, 520px default width (wider dialogs keep theirs).
+- **Title row:** 20px 24px, `#D8D8D8` divider, title 18px / 600; the close × is a 40px round icon button with
+  the grey `#EBE8E8` hover.
+- **Body:** 24px 24px 0, 16px / 1.6. Main copy in the dialogs moved from 13.5px to 16px, secondary grey text
+  to 14px.
+- **Actions:** bottom right with 32px 24px 24px padding, Cancel (secondary, `#CCC` border) then the primary.
+  Buttons in dialogs are 4px, bold, 16px; on hover they lift (shadow) and keep their colour; disabled fades
+  to 65%.
+- **Fields:** every note / comment and the joining date are underlined inputs (`.rh-utext`: `#A5A5A5`, blue on
+  focus); the reason note sits in `.rh-ufld` with a label ("Note (optional)" / "Note (required)" for Other) and
+  turns red with the message under it.
+- **Reason picker:** the stacked option buttons became a **radio list** (`.rh-radio`: 16px ring, blue with an
+  8px dot when chosen). Copy: "Pick a reason. It's recorded against your name."
+- Only pop-ups changed; buttons and fields on the pages keep their current style. Escape, × and clicking outside
+  behave as before.
+- Harness: 209 pass.
+
 ## Admin: identity documents by kit, and hide rules (2026-10-28)
 
 The same document (e.g. Aadhaar) can be uploaded in several Candidate Portal kits, and document names are free

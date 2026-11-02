@@ -72,13 +72,15 @@
   .lnk:hover{text-decoration:underline}
   .addmore{margin-top:14px;border:0;background:none;color:var(--blue);font-weight:600;font-size:14px;cursor:pointer;padding:0}
   .addmore:hover{text-decoration:underline}
-  .scrim{position:fixed;inset:0;background:rgba(17,24,39,.45);display:grid;place-items:center;z-index:40;padding:16px}
-  .dlg{background:#fff;border-radius:8px;width:440px;max-width:100%;box-shadow:0 12px 32px rgba(0,0,0,.2);display:flex;flex-direction:column;max-height:calc(100vh - 32px)}
-  .dlg header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)}
-  .dlg h2{margin:0;font-size:17px;font-weight:600}
-  .dlg .x{border:0;background:#F1F2F4;width:30px;height:30px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--ink)}
-  .dlg .dbody{padding:16px 20px;overflow:auto}
-  .dlg footer{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--line)}
+  /* dialog: RH design system (components/feedback/Dialog) */
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);display:grid;place-items:center;z-index:40;padding:24px}
+  .dlg{background:#fff;border-radius:6px;width:520px;max-width:100%;box-shadow:0 11px 15px -7px rgba(0,0,0,.2),0 24px 38px 3px rgba(0,0,0,.14);display:flex;flex-direction:column;max-height:90vh}
+  .dlg header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 24px;border-bottom:1px solid #D8D8D8}
+  .dlg h2{margin:0;font-size:18px;font-weight:600}
+  .dlg .x{border:0;background:none;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:16px;color:var(--ink);margin:-8px -10px -8px 0}
+  .dlg .x:hover{background:#EBE8E8}
+  .dlg .dbody{padding:24px 24px 0;overflow:auto}
+  .dlg footer{display:flex;justify-content:flex-end;gap:12px;padding:24px}
   .btn.sec{background:#fff;border:1px solid #C7CCD4;color:var(--ink);font-weight:600}
   .btn[disabled]{opacity:.5;cursor:not-allowed}
   .tok{display:inline-block;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;background:#F1F3F6;border:1px solid #E1E4EA;border-radius:4px;padding:1px 6px;margin:2px 4px 2px 0;cursor:pointer}
@@ -109,6 +111,11 @@
   .hidlist{margin-top:8px;font-size:13px;color:var(--muted);line-height:1.7;columns:3 180px;max-width:760px}
   .dlg.wide{width:720px;height:min(760px,calc(100vh - 32px))}
   .dlg.wide .dbody{display:flex;flex-direction:column;overflow:hidden;flex:1;padding-bottom:0}
+  .dlg.wide footer{border-top:1px solid #EEF0F3}
+  .dlg .btn{border-radius:4px;transition:box-shadow .12s}
+  .dlg .btn.pri:hover{background:var(--blue);box-shadow:0 3px 6px rgba(0,0,0,.2),0 3px 6px rgba(0,0,0,.26)}
+  .dlg .btn.sec{border-color:#CCCCCC}
+  .dlg .btn.sec:hover{box-shadow:0 3px 6px rgba(0,0,0,.2),0 3px 6px rgba(0,0,0,.26)}
   .dp-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12.5px;color:var(--muted);margin:10px 0 4px}
   .dp-meta .cb{font-size:13px}
   .dp-list{display:flex;flex-direction:column;overflow:auto;flex:1;min-height:0;border-top:1px solid #EEF0F3;margin:0 -20px;padding:0 20px}
