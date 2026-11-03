@@ -6,6 +6,41 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Copy pass, batch 1, and checks before the joining date (2026-11-03)
+
+Copy review asked for by the manager. Rohan flags text on screenshots; every change is approved in a live
+preview first and logged in his copy deck (kept outside this repo). Patch: `source/fix_copy_batch1.py`.
+
+**Term decisions**
+- **"On file" is not used any more; it's "previous photos"** (application, interview screenshots and documents,
+  so not "submitted" photos). Where the context is clear the qualifier is dropped ("Photo removed",
+  "Removed by …").
+- **"Joining-day photo" stays** (it is the source of truth). The person is not called a "joining candidate"
+  any more (the scope now includes candidates in the onboarding round). Joining date, Joined, Not joined yet,
+  Not joining stay.
+
+**Changes**
+1. Page header: "Verify identity" only (the "Joining-day identity check" sub-line is gone).
+2. Worklist: the "4 ready to check" hint next to the tabs is gone (Completed keeps "1 needs reverifying").
+3. Intro (worklist + admin Basic setup): "Run an identity check for each candidate by comparing their
+   joining-day photo with their previous photos."
+4–9. "On file" → previous photos: "Total 3 previous photos", "Comparing against 3 previous photos…", "No
+   previous photos for this profile", "Photo removed" / "Removed by …" / "Application photo removed", "1 photo
+   changed after the report was submitted. Reverifying starts a fresh check against the latest previous
+   photos.", "It will be compared with every previous photo.", "No previous photo for this round.", admin
+   "…when a previous photo is".
+10–11. Reason pop-ups: titles "Can't confirm identity" and "Not a match", prompt "Select reason:", 560px wide.
+12. **Checks before the joining date are allowed** (candidates walk in early, e.g. to finish documents). The
+   "Joining day hasn't arrived yet" block is now a note, "Joins on 18 Aug 2026 · If Dev Patel is here early,
+   for example to finish their documents, you can run the check now.", with the photo step below it. The
+   confirmation reads "This is a photo of Dev Patel, taken in person today."
+13. Worklist status for them: "Ready to check · joins 18 Aug" (was "Not joined yet"); the filter option "Not
+   joined yet" still finds them.
+14. Report for an early check: "Photo taken on 3 Nov" (the actual day), "Confirmed as a photo of Dev Patel,
+   taken in person", "Photo taken and confirmed by …". A check stores `early` when it runs
+   (`isEarlyCheck`), so this stays right after the joining date passes.
+- Harness: 215 pass.
+
 ## Admin: Review reasons, and the admin on the RH design system (2026-11-02)
 
 Both mocked as a clickable prototype (admin + check page), then approved. Design system = `D:\Codebase\RH DEsign system`.

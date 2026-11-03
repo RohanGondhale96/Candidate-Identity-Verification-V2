@@ -302,7 +302,7 @@ function text(path, label, hint){
 
 /* ---------- sections ---------- */
 function secBasic(){
-  return '<h2 class="sec-title">Basic setup</h2>'+info('Verify each joining candidate against the photos on file before they start.')+
+  return '<h2 class="sec-title">Basic setup</h2>'+info('Run an identity check for each candidate by comparing their joining-day photo with their previous photos.')+
     toggle('enabled','Enable joining-day identity check')+
     (S.enabled ? '<div class="block"><h3 style="margin-bottom:2px">Select RH rounds where the identity check can be run <span class="req">*</span></h3><div class="hint" style="margin:0 0 4px">Candidates in these rounds appear on the worklist.</div>'+cbList('rounds', IDV_ROUNDS, true)+
       (ERR.rounds?'<div class="err">'+ERR.rounds+'</div>':'')+'</div>'+
@@ -481,7 +481,7 @@ function secUpload(){
 }
 function secReverify(){
   return '<h2 class="sec-title">Reverify</h2>'+info('When a report goes out of date, the recruiter reverifies the candidate. The old report is kept as a previous version.')+
-    '<div class="block"><h3>Mark a report out of date when a photo on file is <span class="req">*</span></h3><div class="cbs col">'+
+    '<div class="block"><h3>Mark a report out of date when a previous photo is <span class="req">*</span></h3><div class="cbs col">'+
       [['replaced','Replaced'],['deleted','Deleted'],['added','Added']].map(function(x){ return '<label class="cb"><input type="checkbox" '+(S.reverify.outdatedOn[x[0]]?'checked':'')+' onchange="set(\'reverify.outdatedOn.'+x[0]+'\',this.checked);draw()">'+x[1]+'</label>'; }).join('')+
       '</div>'+(ERR.outdated?'<div class="err">'+ERR.outdated+'</div>':'')+'</div>'+
     toggle('reverify.requireReason','Ask for a reason when reverifying','The reason is saved in Activity.')+
