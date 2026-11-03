@@ -40,6 +40,7 @@ preview first and logged in his copy deck (kept outside this repo). Patch: `sour
    taken in person", "Photo taken and confirmed by …". A check stores `early` when it runs
    (`isEarlyCheck`), so this stays right after the joining date passes.
 - Harness: 215 pass.
+- Batch 2 (same day): the removed-photo notice reads "1 photo was removed. It stays in the report as removed and is left out of the result." (no "from the file"). `source/fix_copy_batch2.py`.
 
 ## Admin: Review reasons, and the admin on the RH design system (2026-11-02)
 
