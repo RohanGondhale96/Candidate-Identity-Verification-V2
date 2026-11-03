@@ -41,6 +41,12 @@ preview first and logged in his copy deck (kept outside this repo). Patch: `sour
    (`isEarlyCheck`), so this stays right after the joining date passes.
 - Harness: 215 pass.
 - Batch 2 (same day): the removed-photo notice reads "1 photo was removed. It stays in the report as removed and is left out of the result." (no "from the file"). `source/fix_copy_batch2.py`.
+- Batch 3 (same day): **Reverify on an out-of-date report is the blue primary button next to Download and Activity** (the brown
+  button in the amber banner was not in the RH design system; its CSS is gone). Banner text: one change = "Application photo
+  updated after the report was submitted · Ananya Rao updated it on 16 Aug 2026, 16:40 IST. Reverify to run the check again.";
+  several = "3 photos changed after the report was submitted · Application photo, Round 1: screening and 1 more. Each one is
+  tagged in the list below. Reverify to run the check again." (always two lines; the Reverify pop-up lists every change). Row
+  tags use the banner verbs: Updated / Removed / Added (were Replaced / Deleted). `source/fix_copy_batch3.py`. Harness: 219 pass.
 
 ## Admin: Review reasons, and the admin on the RH design system (2026-11-02)
 
