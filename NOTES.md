@@ -47,6 +47,13 @@ preview first and logged in his copy deck (kept outside this repo). Patch: `sour
   several = "3 photos changed after the report was submitted · Application photo, Round 1: screening and 1 more. Each one is
   tagged in the list below. Reverify to run the check again." (always two lines; the Reverify pop-up lists every change). Row
   tags use the banner verbs: Updated / Removed / Added (were Replaced / Deleted). `source/fix_copy_batch3.py`. Harness: 219 pass.
+- Batch 4 (same day): **photo captions moved off the photo.** Each photo and its caption are one card
+  (`photoCard`, `.rpt-photo`): the image, a thin divider, then a white strip with the name and date in dark
+  text (`.rpt-pcap`). Replaces the white text on a dark fade over the photo (from 28 Aug), everywhere: review
+  screen, completed report, PDF, Activity preview, removed-photo pair (the "Photo removed" placeholder
+  stretches to the card's height). Worklist status for candidates before their joining date is plain "Ready
+  to check" with the same bar as other ready rows (the date is next to the name). Admin Review reasons intro
+  drops "It's recorded against their name in the report." `source/fix_copy_batch4.py`. Harness: 220 pass.
 
 ## Admin: Review reasons, and the admin on the RH design system (2026-11-02)
 

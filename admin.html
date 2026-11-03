@@ -513,7 +513,7 @@ function rsEnd(){ RS_DRAG=null; Array.prototype.forEach.call(document.querySelec
 function rsOver(e,el){ if(!RS_DRAG) return; e.preventDefault(); el.classList.add('over'); }
 function rsDrop(e,key,to){ e.preventDefault(); if(!RS_DRAG || RS_DRAG.key!==key) return rsEnd(); var a=S.reasons[key], it=a.splice(RS_DRAG.i,1)[0]; a.splice(to,0,it); RS_DRAG=null; draw(); }
 function secReasons(){
-  return '<h2 class="sec-title">Review reasons</h2>'+info('When a recruiter marks a photo <b>Not a match</b> or <b>Can’t confirm</b>, they pick one of these reasons. It’s recorded against their name in the report. Drag to change the order.')+
+  return '<h2 class="sec-title">Review reasons</h2>'+info('When a recruiter marks a photo <b>Not a match</b> or <b>Can’t confirm</b>, they pick one of these reasons. Drag to change the order.')+
     rsList('notmatch','Not a match','Shown when the recruiter says the photo is of a different person.')+
     rsList('ignore','Can’t confirm (set aside)','Shown when the recruiter sets a photo aside because it can’t be judged.')+
     '<div class="hint" style="margin-top:6px">Changes apply to new reviews. Reports already submitted keep the reason they were given.</div>';

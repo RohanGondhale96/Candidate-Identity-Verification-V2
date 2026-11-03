@@ -296,6 +296,11 @@
   .rh-viewer .rv-ph{position:relative;width:min(420px,90vw);aspect-ratio:4/5;margin:auto}
   @media(max-width:600px){ .rh-viewer .rv-title{flex-direction:column;gap:0} }
   .rpt-pane[onclick]{cursor:zoom-in}
+  .rpt-photo{border:1px solid #DDD;border-radius:10px;overflow:hidden;background:#fff;min-width:0}
+  .rpt-photo .rpt-pane{position:relative;width:100%;aspect-ratio:4/5;overflow:hidden;background:#EFEFEF}
+  .rpt-pcap{border-top:1px solid #DDD;padding:10px 12px 11px}
+  .rpt-pcap .t{font-size:13.5px;font-weight:600;color:#2A2A2A;line-height:1.35}
+  .rpt-pcap .s{font-size:12.5px;color:#747474;margin-top:1px}
   /* pre-submit crop entry: chip on the photo thumbnail */
   .rh-cropchip{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 11px;border-radius:9999px;border:1px solid #DDD;background:rgba(255,255,255,.94);color:#2A2A2A;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.15);white-space:nowrap}
   .rh-cropchip:hover{background:#fff;color:#0076FB;border-color:#Cfe0f5}
@@ -1299,7 +1304,7 @@ var WL_SEG={g:'#12B76A',b:'#0076FB',l:'#BFD7F7',n:'#E5E7EB',a:'#F59E0B'};
    segment would never fill. Completed rows show no bar, only the status and the result. */
 function stageInfo(c){
   if(isCompleted(c)) return c.staleInfo ? {label:'Needs reverifying',col:'#8A6414',segs:''} : {label:'Check completed',col:'#2A2A2A',segs:''};
-  if(isFuture(c) && wlStatus(c)!=='inreview') return {label:'Ready to check · joins '+shortDay(c.joining||fmtDate(c.joiningISO)),col:'#2A2A2A',segs:'nn'};
+  if(isFuture(c) && wlStatus(c)!=='inreview') return {label:'Ready to check',col:'#2A2A2A',segs:'bn'};
   if(wlStatus(c)==='inreview') return {label:'Check in progress',col:'#2A2A2A',segs:'bb'};
   return {label:'Ready to check',col:'#2A2A2A',segs:'bn'};
 }
@@ -1452,15 +1457,16 @@ function reportFooterText(v){
 function _seg(v,label,n,on){
   return '<button type="button" onclick="setReportView(\''+v+'\')" aria-pressed="'+(on?'true':'false')+'" style="border:0;background:none;color:'+(on?'#2A2A2A':'#667085')+';font-family:inherit;font-size:13px;font-weight:600;padding:0 2px 11px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;border-bottom:2px solid '+(on?'#0076FB':'transparent')+';margin-bottom:-1px">'+h(label)+'<span style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:#EFF1F5;color:#667085">'+n+'</span></button>';
 }
+/* a photo with its caption in a strip under it, inside one card (caption no longer sits over the photo) */
+function photoCard(paneAttrs, img, title, sub){
+  return '<div class="rpt-photo"><div class="rpt-pane"'+paneAttrs+'>'+img+'</div>'+
+    '<div class="rpt-pcap"><div class="t">'+title+'</div>'+(sub?'<div class="s">'+sub+'</div>':'')+'</div></div>';
+}
 function comparePanes(r, seed, i, c){
-  var capStyle='position:absolute;left:0;right:0;bottom:0;padding:20px 11px 9px;background:linear-gradient(to top,rgba(0,0,0,.68),rgba(0,0,0,0));color:#fff';
-  var paneStyle='position:relative;width:100%;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD';
   // caption mirrors the joining-day pane: "Photo taken during <round>" / date+time (per manager)
   var capPrimary = r.by ? ('Photo taken during '+h(r.label)) : (r.src==='document' ? 'Identity document' : h(r.label||'On-file photo'));
-  var refPane='<div class="rpt-pane" onclick="openLightbox('+i+')" style="'+paneStyle+'">'+photoTile(r,seed,'contain')+
-    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+capPrimary+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:2px">'+h(tz(r.date))+'</div></div></div>';
-  var todayPane='<div class="rpt-pane" onclick="openLightbox(\'join\')" style="'+paneStyle+'">'+uploadedImg('contain')+
-    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+joinPhotoLabel(state.entry)+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(tz(photoStamp(c, state.entry)))+'</div></div></div>';
+  var refPane=photoCard(' onclick="openLightbox('+i+')"', photoTile(r,seed,'contain'), capPrimary, h(tz(r.date)));
+  var todayPane=photoCard(' onclick="openLightbox(\'join\')"', uploadedImg('contain'), joinPhotoLabel(state.entry), h(tz(photoStamp(c, state.entry))));
   return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+refPane+todayPane+'</div>';
 }
 function reportThumbs(r, seed){
@@ -1488,14 +1494,11 @@ function pendingCard(i, r, c){
   '</article>';
 }
 function removedPanes(r, c){
-  var paneStyle='position:relative;width:100%;aspect-ratio:4/5;border-radius:10px;overflow:hidden';
-  var capStyle='position:absolute;left:0;right:0;bottom:0;padding:20px 11px 9px;background:linear-gradient(to top,rgba(0,0,0,.68),rgba(0,0,0,0));color:#fff';
-  var gone='<div class="rpt-pane rpt-gone" style="'+paneStyle+';background:#F7F8FA;border:1.5px dashed #C9D1DE;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;text-align:center">'+
+  var gone='<div class="rpt-gone" style="position:relative;width:100%;min-height:100%;border-radius:10px;overflow:hidden;background:#F7F8FA;border:1.5px dashed #C9D1DE;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;text-align:center">'+
     '<span style="width:46px;height:46px;border-radius:50%;background:#EAEDF2;display:grid;place-items:center;color:#8A97A8"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.4 5H19a2 2 0 0 1 2 2v8.6"/><path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2"/><path d="M3 16l5-5 4 4"/></svg></span>'+
     '<div style="font-size:13.5px;font-weight:600;color:#475467">Photo removed</div>'+
   '</div>';
-  var todayPane='<div class="rpt-pane" onclick="openLightbox(\'join\')" style="'+paneStyle+';background:#EFEFEF;border:1px solid #DDD">'+uploadedImg('contain')+
-    '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+joinPhotoLabel(state.entry)+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(tz(photoStamp(c, state.entry)))+'</div></div></div>';
+  var todayPane=photoCard(' onclick="openLightbox(\'join\')"', uploadedImg('contain'), joinPhotoLabel(state.entry), h(tz(photoStamp(c, state.entry))));
   return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+gone+todayPane+'</div>';
 }
 function removedNote(r){
@@ -2436,12 +2439,9 @@ function render(){
         if(_done && !isCant && effectiveOpen(i,r)){
           var needsCode = (st==='review' || st==='nomatch');
           var rel = reportRelAge(r);
-          var capStyle='position:absolute;left:0;right:0;bottom:0;padding:20px 11px 9px;background:linear-gradient(to top,rgba(0,0,0,.68),rgba(0,0,0,0));color:#fff';
-          var paneStyle='position:relative;width:100%;aspect-ratio:4/5;border-radius:8px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD';
-          var refPane='<div style="'+paneStyle+'">'+photoTile(r,(c?c.id:'')+r.label,'contain')+
-            '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">'+h(r.label)+'</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(r.date)+(rel?(' · '+h(rel)):'')+'</div>'+(r.by?'<div style="font-size:11.5px;color:rgba(255,255,255,.85);margin-top:3px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>Interviewed by '+h(r.by)+'</div>':'')+'</div></div>';
-          var todayPane='<div class="rpt-pane" onclick="openLightbox(\'join\')" style="'+paneStyle+'">'+uploadedImg('contain')+
-            '<div style="'+capStyle+'"><div style="font-size:12.5px;font-weight:600;line-height:1.3">Photo taken today</div><div style="font-size:11.5px;color:rgba(255,255,255,.82);margin-top:1px">'+h(photoStamp(c, state.entry))+'</div></div></div>';
+          var refSub=h(r.date)+(rel?(' · '+h(rel)):'')+(r.by?'<div style="margin-top:3px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>Interviewed by '+h(r.by)+'</div>':'');
+          var refPane=photoCard('', photoTile(r,(c?c.id:'')+r.label,'contain'), h(r.label), refSub);
+          var todayPane=photoCard(' onclick="openLightbox(\'join\')"', uploadedImg('contain'), 'Photo taken today', h(photoStamp(c, state.entry)));
           html += '<div style="padding:0 20px 18px;background:#F7F8FA">'+
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+
               '<div>'+refPane+'</div>'+
