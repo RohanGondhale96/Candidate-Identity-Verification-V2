@@ -6,6 +6,14 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Check page photo cards: no photo date under the name (2026-11-04)
+
+Same as the completed report (`b439dac`): on the check page before Submit, the photo date/time under each photo
+name is gone; the badge stays on the right and the date stays in the caption under each photo. Notes that
+followed the date stay on their own ("Replaced after the check ran, checked separately", "Carried over from the
+X report"). Changed-photo cards keep "New photo added / Photo replaced by X · time" (who changed it, not when the
+photo was taken). Patch: `source/fix_checkcard_nodate.py`, test `source/fix_tests_checkcard_nodate.py`.
+
 ## Changed-photos warning at the top of the check page (2026-11-04)
 
 Rohan: keep the pattern of the out-of-date banner, important things at the top of the page. Approved on

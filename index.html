@@ -1556,12 +1556,12 @@ function reportCard(i, r, c){
   if(isRemovedRow(r)) return removedCard(i, r, c);
   var st=photoState(r), flagged=(st==='review'||st==='nomatch'), isCant=(st==='cant');
   var open=effectiveOpen(i,r), seed=(c?c.id:'')+r.label, chip=rowBadge(r), clickable=!isCant;
-  var subline = h(tz(r.date)) + (r.checkedAfterChange && r.change ? ' · <span style="color:#5A6473">'+(r.change.verb==='added'?'Added':'Replaced')+' after the check ran, checked separately</span>' : '') + (r.carried ? ' · <span style="color:#5A6473">Carried over from the '+h(r.carried)+' report</span>' : '');
+  var subline = [r.checkedAfterChange && r.change ? '<span style="color:#5A6473">'+(r.change.verb==='added'?'Added':'Replaced')+' after the check ran, checked separately</span>' : '', r.carried ? '<span style="color:#5A6473">Carried over from the '+h(r.carried)+' report</span>' : ''].filter(Boolean).join(' · ');
   var caret = isCant ? '<span style="width:30px;flex-shrink:0"></span>'
     : '<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" style="width:30px;height:30px;border:0;background:none;cursor:pointer;display:grid;place-items:center;border-radius:7px;flex-shrink:0">'+chevron(open?'180deg':'0deg')+'</button>';
   var head='<div style="display:flex;align-items:center;gap:13px;padding:14px 16px'+(clickable?';cursor:pointer':'')+'"'+(clickable?(' onclick="toggleRow('+i+')"'):'')+'>'+
     ((open||isCant)?'':reportThumbs(r,seed))+
-    '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.35">'+h(r.label)+'</div><div style="font-size:12px;color:#667085;margin-top:1px">'+subline+'</div></div>'+
+    '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.35">'+h(r.label)+'</div>'+(subline?'<div style="font-size:12px;color:#667085;margin-top:1px">'+subline+'</div>':'')+'</div>'+
     '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+chip+caret+'</div>'+
   '</div>';
   var body='';
