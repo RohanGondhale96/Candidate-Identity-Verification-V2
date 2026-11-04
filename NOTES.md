@@ -6,6 +6,43 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Copy pass: status words, one vocabulary (2026-11-04)
+
+First batch from the terminology audit (`copy-review/terminology-and-joining-day-audit.xlsx`, Status terms
+sheet). Approved on before/after screens. Patches: `source/fix_copy_status_terms.py`, tests
+`source/fix_tests_status_terms.py`.
+
+**Per-photo statuses are only:** Match, Not a match, Needs review, Can't confirm, Couldn't compare, Not compared
+yet. **Overall result:** Match or Not a match; Inconclusive only when no photo counts (every photo Can't confirm,
+or none could be compared).
+
+- Chips: "Set aside" -> **Can't confirm** (reviewer's choice); a system failure now shows **Couldn't compare**
+  (was also "Set aside"); "Not matched yet", "Not checked" (amber) and "-" -> **Not compared yet** (grey; amber
+  is kept for Needs review). "Checking" -> "Comparing".
+- Bottom bar: "x of y compared · n match · n needs review · n not a match · n can't confirm · n couldn't
+  compare · n not compared yet".
+- Review panel: "This needs a look:" -> "Needs review:"; "Set aside, leave out of the score" -> "Leave out of
+  the result"; "Override the verdict" -> "Change the result".
+- Recorded decisions use one pattern: "Reviewed: Match / Not a match / Can't confirm · reason"; completed-report
+  notes: "Reviewed by X: Can't confirm. Reason: ...".
+- Submit pop-up: columns "Photo | Suggested result | Final result"; error "Add a note. n photo(s) still
+  need(s) review."
+- Reason pop-up title: "Can't confirm identity" -> "Can't confirm" (matches the chip; overrides copy deck #10).
+- Report header: "Identity confirmed" -> **Match**, "Can't confirm identity" -> **Not a match**; Inconclusive
+  sub-text says "every photo was marked Can't confirm" or "no photo could be compared". The out-of-date line
+  reads "Match / Not a match on {date}, before the photo changed".
+- Activity: "Verification enabled" -> "Identity check enabled"; an Inconclusive report is now logged as
+  "Report submitted: Inconclusive" (was "Match", a bug).
+- Worklist "what changed" uses the banner verbs: updated / removed (was replaced / deleted).
+- "in this reference" -> "in this photo"; removed-photo note "This photo was removed, so it's left out of the
+  result."; default reason "The source photo is blurry" -> "The photo is blurry".
+- Admin Review reasons: "Can't confirm (set aside)" -> "Can't confirm"; hint "Shown when the recruiter decides
+  a photo can't be judged."
+
+**Open:** overall result when every photo is Couldn't compare (kept Inconclusive; alternative is to block
+Submit); Can't confirm and Couldn't compare share one grey chip. **Not in this batch:** joining-day text, the
+confirmation checkbox, api/compare.js messages, old labels in unused code.
+
 ## Recompare: update (new and changed photos) or all photos; one candidate photo per report (2026-11-04)
 
 Part of the scope expansion (automation at offer acceptance, reports in parts). Mocked over several rounds, then

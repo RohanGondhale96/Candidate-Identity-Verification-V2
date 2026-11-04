@@ -860,7 +860,7 @@ var IDV_DEFAULTS = {
   reverify: { outdatedOn:{ replaced:true, deleted:true, added:true }, requireReason:false, notify:{ roles:['Recruiter'], users:[] } },
   report: { timezone:'IST' },
   reasons: { notmatch:['Clearly a different person','Facial features don\'t match'],
-             ignore:['The source photo is blurry','Appearance changed (age)','The document photo isn\u2019t clear'] }   // "Other" is always added last
+             ignore:['The photo is blurry','Appearance changed (age)','The document photo isn\u2019t clear'] }   // "Other" is always added last
 };
 function idvMerge(base, over){
   if(Array.isArray(base)) return Array.isArray(over) ? over.slice() : base.slice();
@@ -991,7 +991,7 @@ function rowBadge(r){
   var st=photoState(r), o = r.review ? codeOutcome(r.review) : null;
   if(o==='pos') return _pill('Match','#1a8a3a','#E7F4EC');
   if(o==='neg') return _pill('Not a match','#D93025','#FDECEC');
-  if(o==='excluded') return _pill('Set aside','#5F5E5A','#EFEFEF');
+  if(o==='excluded') return _pill('Can’t confirm','#5F5E5A','#EFEFEF');
   if(st==='cant')    return _pill("Couldn’t compare",'#5F5E5A','#EFEFEF');
   if(st==='match')   return _pill('Match','#1a8a3a','#E7F4EC');
   if(st==='review')  return _pill('Needs review','#B7791F','#FBF1DE');
@@ -1128,7 +1128,7 @@ function matchReason(r){
 }
 /* plain-language reason a reference couldn’t be compared */
 function cantReason(r){
-  var base=(r&&r.err) || 'We couldn’t find a face in this reference.';
+  var base=(r&&r.err) || 'We couldn’t find a face in this photo.';
   if(/no face/i.test(base)) return base.replace(/\.+$/,'') + '. The scan is probably too dark, blurry or cropped to pick out a face, so there’s nothing to line up against today’s photo.';
   return base;
 }
@@ -1164,7 +1164,7 @@ function similarityBar(r){
 /* likely-cause callout + the three action cards (Same person / Not a match / Ignore) + audit line */
 function reasonCodes(i, r){
   var st = photoState(r);
-  var causeLabel = st==='nomatch' ? 'Not a match:' : 'This needs a look:';
+  var causeLabel = st==='nomatch' ? 'Not a match:' : 'Needs review:';
   var out = '<div style="display:flex;gap:9px;margin-top:16px;padding:11px 13px;background:#FBF1DE;border:0.5px solid #EAD9AE;border-radius:8px;font-size:13px;color:#8a6414;line-height:1.5">'+
     '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#B7791F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:1px;flex-shrink:0"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><path d="M12 17.6v.1"/></svg>'+
     '<span><span style="font-weight:600">'+causeLabel+'</span> '+h(causeText(r))+'</span></div>';
@@ -1172,9 +1172,8 @@ function reasonCodes(i, r){
   if(r.review){
     var o = codeOutcome(r.review);
     var dot = o==='neg' ? '#D93025' : (o==='excluded' ? '#5F5E5A' : '#1a8a3a');
-    var lead = r.review==='same' ? 'Same person' : (r.review==='notmatch' ? 'Marked not a match' : 'Set aside, couldn’t confirm');
-    var tail = r.review==='same' ? ', confirmed by review'
-             : (r.reasonLabel ? (r.review==='notmatch' ? (', '+r.reasonLabel) : (' · '+r.reasonLabel)) : '');
+    var lead = 'Reviewed: '+(r.review==='same' ? 'Match' : (r.review==='notmatch' ? 'Not a match' : 'Can’t confirm'));
+    var tail = r.reasonLabel ? (' · '+r.reasonLabel) : '';
     out += '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px;border-top:1px solid #E0E0E0;padding-top:12px">'+
       '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#747474"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex-shrink:0"></span><span><b style="font-weight:600;color:#2A2A2A">'+h(lead)+'</b>'+h(tail)+(r.reviewedAt?(' · '+h(r.reviewedAt)):'')+'</span></span>'+
       '<button type="button" onclick="clearRowVerdict('+i+')" style="margin-left:auto;border:0;background:none;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Change</button>'+
@@ -1185,7 +1184,7 @@ function reasonCodes(i, r){
   out += '<div style="font-size:12px;font-weight:700;color:#747474;letter-spacing:.05em;text-transform:uppercase;margin-top:16px">Is this the same person?</div>';
   // all flagged rows (Needs review or Not a match) offer the same three verdicts, so the recruiter
   // can confirm a Not a match (not just disagree or set aside) - a confirmed Not a match drives the verdict.
-  var acts = [['same','Match','Same person'],['notmatch','Not a match','Different person'],['ignore','Can\'t confirm','Set aside, leave out of the score']];
+  var acts = [['same','Match','Same person'],['notmatch','Not a match','Different person'],['ignore','Can\'t confirm','Leave out of the result']];
   var ICONS = {
     same:   {col:'#1a8a3a', bg:'#E7F4EC', svg:'<path d="M5 12l5 5L20 7"/>'},
     notmatch:{col:'#D93025', bg:'#FDECEC', svg:'<path d="M7 7l10 10M17 7L7 17"/>'},
@@ -1222,8 +1221,8 @@ function matchBand(r, right){
 function matchOverride(i, r){
   if(r.review){   // recruiter already overrode -> match band + the recorded verdict
     var o=codeOutcome(r.review), dot=o==='neg'?'#D93025':(o==='excluded'?'#5F5E5A':'#1a8a3a');
-    var lead=r.review==='same'?'Confirmed a match':(r.review==='notmatch'?'Marked not a match':'Set aside, couldn’t confirm');
-    var tail=r.reasonLabel?(r.review==='notmatch'?(', '+r.reasonLabel):(' · '+r.reasonLabel)):'';
+    var lead='Reviewed: '+(r.review==='same'?'Match':(r.review==='notmatch'?'Not a match':'Can’t confirm'));
+    var tail=r.reasonLabel?(' · '+r.reasonLabel):'';
     return matchBand(r,'')+
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;border-top:1px solid #E0E0E0;padding-top:12px">'+
         '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#747474"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex-shrink:0"></span><span><b style="font-weight:600;color:#2A2A2A">'+h(lead)+'</b>'+h(tail)+(r.reviewedAt?(' · '+h(r.reviewedAt)):'')+'</span></span>'+
@@ -1233,10 +1232,10 @@ function matchOverride(i, r){
   }
   if(state.overrideOpen && state.overrideOpen[i]){   // Change clicked -> band + the override options
     return matchBand(r,'')+
-      '<div style="font-size:12px;font-weight:700;color:#747474;letter-spacing:.05em;text-transform:uppercase;margin-top:16px">Override the verdict</div>'+
+      '<div style="font-size:12px;font-weight:700;color:#747474;letter-spacing:.05em;text-transform:uppercase;margin-top:16px">Change the result</div>'+
       '<div class="rpt-acts" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px">'+
         overrideCard(i,'notmatch','Not a match','Different person','#D93025','#FDECEC','<path d="M7 7l10 10M17 7L7 17"/>')+
-        overrideCard(i,'ignore','Can\'t confirm','Set aside, leave out of the score','#5F5E5A','#EFEFEF','<circle cx="12" cy="12" r="8.5"/><path d="M8 12h8"/>')+
+        overrideCard(i,'ignore','Can\'t confirm','Leave out of the result','#5F5E5A','#EFEFEF','<circle cx="12" cy="12" r="8.5"/><path d="M8 12h8"/>')+
       '</div>';
   }
   // default: the match band with the Change link inside it, on the right
@@ -1257,8 +1256,8 @@ function notMatchBand(r, right){
 function nomatchOverride(i, r){
   if(r.review){   // reviewer already overrode -> band + the recorded verdict + Change
     var o=codeOutcome(r.review), dot=o==='neg'?'#D93025':(o==='excluded'?'#5F5E5A':'#1a8a3a');
-    var lead=r.review==='same'?'Confirmed a match':(r.review==='notmatch'?'Marked not a match':'Set aside, couldn’t confirm');
-    var tail=r.reasonLabel?(r.review==='notmatch'?(', '+r.reasonLabel):(' · '+r.reasonLabel)):'';
+    var lead='Reviewed: '+(r.review==='same'?'Match':(r.review==='notmatch'?'Not a match':'Can’t confirm'));
+    var tail=r.reasonLabel?(' · '+r.reasonLabel):'';
     return notMatchBand(r,'')+
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;border-top:1px solid #E0E0E0;padding-top:12px">'+
         '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#747474"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex-shrink:0"></span><span><b style="font-weight:600;color:#2A2A2A">'+h(lead)+'</b>'+h(tail)+(r.reviewedAt?(' · '+h(r.reviewedAt)):'')+'</span></span>'+
@@ -1268,10 +1267,10 @@ function nomatchOverride(i, r){
   }
   if(state.overrideOpen && state.overrideOpen[i]){   // Change clicked -> band + override options (Match / Can't confirm)
     return notMatchBand(r,'')+
-      '<div style="font-size:12px;font-weight:700;color:#747474;letter-spacing:.05em;text-transform:uppercase;margin-top:16px">Override the verdict</div>'+
+      '<div style="font-size:12px;font-weight:700;color:#747474;letter-spacing:.05em;text-transform:uppercase;margin-top:16px">Change the result</div>'+
       '<div class="rpt-acts" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px">'+
         overrideCard(i,'same','Match','Same person','#1a8a3a','#E7F4EC','<path d="M5 12l5 5L20 7"/>')+
-        overrideCard(i,'ignore','Can\'t confirm','Set aside, leave out of the score','#5F5E5A','#EFEFEF','<circle cx="12" cy="12" r="8.5"/><path d="M8 12h8"/>')+
+        overrideCard(i,'ignore','Can\'t confirm','Leave out of the result','#5F5E5A','#EFEFEF','<circle cx="12" cy="12" r="8.5"/><path d="M8 12h8"/>')+
       '</div>';
   }
   // default: the not-match band with the Change link inside it, on the right
@@ -1283,23 +1282,23 @@ var REMOVED_PILL={t:'Removed',c:'#5F5E5A',bg:'#EFEFEF'};
 function aiVerdictLabel(r){
   if(isRemovedRow(r)) return REMOVED_PILL;
   var st=photoState(r);
-  return ({match:{t:'Match',c:'#1a8a3a',bg:'#E7F4EC'},review:{t:'Needs review',c:'#8a6414',bg:'#FBF1DE'},nomatch:{t:'Not a match',c:'#B42318',bg:'#FDECEC'},cant:{t:'Couldn’t compare',c:'#5F5E5A',bg:'#EFEFEF'}})[st] || {t:'-',c:'#747474',bg:'#EFEFEF'};
+  return ({match:{t:'Match',c:'#1a8a3a',bg:'#E7F4EC'},review:{t:'Needs review',c:'#8a6414',bg:'#FBF1DE'},nomatch:{t:'Not a match',c:'#B42318',bg:'#FDECEC'},cant:{t:'Couldn’t compare',c:'#5F5E5A',bg:'#EFEFEF'}})[st] || {t:'Not compared yet',c:'#747474',bg:'#EFEFEF'};
 }
 function reviewedVerdictLabel(r){
   if(isRemovedRow(r)) return REMOVED_PILL;
   if(r.review==='same')     return {t:'Match',c:'#1a8a3a',bg:'#E7F4EC'};
   if(r.review==='notmatch') return {t:'Not a match',c:'#B42318',bg:'#FDECEC'};
-  if(r.review==='ignore')   return {t:'Set aside',c:'#5F5E5A',bg:'#EFEFEF'};
+  if(r.review==='ignore')   return {t:'Can’t confirm',c:'#5F5E5A',bg:'#EFEFEF'};
   var st=photoState(r);
-  if(st==='cant')  return {t:'Set aside',c:'#5F5E5A',bg:'#EFEFEF'};   // couldn't compare -> excluded
+  if(st==='cant')  return {t:'Couldn’t compare',c:'#5F5E5A',bg:'#EFEFEF'};   // a system failure, not a reviewer's decision
   if(st==='match') return {t:'Match',c:'#1a8a3a',bg:'#E7F4EC'};       // agrees with the AI
   if(st==='nomatch') return {t:'Not a match',c:'#B42318',bg:'#FDECEC'}; // accepted AI verdict (no override)
-  return {t:'-',c:'#747474',bg:'#EFEFEF'};
+  return {t:'Not compared yet',c:'#747474',bg:'#EFEFEF'};
 }
 function minipill(x){ return '<span style="background:'+x.bg+';color:'+x.c+';border-radius:999px;padding:3px 9px;font-size:11.5px;font-weight:600;white-space:nowrap">'+h(x.t)+'</span>'; }
 function submitReviewTable(rows){
   return '<div style="margin:2px 0 14px;border:1px solid #E5E9F0;border-radius:10px;overflow:hidden">'+
-    '<div style="display:flex;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8A97A8;background:#F7F8FA;padding:8px 12px"><span style="flex:1;min-width:0">Source</span><span style="width:120px;flex-shrink:0">Suggested Decision</span><span style="width:120px;flex-shrink:0">Final Decision</span></div>'+
+    '<div style="display:flex;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8A97A8;background:#F7F8FA;padding:8px 12px"><span style="flex:1;min-width:0">Photo</span><span style="width:120px;flex-shrink:0">Suggested result</span><span style="width:120px;flex-shrink:0">Final result</span></div>'+
     rows.map(function(r){ return '<div style="display:flex;align-items:center;font-size:12.5px;padding:8px 12px;border-top:1px solid #EEF1F5"><span style="flex:1;min-width:0;color:#2A2A2A;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px">'+h(r.label)+'</span><span style="width:120px;flex-shrink:0">'+minipill(aiVerdictLabel(r))+'</span><span style="width:120px;flex-shrink:0">'+minipill(reviewedVerdictLabel(r))+'</span></div>'; }).join('')+
   '</div>';
 }
@@ -1357,8 +1356,9 @@ function stageOutcome(c){
   if(c.staleInfo){ var l=staleList(c), txt;
     if(l.length>1){ // "2 photos replaced", or per action when mixed: "1 photo replaced, 1 deleted"
       var cnt={}, order=[]; l.forEach(function(x){ var v=staleVerb(x); if(!cnt[v]){ cnt[v]=0; order.push(v); } cnt[v]++; });
-      txt=order.map(function(v,i){ return cnt[v]+(i===0?(' photo'+(cnt[v]===1?'':'s')):'')+' '+v; }).join(', '); }
-    else { var w=String((l[0]&&l[0].what)||'Photo'); txt=w.charAt(0).toUpperCase()+w.slice(1)+' '+staleVerb(l[0]); }
+      var vb=function(v){ return v==='replaced'?'updated':(v==='deleted'?'removed':v); };
+      txt=order.map(function(v,i){ return cnt[v]+(i===0?(' photo'+(cnt[v]===1?'':'s')):'')+' '+vb(v); }).join(', '); }
+    else { var w=String((l[0]&&l[0].what)||'Photo'), v0=staleVerb(l[0]); txt=w.charAt(0).toUpperCase()+w.slice(1)+' '+(v0==='replaced'?'updated':(v0==='deleted'?'removed':v0)); }
     return '<span class="wl-stage-o" style="color:#5A6473;font-weight:400">'+h(txt)+'</span>'; }
   var cs=completedStatus(c);
   if(cs==='inconclusive') return '<span class="wl-stage-o" style="color:#5A6473">Inconclusive</span>';
@@ -1463,12 +1463,12 @@ function reviewNext(){
    total = compared photos (set-aside included, couldn't-compare excluded); matched = system + "Same person". */
 function pendingFooterText(rows, v){
   var n=pendingCount(rows), total=(rows||[]).length-removedCount(rows), det=[];
-  det.push((total-n)+' of '+total+' checked');
-  det.push(v.matched+' matched');
-  if(v.unresolved>0) det.push(v.unresolved+' left to review');
-  if(v.notMatch>0) det.push(v.notMatch+(v.notMatch===1?' doesn\u2019t match':' don\u2019t match'));
+  det.push((total-n)+' of '+total+' compared');
+  det.push(v.matched+' match');
+  if(v.unresolved>0) det.push(v.unresolved+(v.unresolved===1?' needs review':' need review'));
+  if(v.notMatch>0) det.push(v.notMatch+' not a match');
   if(v.removed>0) det.push(v.removed+' removed');
-  return '<span style="color:#8A6414;font-weight:600">'+n+' not checked yet</span><span style="color:#5A6473"> · '+h(det.join(' · '))+'</span>';
+  return '<span style="color:#8A6414;font-weight:600">'+n+' not compared yet</span><span style="color:#5A6473"> · '+h(det.join(' · '))+'</span>';
 }
 function reportFooterText(v){
   var total = v.total + v.ignored;               // couldn't-compare already excluded from v.total
@@ -1478,10 +1478,10 @@ function reportFooterText(v){
   var main = '<span style="font-weight:600;color:#2A2A2A">'+matched+' of '+total+' '+noun+' '+verb+'</span>';
   var det=[];
   if(v.unresolved===0 && v.vouchPos>0) det.push(v.vouchPos+' reviewed by you');   // only once nothing is left to review
-  if(v.ignored>0)   det.push(v.ignored+' set aside');
+  if(v.ignored>0)   det.push(v.ignored+' can’t confirm');
   if(v.notMatch>0)  det.push(v.notMatch+(v.notMatch===1?' doesn’t match':' don’t match'));
-  if(v.cant>0)      det.push(v.cant+' couldn’t be compared');
-  if(v.unresolved>0) det.push(v.unresolved+' left to review');
+  if(v.cant>0)      det.push(v.cant+' couldn’t compare');
+  if(v.unresolved>0) det.push(v.unresolved+(v.unresolved===1?' needs review':' need review'));
   if(v.removed>0)   det.push(v.removed+' removed');
   return main + (det.length ? '<span style="color:#5A6473"> · '+h(det.join(' · '))+'</span>' : '');
 }
@@ -1510,8 +1510,8 @@ function pendingCard(i, r, c){
   var ch=r.change, seed=(c?c.id:'')+r.label, running=r.status==='running';
   var what = ch.verb==='added' ? 'New photo added' : 'Photo replaced';
   var sub = what+' by '+h(ch.by)+' · '+h(tz(ch.date+', '+ch.time));
-  var chip = running ? '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#5A6473;background:#EFF1F5;border-radius:999px;padding:4px 10px"><span class="stp-spin" style="width:13px;height:13px"></span>Checking</span>'
-                     : _pill('Not checked','#8A6414','#FBF1DE');
+  var chip = running ? '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#5A6473;background:#EFF1F5;border-radius:999px;padding:4px 10px"><span class="stp-spin" style="width:13px;height:13px"></span>Comparing</span>'
+                     : _pill('Not compared yet','#5F5E5A','#EFEFEF');
   return '<article id="rpt-round-'+i+'" style="'+V2CARD+';scroll-margin-top:12px;border-color:#F0DFB8">'+
     '<div style="display:flex;align-items:center;gap:13px;padding:14px 16px">'+
       '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.35">'+h(r.label)+'</div><div style="font-size:12px;color:#8A6414;margin-top:1px">'+sub+'</div></div>'+
@@ -1520,7 +1520,7 @@ function pendingCard(i, r, c){
     '<div style="padding:0 16px 16px">'+comparePanes(r,seed,i,c)+
       '<div style="margin-top:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#FBF1DE;border:1px solid #F0DFB8;border-radius:10px;padding:12px 14px">'+
         '<div style="flex:1 1 260px;font-size:13px;color:#6B4E0F;line-height:1.5"><b>'+(ch.verb==='added'?'This photo was added after the check ran.':'This photo was replaced after the check ran.')+'</b> It hasn’t been compared yet. Run the check for this photo before you submit.</div>'+
-        '<button type="button" class="rh-btn primary sm" '+(running?'disabled':'')+' onclick="runOne('+i+')" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>'+(running?'Checking…':'Run check')+'</button>'+
+        '<button type="button" class="rh-btn primary sm" '+(running?'disabled':'')+' onclick="runOne('+i+')" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>'+(running?'Comparing…':'Run check')+'</button>'+
       '</div>'+
     '</div>'+
   '</article>';
@@ -1534,7 +1534,7 @@ function removedPanes(r, c){
   return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+gone+todayPane+'</div>';
 }
 function removedNote(r){
-  return reasonNote('cant', 'Removed after the check ran:', 'This photo was taken off the candidate’s file, so it’s left out of the result and doesn’t need checking.'+(r.wasResult?(' Its earlier result ('+r.wasResult+') isn’t counted.'):''));
+  return reasonNote('cant', 'Removed after the check ran:', 'This photo was removed, so it’s left out of the result.'+(r.wasResult?(' Its earlier result ('+r.wasResult+') isn’t counted.'):''));
 }
 function removedCard(i, r, c, completed){
   var ch=r.change||{};
@@ -1648,7 +1648,7 @@ function reportFeed(s, c){
     var reviewCta = nPend2>0
       ? ((rows||[]).some(function(r){ return r.change && r.status==='pending'; })
           ? '<button type="button" onclick="runNextPending()" style="'+btnStyle+'"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Run check</button>'
-          : '<button type="button" disabled style="'+btnStyle+';opacity:.6;cursor:default"><span class="stp-spin" style="width:13px;height:13px;border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>Checking…</button>')
+          : '<button type="button" disabled style="'+btnStyle+';opacity:.6;cursor:default"><span class="stp-spin" style="width:13px;height:13px;border-color:rgba(255,255,255,.4);border-top-color:#fff"></span>Comparing…</button>')
       : left===0
       ? (canDo('run') ? '<button type="button" onclick="openSubmit()" style="'+btnStyle+'">'+tick+'Submit report</button>' : '<span style="font-size:13px;color:#747474">Only people with access to run identity checks can submit this report.</span>')
       : (left===1
@@ -1721,10 +1721,10 @@ function badgeInfo(r){
   var st=photoState(r), o=r.review?codeOutcome(r.review):null;
   if(o==='pos'||(o==null&&st==='match')) return {t:'Match',c:'#1a8a3a',bg:'#E7F4EC'};
   if(o==='neg'||(o==null&&st==='nomatch')) return {t:'Not a match',c:'#D93025',bg:'#FDECEC'};
-  if(o==='excluded') return {t:'Set aside',c:'#5F5E5A',bg:'#EFEFEF'};
+  if(o==='excluded') return {t:'Can’t confirm',c:'#5F5E5A',bg:'#EFEFEF'};
   if(st==='cant') return {t:'Couldn’t compare',c:'#5F5E5A',bg:'#EFEFEF'};
   if(st==='review') return {t:'Needs review',c:'#B7791F',bg:'#FBF1DE'};
-  return {t:'-',c:'#747474',bg:'#EFEFEF'};
+  return {t:'Not compared yet',c:'#747474',bg:'#EFEFEF'};
 }
 function resultBadge(r, grey){ var b=badgeInfo(r); return grey ? _pill(b.t,'#8A97A8','#ECEEF1') : _pill(b.t,b.c,b.bg); }
 function changeTag(si){ return '<span class="rpt-tag">'+h(cap(staleBannerVerb(si))+' '+shortDay(si.date))+'</span>'; }
@@ -1733,9 +1733,10 @@ function amberNoteBox(text){ return '<div class="rpt-note amber">'+h(text)+'</di
 /* reviewer note under a photo pair - only when a row was set aside or overridden */
 function completedRowNote(r, c){
   var o=r.review?codeOutcome(r.review):null, by=r.reviewedBy||(c.wl&&c.wl.by)||'A. Sharma';
-  if(o==='excluded') return greyNoteBox('Set aside by '+by+': couldn’t confirm.'+(r.reason?(' Reason: '+r.reason):''));
-  if(o==='neg')      return greyNoteBox('Marked not a match by '+by+(r.reason?(': '+r.reason):'.'));
-  if(o==='pos')      return greyNoteBox('Confirmed a match by '+by+'.');
+  var why=r.reasonLabel||r.reason;
+  if(o==='excluded') return greyNoteBox('Reviewed by '+by+': Can’t confirm.'+(why?(' Reason: '+why):''));
+  if(o==='neg')      return greyNoteBox('Reviewed by '+by+': Not a match.'+(why?(' Reason: '+why):''));
+  if(o==='pos')      return greyNoteBox('Reviewed by '+by+': Match.');
   return '';
 }
 /* photo pair for the completed report - captions are just "Reference" / "Joining day" */
@@ -1752,7 +1753,7 @@ function completedCard(i, r, c, stale){
   var body='';
   if(isCant){ body='<div class="rpt-cardbody">'+comparePanes(r,seed,i,c)+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
   else if(open){
-    var note=changed ? amberNoteBox('This is the photo compared on '+submitShort(state.decision)+'. The new one hasn’t been checked yet.') : completedRowNote(r,c);
+    var note=changed ? amberNoteBox('This is the photo compared on '+submitShort(state.decision)+'. The new one hasn’t been compared yet.') : completedRowNote(r,c);
     body='<div class="rpt-cardbody">'+comparePanes(r,seed,i,c)+note+'</div>';   // same captions as the review screen
   }
   return '<article id="rpt-round-'+i+'" class="rpt-card">'+head+body+'</article>';
@@ -1770,8 +1771,8 @@ function completedReport(s, c){
   var vcol=(stale||inconc)?'#667085':(confirmed?'#1a8a3a':'#D93025');
   var vico=inconc?'<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.6v.1"/>':(confirmed?'<path d="M5 12.5l4.5 4.5L19 7.5"/>':'<path d="M7 7l10 10M17 7L7 17"/>');
   var verdictText=stale
-    ? ((inconc?'Inconclusive':(confirmed?'Confirmed':'Not confirmed'))+' on '+submitShort(dec)+', before the '+(staleList(c).length>1?'photos':'photo')+' changed')
-    : (inconc?'Inconclusive: no photo could be confirmed':(confirmed?'Identity confirmed':'Can’t confirm identity'));
+    ? ((inconc?'Inconclusive':(confirmed?'Match':'Not a match'))+' on '+submitShort(dec)+', before the '+(staleList(c).length>1?'photos':'photo')+' changed')
+    : (inconc?(reportSummary(rows).cant>0?'Inconclusive: no photo could be compared':'Inconclusive: every photo was marked Can’t confirm'):(confirmed?'Match':'Not a match'));
 
   var html='<div class="rh-card" style="padding:0;overflow:hidden">';
   if(stale){
@@ -2506,7 +2507,7 @@ function render(){
         var clickable = !!onclick;
         var badgeCell = st ? '<span style="flex-shrink:0">'+rowBadge(r)+'</span>'
           : (_idle
-              ? '<span style="flex-shrink:0;font-size:12px;font-weight:600;color:#6E7684;background:#EFF1F5;padding:4px 11px;border-radius:999px;white-space:nowrap">Not matched yet</span>'
+              ? '<span style="flex-shrink:0;font-size:12px;font-weight:600;color:#6E7684;background:#EFF1F5;padding:4px 11px;border-radius:999px;white-space:nowrap">Not compared yet</span>'
               : '<span style="width:96px;height:22px;border-radius:999px;flex-shrink:0;background:linear-gradient(90deg,#EFEFEF 25%,#F9FAFB 50%,#EFEFEF 75%);background-size:220% 100%;animation:rh-shim 1.3s linear infinite"></span>');
         html += '<div id="rpt-row-'+i+'" style="border-bottom:1px solid #E0E0E0;opacity:'+opacity+'">'+
           '<button type="button" class="rpt-row"'+(onclick?(' onclick="'+onclick+'"'):'')+' style="display:flex;align-items:center;gap:14px;width:100%;padding:14px 20px;background:none;border:0;text-align:left;font-family:inherit;cursor:'+(clickable?'pointer':'default')+'">'+
@@ -2640,7 +2641,7 @@ function render(){
   if(s.rmodal){
     var rm = s.rmodal;
     var rmReasons = reasonList(rm.action);
-    var rmTitle = rm.action==='notmatch' ? 'Not a match' : 'Can’t confirm identity';
+    var rmTitle = rm.action==='notmatch' ? 'Not a match' : 'Can’t confirm';
     html += '<div class="rh-scrim" onclick="scrimReason(event)"><div class="rh-dialog" style="width:560px">'+
       '<header><h2>'+rmTitle+'</h2><button class="x" onclick="cancelReason()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
@@ -2861,7 +2862,7 @@ function confirmSubmit(){
   var v=reportSummary(state.rows);
   if(pendingCount(state.rows)){ setState({submitModal:null}); return; }
   if(!m.confirmed){ setState({submitModal:Object.assign({}, m, {note:note, err:'Confirm you’ve reviewed all comparisons.'})}); return; }
-  if(v.unresolved>0 && !note){ setState({submitModal:Object.assign({}, m, {note:note, err:'Add a note. '+v.unresolved+' comparison'+(v.unresolved>1?'s are':' is')+' still unreviewed.'})}); return; }
+  if(v.unresolved>0 && !note){ setState({submitModal:Object.assign({}, m, {note:note, err:'Add a note. '+v.unresolved+' photo'+(v.unresolved>1?'s still need':' still needs')+' review.'})}); return; }
   // same shape as the seeded reports: "15 Aug 2026, 15:42" (24h, day-first)
   var at = nowStamp().replace(/ IST$/,'');
   var dec = {action:'submitted', by:'A. Sharma', at:at, note:note, status:v.tier, unreviewed:v.unresolved};
@@ -3098,7 +3099,7 @@ function photoEventText(reverify, source, takenAt){
 function activityLog(s, c){
   var evs=[], seq=0;
   // step: where an event sits in the flow, so events in the same minute keep their real order
-  var STEP=[['Verification enabled',0],['Recompare started',2],['Candidate photo',3],['Joining-day photo',3],['Photo uploaded',3],['Photo taken',3],['Quality check',4],['Comparison run',5],['Review ',6],['Report submitted',7]];
+  var STEP=[['Identity check enabled',0],['Recompare started',2],['Candidate photo',3],['Joining-day photo',3],['Photo uploaded',3],['Photo taken',3],['Quality check',4],['Comparison run',5],['Review ',6],['Report submitted',7]];
   function stepOf(e){ if(e.k==='ext') return 1; for(var i=0;i<STEP.length;i++){ if(e.t.indexOf(STEP[i][0])===0) return STEP[i][1]; } return 6; }
   function add(day, time, e){ e.day=day; e.time=time; e.key=alKey(day,time); e.step=stepOf(e); e.seq=seq++; evs.push(e); }
   var actor=function(n){ return 'by <span class="actor">'+h(n)+'</span>'; };
@@ -3108,13 +3109,13 @@ function activityLog(s, c){
     // when the photo was taken / compared: a live run stamps ranAt; seeded reports ran on the joining day
     var ran = e.ranAt ? alSplit(e.ranAt) : {day:(dec?alSplit(dec.at,c.joining).day:c.joining), time:'09:42'};
     var up  = e.ranAt ? ran : {day:ran.day, time:'09:41'};
-    if(i===0) add(ran.day, '09:38', {k:'human', ic:'&#9873;', t:'Verification enabled (Onboarding round)', m:actor((dec&&dec.by)||'A. Sharma'), ts:h(tzTime(ran.day,'09:38'))});
+    if(i===0) add(ran.day, '09:38', {k:'human', ic:'&#9873;', t:'Identity check enabled (Onboarding round)', m:actor((dec&&dec.by)||'A. Sharma'), ts:h(tzTime(ran.day,'09:38'))});
     add(up.day, up.time, {k:'human', ic:'&#8593;', t:photoEventText(e.reverify, e.photoSource, e.photoTakenAt), m:actor('A. Sharma'), ts:h(tzTime(up.day,up.time))});
     add(up.day, up.time, {k:'sys', ic:'&#9737;', t:'Quality check passed', m:'system', ts:h(tzTime(up.day,up.time))});
     add(ran.day, ran.time, {k:'sys', ic:'&#9737;', t:'Comparison run: '+(e.runCount||n)+' photo'+((e.runCount||n)===1?'':'s'), m:'system', ts:h(tzTime(ran.day,ran.time))});
     if(dec){
       var sub=alSplit(dec.at, ran.day), ver=reportVersion(e);
-      add(sub.day, sub.time, {k:'human', ic:'&#10003;', t:'Report submitted: '+h(outcomeLabel(dec.status||'match').t)+(entries.filter(function(x){return x.decision;}).length>1?' <span class="bext">Version '+ver+'</span>':''),
+      add(sub.day, sub.time, {k:'human', ic:'&#10003;', t:'Report submitted: '+h(dec.status==='inconclusive'?'Inconclusive':outcomeLabel(dec.status||'match').t)+(entries.filter(function(x){return x.decision;}).length>1?' <span class="bext">Version '+ver+'</span>':''),
         m:actor(dec.by||'A. Sharma')+' &middot; '+n+' comparison'+(n===1?'':'s'), ts:h(tzTime(sub.day,sub.time)),
         link:'<button type="button" class="lnk" onclick="viewReport('+state.history.indexOf(e)+')">View report</button>'});
     } else if(e===s.entry){

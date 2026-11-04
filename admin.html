@@ -241,7 +241,7 @@ var IDV_DEFAULTS = {
   reverify: { outdatedOn:{ replaced:true, deleted:true, added:true }, requireReason:false, notify:{ roles:['Recruiter'], users:[] } },
   report: { timezone:'IST' },
   reasons: { notmatch:['Clearly a different person','Facial features don\'t match'],
-             ignore:['The source photo is blurry','Appearance changed (age)','The document photo isn\u2019t clear'] }   // "Other" is always added last
+             ignore:['The photo is blurry','Appearance changed (age)','The document photo isn\u2019t clear'] }   // "Other" is always added last
 };
 function idvMerge(base, over){
   if(Array.isArray(base)) return Array.isArray(over) ? over.slice() : base.slice();
@@ -515,7 +515,7 @@ function rsDrop(e,key,to){ e.preventDefault(); if(!RS_DRAG || RS_DRAG.key!==key)
 function secReasons(){
   return '<h2 class="sec-title">Review reasons</h2>'+info('When a recruiter marks a photo <b>Not a match</b> or <b>Can’t confirm</b>, they pick one of these reasons. Drag to change the order.')+
     rsList('notmatch','Not a match','Shown when the recruiter says the photo is of a different person.')+
-    rsList('ignore','Can’t confirm (set aside)','Shown when the recruiter sets a photo aside because it can’t be judged.')+
+    rsList('ignore','Can’t confirm','Shown when the recruiter decides a photo can’t be judged.')+
     '<div class="hint" style="margin-top:6px">Changes apply to new reviews. Reports already submitted keep the reason they were given.</div>';
 }
 function secReport(){
