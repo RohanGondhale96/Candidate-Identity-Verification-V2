@@ -6,6 +6,26 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Recompare pop-up redesign: "What do you want to recompare?" (2026-11-05)
+
+Rohan: "on file" must go everywhere; the pop-up "looks very bad"; "Compare with" and "Choose the candidate
+photo next. Every photo is compared again." are confusing. Three redesigns were mocked (1 two clear choices,
+2 choose and go, 3 changes first); **option 1** chosen and reviewed in a clickable preview. Patch:
+`source/fix_recompare_popup_v2.py`, tests `source/fix_tests_recompare_popup_v2.py`.
+
+- Summary: "n photo(s) changed since the 14 Aug report." + View changes; "No photos have changed since the 15 Aug
+  report."; candidate photo replaced: "The application photo, which the 14 Aug report used as the candidate
+  photo, has changed." (or "n photos changed since..., including the application photo that report used as the
+  candidate photo."). The separate "Last report: ... candidate photo: ..." line is gone.
+- Question: "**What do you want to recompare?**" (was "Compare with"), in the shared label style.
+- "**Only the changed photos (n)**: Uses the same candidate photo as the 14 Aug report. The other n results stay
+  as they are." Disabled with a reason: "Nothing has changed." / "Not possible: the candidate photo itself
+  changed."
+- "**All photos (n)**: Starts a new check. You'll take or upload a new photo of the candidate." (candidate photo
+  replaced: "Starts a new check with the new application photo, or another photo of the candidate.")
+- The choices are bordered cards; the chosen one is outlined in blue. Cancel / Next unchanged.
+- The last visible "on file" went too: the fallback caption "On-file photo" -> "Photo".
+
 ## One pattern for labels: sentence case everywhere (2026-11-05)
 
 Rohan: "in one page everything is in caps, in another page it's sentence case, there is no uniformity". RH design

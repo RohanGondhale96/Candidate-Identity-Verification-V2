@@ -165,17 +165,19 @@
   .rc-chg div+div{border-top:1px solid #EFEFEF}
   .rc-chg .w{flex:1;min-width:0}
   .rc-chg .v{color:#747474;font-size:13px;white-space:nowrap}
-  .rc-q{font-size:14px;font-weight:600;color:#2A2A2A;margin:20px 0 12px}
-  .rc-opts{display:flex;flex-direction:column;gap:12px}
-  .rc-opt{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+  .rc-q{font-size:13px;font-weight:600;color:#667085;margin:18px 0 10px}
+  .rc-opts{display:flex;flex-direction:column;gap:8px}
+  .rc-opt{display:flex;gap:10px;align-items:flex-start;cursor:pointer;position:relative;border:1px solid #DDD;border-radius:6px;padding:11px 12px}
+  .rc-opt:has(input:checked){border-color:var(--rh-primary);background:#F5F9FF}
+  .rc-opt:not(.off):hover{border-color:#B9C3D0}
   .rc-opt input{position:absolute;opacity:0;width:0;height:0}
   .rc-opt .dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(0,0,0,.54);box-sizing:border-box;flex-shrink:0;display:grid;place-items:center;margin-top:4px}
   .rc-opt input:checked+.dot{border-color:var(--rh-primary)}
   .rc-opt input:checked+.dot::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--rh-primary)}
   .rc-opt input:focus-visible+.dot{box-shadow:0 0 0 3px rgba(0,118,251,.3)}
-  .rc-opt .t{font-size:16px;color:#2A2A2A;line-height:1.5}
-  .rc-opt .d{font-size:14px;color:#747474}
-  .rc-opt.off{cursor:not-allowed}.rc-opt.off .t,.rc-opt.off .d{color:#A0A7B2}.rc-opt.off .dot{border-color:#C9CDD3}
+  .rc-opt .t{font-size:15px;font-weight:600;color:#2A2A2A;line-height:1.45}
+  .rc-opt .d{font-size:13.5px;color:#747474;line-height:1.45;margin-top:2px}
+  .rc-opt.off{cursor:not-allowed;background:#FAFAFB}.rc-opt.off .t,.rc-opt.off .d{color:#A0A7B2}.rc-opt.off .dot{border-color:#C9CDD3}
   .rh-radios{display:flex;flex-direction:column;gap:14px}
   .rh-radio{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:16px;color:var(--rh-text-primary)}
   .rh-radio input{position:absolute;opacity:0;width:0;height:0}
@@ -1500,7 +1502,7 @@ function photoCard(paneAttrs, img, title, sub){
 }
 function comparePanes(r, seed, i, c){
   // caption mirrors the joining-day pane: "Photo taken during <round>" / date+time (per manager)
-  var capPrimary = r.by ? ('Photo taken during '+h(r.label)) : (r.src==='document' ? 'Identity document' : h(r.label||'On-file photo'));
+  var capPrimary = r.by ? ('Photo taken during '+h(r.label)) : (r.src==='document' ? 'Identity document' : h(r.label||'Photo'));
   var refPane=photoCard(' onclick="openLightbox('+i+')"', photoTile(r,seed,'contain'), capPrimary, h(tz(r.date)));
   var todayPane=photoCard(' onclick="openLightbox(\'join\')"', uploadedImg('contain'), joinPhotoLabel(state.entry), h(tz(photoStamp(c, state.entry))));
   return '<div class="rpt-panes" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+refPane+todayPane+'</div>';
@@ -1852,18 +1854,22 @@ function rcState(s, c){
 function rcBody(s, c){
   var st=rcState(s,c), open=!!s.rcOpen, list=st.list;
   var chev='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+  var when = (st.last && st.last.decision) ? ('the '+submitShort(st.last.decision)+' report') : 'the last report';
   var sum = list.length
-    ? (st.ref ? '<div style="font-size:13px;color:#747474;margin:-6px 0 10px">'+(st.auto?'Last report: run automatically · candidate photo: ':'Last report\u2019s candidate photo: ')+h(st.ref)+'</div>' : '')+
-      '<div class="rc-sum"><span>'+list.length+' photo'+(list.length===1?'':'s')+' on file changed since the report.</span><button type="button" class="lnk" aria-expanded="'+open+'" onclick="setState({rcOpen:!state.rcOpen})">'+(open?'Hide':'View')+' changes'+chev+'</button></div>'+
+    ? '<div class="rc-sum"><span>'+((st.refChanged && list.length===1) ? ('The '+h(st.ref.toLowerCase())+', which '+h(when)+' used as the candidate photo, has changed') : (list.length+' photo'+(list.length===1?'':'s')+' changed since '+h(when)+(st.refChanged?(', including the '+h(st.ref.toLowerCase())+' that report used as the candidate photo'):'')))+'.</span><button type="button" class="lnk" aria-expanded="'+open+'" onclick="setState({rcOpen:!state.rcOpen})">'+(open?'Hide':'View')+' changes'+chev+'</button></div>'+
       (open ? '<div class="rc-chg">'+list.map(function(ch){ var v=staleVerb(ch);
           return '<div><span class="w">'+h(ch.what)+(ch.what===st.ref?' <span style="display:inline-block;margin-left:6px;font-size:11.5px;font-weight:600;color:#8A6414;background:#FBF1DE;border-radius:999px;padding:1px 8px">candidate photo</span>':'')+'</span><span class="v">'+(v==='deleted'?'Removed':(v==='added'?'Added':'Replaced'))+' · '+h(shortDay(ch.date))+'</span></div>'; }).join('')+'</div>' : '')
-    : '<div class="rc-sum"><span>Nothing on file has changed since the report.</span></div>';
+    : '<div class="rc-sum"><span>No photos have changed since '+h(when)+'.</span></div>';
   var opt=function(v, title, desc, off){
     return '<label class="rc-opt'+(off?' off':'')+'"><input type="radio" name="rc-scope" '+(st.mode===v&&!off?'checked':'')+(off?' disabled':'')+' onchange="setState({rvMode:\''+v+'\'})"><span class="dot"></span><span><div class="t">'+title+'</div><div class="d">'+desc+'</div></span></label>';
   };
-  return sum+'<div class="rc-q">Compare with</div><div class="rc-opts">'+
-    opt('new', 'New and changed photos only'+(st.canNew?' ('+st.nNew+')':''), st.refChanged ? ('This report\u2019s candidate photo, the '+st.ref.toLowerCase()+', has been replaced. Compare all photos to use a new candidate photo.') : (st.canNew ? ('Same candidate photo as the last report. The other '+st.nKeep+' results are carried over.') : 'Nothing new to compare'), !st.canNew)+
-    opt('full', 'All photos ('+st.nAll+')', 'Choose the candidate photo next. Every photo is compared again.', false)+
+  var newDesc = st.canNew ? ('Uses the same candidate photo as '+h(when)+'. The other '+st.nKeep+' result'+(st.nKeep===1?'':'s')+' stay as they are.')
+              : (st.refChanged ? 'Not possible: the candidate photo itself changed.' : 'Nothing has changed.');
+  var fullDesc = st.refChanged ? ('Starts a new check with the new '+h(st.ref.toLowerCase())+', or another photo of the candidate.')
+               : 'Starts a new check. You\u2019ll take or upload a new photo of the candidate.';
+  return sum+'<div class="rc-q">What do you want to recompare?</div><div class="rc-opts">'+
+    opt('new', 'Only the changed photos'+(st.canNew?' ('+st.nNew+')':''), newDesc, !st.canNew)+
+    opt('full', 'All photos ('+st.nAll+')', fullDesc, false)+
   '</div>';
 }
 function reverifyIntro(c){
