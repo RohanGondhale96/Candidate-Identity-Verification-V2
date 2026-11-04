@@ -6,6 +6,27 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Copy pass: the joining-date confirmation checkbox is removed; consent is the only box (2026-11-04)
+
+Third batch from the terminology audit (Confirmation checkbox impact sheet). Approved on before/after screens.
+Patches: `source/fix_copy_checkbox.py`, tests `source/fix_tests_checkbox.py`.
+
+- **Photo step:** the second checkbox ("This photo was taken on the joining date, of the person who reported to
+  join." / "This is a photo of {name}, taken in person today." / Recompare "...the person who reported to join on
+  {date}.") is gone. Submit needs a photo and **consent** only (consent stays, decided 5 Sep).
+- **Report in progress:** the green "Confirmed as the joining-day photo of the person who reported to join" line
+  under the candidate photo is gone ("Run by A. Sharma · date" stays). The same line in the unused old review
+  list is gone too.
+- **Completed report:** the line under the result is shown on every manual report (it used to depend on the box),
+  in grey without a tick (same style as "Run automatically · candidate photo: Application photo"):
+  "Candidate photo taken by X · time" (camera or seeded), "Candidate photo uploaded by X · time" (file),
+  "Candidate photo from {date} reused by X · taken {time}". "and confirmed" is gone. Still hidden in the PDF.
+- The `attest` field is removed from state, new and saved checks, reuse, print and the demo data;
+  `toggleAttest()` is deleted.
+
+**Open:** consent for the automatic offer-accepted run (nobody is there to tick it; it has to come from the
+application); whether the "Candidate photo taken by" line should show in the PDF.
+
 ## Copy pass: joining-day text, the check no longer assumes a joining day (2026-11-04)
 
 Second batch from the terminology audit (Joining-day references sheet). The check also runs when an offer is
