@@ -6,6 +6,20 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Shorter photo frames (5:4) and no "replaced by / removed by" line (2026-11-05)
+
+Rohan: the photos were too tall (one comparison didn't fit on a laptop screen). Mocked today vs square vs 5:4 on
+a 1366 x 768 screen; option B approved. Patches: `source/fix_photo_height.py`, `source/fix_change_sublines.py`,
+tests `source/fix_tests_change_height.py`.
+
+- **Photo frames** on the check page and the completed report: 4:5 (510 x 638) -> **5:4 (510 x 408)** on
+  desktop. A whole Needs review card (both photos, the reason, the Match / Not a match / Can't confirm choice) is
+  about 707 px and fits a laptop screen; a report card is about 544 px (was 774). Photos still show whole inside
+  the frame (headshots get grey bands at the sides instead of top and bottom). Phones keep the square frame; the
+  PDF keeps its 16:10 rule. Not chosen: square (510 x 510, review card 809 px).
+- **Changed and removed cards:** the line under the photo name ("Photo replaced / New photo added / Removed by X
+  · time") is gone; the note and the photo caption below say what happened and when. Who did it is in Activity.
+
 ## Copy pass: small leftovers, Recompare wording and plain compare errors (2026-11-04)
 
 Last batch from the terminology audit. Approved on before/after screens. Patch: `source/fix_copy_leftovers.py`

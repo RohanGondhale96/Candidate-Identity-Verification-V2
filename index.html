@@ -321,7 +321,7 @@
   @media(max-width:600px){ .rh-viewer .rv-title{flex-direction:column;gap:0} }
   .rpt-pane[onclick]{cursor:zoom-in}
   .rpt-photo{border:1px solid #DDD;border-radius:10px;overflow:hidden;background:#fff;min-width:0}
-  .rpt-photo .rpt-pane{position:relative;width:100%;aspect-ratio:4/5;overflow:hidden;background:#EFEFEF}
+  .rpt-photo .rpt-pane{position:relative;width:100%;aspect-ratio:5/4;overflow:hidden;background:#EFEFEF}
   .rpt-pcap{border-top:1px solid #DDD;padding:10px 12px 11px}
   .rpt-pcap .t{font-size:13.5px;font-weight:600;color:#2A2A2A;line-height:1.35}
   .rpt-pcap .s{font-size:12.5px;color:#747474;margin-top:1px}
@@ -1518,7 +1518,7 @@ function pendingCard(i, r, c){
                      : _pill('Not compared yet','#5F5E5A','#EFEFEF');
   return '<article id="rpt-round-'+i+'" style="'+V2CARD+';scroll-margin-top:12px;border-color:#F0DFB8">'+
     '<div style="display:flex;align-items:center;gap:13px;padding:14px 16px">'+
-      '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.35">'+h(r.label)+'</div><div style="font-size:12px;color:#8A6414;margin-top:1px">'+sub+'</div></div>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.35">'+h(r.label)+'</div></div>'+
       '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+chip+'<span style="width:30px;flex-shrink:0"></span></div>'+
     '</div>'+
     '<div style="padding:0 16px 16px">'+comparePanes(r,seed,i,c)+
@@ -1545,7 +1545,7 @@ function removedCard(i, r, c, completed){
   var ch=r.change||{};
   var sub='Removed by '+h(ch.by)+' · '+h(tz(ch.date+', '+ch.time));
   var head='<div style="display:flex;align-items:center;gap:13px;padding:14px 16px">'+
-      '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.35;color:#475467">'+h(r.label)+'</div><div style="font-size:12px;color:#667085;margin-top:1px">'+sub+'</div></div>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.35;color:#475467">'+h(r.label)+'</div></div>'+
       '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+_pill('Removed','#5F5E5A','#EFEFEF')+'<span style="width:30px;flex-shrink:0"></span></div>'+
     '</div>';
   var body='<div style="padding:0 16px 16px">'+removedPanes(r,c)+removedNote(r)+'</div>';
