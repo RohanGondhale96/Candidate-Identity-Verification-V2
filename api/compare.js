@@ -37,7 +37,7 @@ module.exports = async (req, res) => {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const { joining, onfile } = body;
     if (!joining || !joining.data || !onfile || !onfile.data) {
-      res.status(400).json({ error: 'Both images (joining, onfile) are required' });
+      res.status(400).json({ error: 'Both photos are required.' });
       return;
     }
 
@@ -54,7 +54,7 @@ module.exports = async (req, res) => {
       // The joining photo is quality-gated (DetectFaces) before we get here, so it always has a
       // face — meaning this is the on-file reference. Render it as "Couldn't compare".
       if (e && e.name === 'InvalidParameterException') {
-        res.status(422).json({ error: 'No face detected in the reference photo.' });
+        res.status(422).json({ error: 'No face found in this photo.' });
         return;
       }
       throw e;
@@ -65,7 +65,7 @@ module.exports = async (req, res) => {
 
     // No face at all in the reference on file -> couldn't compare.
     if (targetFaceCount === 0) {
-      res.status(422).json({ error: 'No face detected in the reference photo.' });
+      res.status(422).json({ error: 'No face found in this photo.' });
       return;
     }
 

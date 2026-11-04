@@ -719,7 +719,7 @@ function geminiCompare(joiningUri, onFileUri){
   var a=_dataUri(joiningUri), b=_dataUri(onFileUri);
   return fetch('/api/compare', { method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ joining:{mime:a.mime,data:a.data}, onfile:{mime:b.mime,data:b.data} }) })
-    .then(function(res){ return res.json().catch(function(){return {};}).then(function(j){ if(!res.ok) throw new Error(j.error||('Compare failed ('+res.status+')')); return j; }); })
+    .then(function(res){ return res.json().catch(function(){return {};}).then(function(j){ if(!res.ok) throw new Error(res.status===422 ? (j.error||'No face found in this photo.') : 'The comparison service isn’t available. Try again later.'); return j; }); })
     .then(function(j){ return { similarity:_clampPct(j.similarity), confidence:_clampPct(j.confidence), samePerson:!!j.same_person, reason:j.reason||'' }; });
 }
 function geminiQuality(uri){
@@ -1133,7 +1133,7 @@ function matchReason(r){
 /* plain-language reason a reference couldn’t be compared */
 function cantReason(r){
   var base=(r&&r.err) || 'We couldn’t find a face in this photo.';
-  if(/no face/i.test(base)) return base.replace(/\.+$/,'') + '. The photo is probably too dark, blurry or cropped to pick out a face, so there’s nothing to compare with the candidate photo.';
+  if(/no face/i.test(base)) return 'We couldn’t find a face in this photo. It’s probably too dark, blurry or cropped, so there’s nothing to compare with the candidate photo.';
   return base;
 }
 /* small tinted callout for the match / couldn’t-compare explanations (mirrors the amber "needs a look" note) */
@@ -1869,7 +1869,7 @@ function rcBody(s, c){
 function reverifyIntro(c){
   var si=c&&c.staleInfo, list=(si&&(si.changes||[si]))||[];
   var n=list.length;
-  return n+' photo'+(n===1?'':'s')+' changed after the report was submitted. Reverifying starts a fresh check against the latest previous photos.';
+  return n+' photo'+(n===1?'':'s')+' changed after the report was submitted. Recomparing checks them against the latest photos on the profile.';
 }
 function reverifyChanges(c){
   var si=c&&c.staleInfo; if(!si) return '';
@@ -2258,7 +2258,7 @@ function worklistView(){
   var nStale=wlStatusRows('completed').filter(function(c){return c.staleInfo;}).length;
   function wlTab(key,label,n){ var on=view===key;
     return '<button type="button" role="tab" aria-selected="'+on+'" class="wl-tab'+(on?' on':'')+'" onclick="setWlView(\''+key+'\')">'+h(label)+'<span class="cnt">'+n+'</span></button>'; }
-  var hint = view==='pending' ? '' : (nStale ? nStale+' need'+(nStale===1?'s':'')+' reverifying' : '');
+  var hint = view==='pending' ? '' : (nStale ? nStale+' need'+(nStale===1?'s':'')+' recomparing' : '');
   html+='<div class="wl-tabs" role="tablist" aria-label="Candidates by status">'+wlTab('pending','To verify',nPending)+wlTab('completed','Completed',nDone)+
     (hint?'<span class="wl-tabhint'+(view==='completed'?' warn':'')+'">'+h(hint)+'</span>':'')+'</div>';
 
@@ -2464,7 +2464,7 @@ function render(){
     if(_done){
       html += '<div><div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid #E0E0E0">'+
         '<div style="width:48px;height:60px;border-radius:6px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;flex-shrink:0;position:relative">'+uploadedImg()+'</div>'+
-        '<div style="flex:1 1 180px;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.4">Photo taken today</div>'+
+        '<div style="flex:1 1 180px;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.4">Candidate photo</div>'+
           '<div style="font-size:12.5px;color:#747474;margin-top:2px">Run by A. Sharma · '+h(photoStamp(c, s.entry))+' IST</div>'+
 
           '</div>'+
@@ -2530,7 +2530,7 @@ function render(){
           var rel = reportRelAge(r);
           var refSub=h(r.date)+(rel?(' · '+h(rel)):'')+(r.by?'<div style="margin-top:3px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>Interviewed by '+h(r.by)+'</div>':'');
           var refPane=photoCard('', photoTile(r,(c?c.id:'')+r.label,'contain'), h(r.label), refSub);
-          var todayPane=photoCard(' onclick="openLightbox(\'join\')"', uploadedImg('contain'), 'Photo taken today', h(photoStamp(c, state.entry)));
+          var todayPane=photoCard(' onclick="openLightbox(\'join\')"', uploadedImg('contain'), 'Candidate photo', h(photoStamp(c, state.entry)));
           html += '<div style="padding:0 20px 18px;background:#F7F8FA">'+
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+
               '<div>'+refPane+'</div>'+

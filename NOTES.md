@@ -6,6 +6,23 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Copy pass: small leftovers, Recompare wording and plain compare errors (2026-11-04)
+
+Last batch from the terminology audit. Approved on before/after screens. Patch: `source/fix_copy_leftovers.py`
+(check page, admin, `build_repo.js`, `api/compare.js`), tests `source/fix_tests_leftovers.py`.
+
+- Worklist Completed tab hint: "n need(s) reverifying" -> "n need(s) recomparing" (same as the row stage).
+- **No face found:** the server now says "No face found in this photo." (was "...in the reference photo", which
+  meant the round's photo and clashed with "candidate photo"); the page shows "We couldn't find a face in this
+  photo. It's probably too dark, blurry or cropped, so there's nothing to compare with the candidate photo."
+- **Any other compare failure** (500, missing AWS credentials, raw errors) shows one sentence: "The comparison
+  service isn't available. Try again later." (mapped in the browser proxy injected by `build_repo.js`; the
+  detail stays in the server logs). Missing photo: "Both photos are required." Scoring is untouched.
+- Admin: "...submit reports and recompare photos" (was "reverify candidates"); the hidden Reverify section is
+  "Recompare" ("the recruiter recompares the photos", "Ask for a reason when recomparing").
+- Unused code: "Photo taken today" -> "Candidate photo" (2), old Reverify sentence reworded. The full removal of
+  the old unused screens (audit rows #90-100) is not done (no visible effect, many test changes).
+
 ## Check page photo cards: no photo date under the name (2026-11-04)
 
 Same as the completed report (`b439dac`): on the check page before Submit, the photo date/time under each photo
