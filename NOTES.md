@@ -6,6 +6,46 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Recompare: update (new and changed photos) or all photos; one candidate photo per report (2026-11-04)
+
+Part of the scope expansion (automation at offer acceptance, reports in parts). Mocked over several rounds, then
+approved. Patches: `source/fix_recompare_1_popup.py` … `fix_recompare_4_build.py`.
+
+**Rule:** a report has **one candidate photo** (the photo every other photo is compared with). An update always
+reuses the latest report's candidate photo; a different photo only comes with a full check.
+
+- **"Reverify" is now "Recompare"** (it compares photos again): button, banner text, pop-up, Leave pop-up,
+  reason field, Activity ("Recompare started"), worklist stage ("Needs recomparing"; flag for the copy pass).
+- **Pop-up "Recompare photos"** (light; same size however many photos changed): one line "n photos on file
+  changed since the report." + **View changes** (compact list, scrolls after five); **Compare with**:
+  - **New and changed photos only (n)**: "Same candidate photo as the last report. The other n results are
+    carried over." Default when something changed.
+  - **All photos (n)**: "Choose the candidate photo next. Every photo is compared again."
+  - Nothing changed: only All photos. Button: **Next**. The old bullets and "Start reverify" are gone.
+- **Update path:** Next shows the last report's candidate photo read-only ("Candidate photo from 14 Aug", what is
+  compared and carried over) and **Submit**; no "Choose a different photo", no taken line, no consent line.
+  The run compares only the new or changed photos; the other results (and review decisions) are **carried over**
+  (`r.carried`); removed photos become Removed rows. The new report therefore covers everything (cumulative), so
+  the candidate's status is the latest report's result.
+- **Report:** rows grouped "Compared now · n photos" and "Carried over from the 14 Aug report · n photos" (with
+  "Same candidate photo; these results and review decisions are unchanged."); in-progress cards say "Carried over
+  from the … report".
+- **Candidate photo changed:** when the last report's candidate photo was the **application photo**
+  (`photoSource:'application'`, e.g. an automatic report, `entry.auto`) and the application photo was replaced,
+  the update is greyed out ("This report's candidate photo, the application photo, has been replaced. Compare all
+  photos to use a new candidate photo."); the change list tags it "candidate photo"; the pop-up says "Last report:
+  run automatically · candidate photo: Application photo". The photo step then offers **Use the new application
+  photo (date)**, Take photo, Upload file (the old one isn't offered). A candidate photo is never compared with
+  itself (the application photo is left out when it's the candidate photo).
+- **Automation (not built, rules agreed):** offer accepted -> full check with the application photo; kit
+  submitted -> update with the latest report's candidate photo; candidate photo replaced -> full check. No pop-up.
+- **Copy:** "Joining-day photo" wording -> **"Candidate photo"** (captions, report line "Candidate photo taken by …",
+  photo step "Add a candidate photo", "Use candidate photo (date)", Activity). Photos added since the report are put
+  on file when a recompare starts (`applyPhotoChanges`).
+- **Demo:** `?demo=auto` turns Ananya's report into an automatic one (candidate photo = her application photo,
+  which was later replaced) to show the greyed-out update.
+- Harness: 227 pass.
+
 ## Copy pass, batch 1, and checks before the joining date (2026-11-03)
 
 Copy review asked for by the manager. Rohan flags text on screenshots; every change is approved in a live
