@@ -619,7 +619,7 @@ function uploadedImg(fit){
   if(!state.photo) return '';
   fit = fit || 'cover';
   var extra = fit==='cover' ? ';object-position:center top' : '';
-  return '<img src="'+h(state.photo)+'" alt="Photo taken on joining day" style="position:absolute;inset:0;width:100%;height:100%;object-fit:'+fit+';background:#EFEFEF'+extra+';display:block">';
+  return '<img src="'+h(state.photo)+'" alt="Candidate photo" style="position:absolute;inset:0;width:100%;height:100%;object-fit:'+fit+';background:#EFEFEF'+extra+';display:block">';
 }
 /* real photo when the candidate has one on file, else the hue placeholder */
 function photoTile(p, seed, fit){
@@ -748,7 +748,7 @@ function run(){
     if(!photos.length){ setState({running:false, done:true}); return; }
     photos.forEach(function(p, i){
       if(USE_LIVE_SCORING){
-        var work = (!p.img) ? Promise.reject(new Error('No previous photo for this round.'))
+        var work = (!p.img) ? Promise.reject(new Error('No photo for this round.'))
                             : geminiCompare(state.photo, p.img);
         work.then(function(res){ settleRow(i, token, res, null); })
             .catch(function(err){ settleRow(i, token, null, err); });
@@ -976,7 +976,7 @@ function runOne(i){
     var open=Object.assign({}, state.openRows); open[i]=true;
     setState({rows:rr, openRows:open});
   };
-  if(USE_LIVE_SCORING){ (r.img ? geminiCompare(state.photo, r.img) : Promise.reject(new Error('No previous photo for this round.'))).then(function(res){ done(res,null); }).catch(function(e){ done(null,e); }); }
+  if(USE_LIVE_SCORING){ (r.img ? geminiCompare(state.photo, r.img) : Promise.reject(new Error('No photo for this round.'))).then(function(res){ done(res,null); }).catch(function(e){ done(null,e); }); }
   else { var t=setTimeout(function(){ done({similarity:r.score||90, confidence:90, samePerson:true, reason:''}, null); }, 600); _steptimers.push(t); }
 }
 /* bottom bar "Run check": run the next changed photo that hasn't run yet, and scroll to it so the result shows */
@@ -1122,14 +1122,14 @@ function causeText(r){ return aiReason(r); }   // fixed text from the score band
 function matchReason(r){
   if(r && r.matchCause) return r.matchCause;
   var score=(r&&r.score)||0;
-  if(score>=93) return 'the eyes, nose and jaw all line up with today’s photo, with nothing that looks off.';
-  if(score>=88) return 'the main features line up with today’s photo; the small differences are down to lighting or angle.';
-  return 'enough of the face matches today’s photo to count as the same person.';
+  if(score>=93) return 'the eyes, nose and jaw all line up with the candidate photo, with nothing that looks off.';
+  if(score>=88) return 'the main features line up with the candidate photo; the small differences are down to lighting or angle.';
+  return 'enough of the face matches the candidate photo to count as the same person.';
 }
 /* plain-language reason a reference couldn’t be compared */
 function cantReason(r){
   var base=(r&&r.err) || 'We couldn’t find a face in this photo.';
-  if(/no face/i.test(base)) return base.replace(/\.+$/,'') + '. The scan is probably too dark, blurry or cropped to pick out a face, so there’s nothing to line up against today’s photo.';
+  if(/no face/i.test(base)) return base.replace(/\.+$/,'') + '. The photo is probably too dark, blurry or cropped to pick out a face, so there’s nothing to compare with the candidate photo.';
   return base;
 }
 /* small tinted callout for the match / couldn’t-compare explanations (mirrors the amber "needs a look" note) */
@@ -1578,7 +1578,7 @@ function reportFeed(s, c){
     html += '<div class="rh-stale">'+
       '<div class="bud"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>'+
       '<div style="flex:1;min-width:0"><h3>This report may be out of date</h3>'+
-        '<p>The <b>'+h(si.what)+'</b> was updated on <b>'+h(si.date)+'</b> by <b>'+h(si.by)+'</b>, after this report was submitted. Recompare to check the candidate photo against the updated previous photos.</p>'+
+        '<p>The <b>'+h(si.what)+'</b> was updated on <b>'+h(si.date)+'</b> by <b>'+h(si.by)+'</b>, after this report was submitted. Recompare to compare the candidate photo with the updated photos.</p>'+
         '<div style="margin-top:11px"><button class="rh-btn primary sm" onclick="openReverify()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Recompare</button></div>'+
       '</div>'+
     '</div>';
@@ -1669,9 +1669,9 @@ var _RMON2={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,D
 function cap(s){ s=String(s||''); return s.charAt(0).toUpperCase()+s.slice(1); }
 function shortDay(dstr){ return String(dstr||'').replace(/\s+\d{4}\b.*$/,''); }   // "16 Aug 2026" -> "16 Aug"
 function metaJoinLine(c){ var jd=c.joining||fmtDate(c.joiningISO); var verb=(dayDiff(c)>0)?'Joined':'Joins'; return c.rhid+' · '+c.req+' · '+verb+' '+jd; }
-/* downloaded file name: <RHID>-JoiningDayIdentityCheck-<report id>[-v<N>] (-vN only for an older, replaced version) */
+/* downloaded file name: <RHID>-IdentityCheck-<report id>[-v<N>] (-vN only for an older, replaced version) */
 function reportFileName(c, hh){
-  var base=(c.rhid||'RH')+'-JoiningDayIdentityCheck-'+reportId(c);
+  var base=(c.rhid||'RH')+'-IdentityCheck-'+reportId(c);
   return (hh && isSuperseded(hh)) ? base+'-v'+reportVersion(hh) : base;
 }
 function reportId(c){ var num=(c.rhid||'').replace(/\D/g,'')||'00000'; var mmdd=(c.joiningISO||'').slice(5).replace('-','')||'0000'; return 'RHS-'+num+'-'+mmdd; }
@@ -2159,7 +2159,7 @@ function findCandidateCard(ok){
 function wlHeadActions(){ return '<a class="wl-export wl-hact" href="admin.html" style="text-decoration:none" aria-label="Identity check settings"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="lbl">Settings</span></a>'+
       '<button type="button" class="wl-export wl-hact" onclick="wlExportExcel()" aria-label="Export to Excel"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg><span class="lbl">Export to Excel</span></button>'; }
 function worklistView(){
-  if(!IDV.enabled) return '<div class="rh-card wl-content" style="text-align:center;padding:48px 24px"><div style="font-size:17px;font-weight:600;margin-bottom:6px">The joining-day identity check is turned off</div>'+
+  if(!IDV.enabled) return '<div class="rh-card wl-content" style="text-align:center;padding:48px 24px"><div style="font-size:17px;font-weight:600;margin-bottom:6px">The identity check is turned off</div>'+
     '<div style="font-size:13.5px;color:#747474;margin-bottom:18px">An admin can turn it on in the identity check settings.</div><a class="rh-btn secondary sm" href="admin.html" style="text-decoration:none;display:inline-flex;align-items:center">Open settings</a></div>';
   var s=state, view=s.wlView||'pending', when=s.wlWhen||'all';
   var nPending=wlStatusRows('pending').length, nDone=wlStatusRows('completed').length;
@@ -2216,7 +2216,7 @@ function worklistView(){
   var html='<div class="rh-card wl-content">'+
     '<div class="wl-sec"><div>'+
       '<h2 class="wl-sectitle">Candidates</h2>'+
-      '<div class="wl-secdesc"><svg viewBox="0 0 24 24" width="16" height="16" fill="#0076FB" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>Run an identity check for each candidate by comparing their joining-day photo with their previous photos.</div>'+
+      '<div class="wl-secdesc"><svg viewBox="0 0 24 24" width="16" height="16" fill="#0076FB" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>Run an identity check by comparing the candidate photo with every other photo on the candidate’s profile.</div>'+
     '</div>'+
     '</div>';
 
@@ -2330,25 +2330,13 @@ function render(){
       '</div>';
     if(!c.photos.length){
       var noPh = isFuture(c)
-        ? 'No previous photos for this profile yet. '+h(c.name)+' joins on '+h(c.joining||fmtDate(c.joiningISO))+'. Once their application or interview photos are added and they’ve reported to join, you can take the joining-day photo and run the check.'
-        : 'No previous photos for this profile. There’s nothing to compare a joining-day photo against, so there’s no check to run. You’ll need at least one application, interview or document photo first.';
+        ? 'No photos on this profile yet. Once application or interview photos are added, you can run the check.'
+        : 'No photos on this profile, so there’s nothing to compare the candidate photo with. Add at least one application, interview or document photo first.';
       html += '<div class="note" style="margin-top:18px">'+noPh+'</div>';
     }
     html += '</div>';
   }
 
-  /* 3a. FUTURE JOINER - can view the profile + on-file photos, but the joining-day upload is blocked until they join */
-  if(c && c.photos.length && !s.done && isFuture(c)){
-    html += '<div class="rh-card">'+
-      '<div style="display:flex;gap:13px;align-items:flex-start">'+
-        '<span style="width:40px;height:40px;border-radius:10px;background:#EAF2FE;display:grid;place-items:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#185FA5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>'+
-        '<div style="flex:1;min-width:0">'+
-          '<div style="font-size:16px;font-weight:600;line-height:1.45;margin-bottom:3px">Joins on '+h(c.joining||fmtDate(c.joiningISO))+'</div>'+
-          '<p style="margin:0;font-size:14px;color:#747474;line-height:1.55">If '+h(c.name)+' is here early, for example to finish their documents, you can run the check now.</p>'+
-        '</div>'+
-      '</div>'+
-    '</div>';
-  }
 
   /* 3. UPLOAD (hidden once a report is shown; re-open via "Use a different photo") */
   if(c && c.photos.length && !s.done){
@@ -2367,7 +2355,7 @@ function render(){
         '<p style="margin:0 0 16px;font-size:13.5px;color:#747474">'+(_app?(camAvailable()?'Use the new application photo, take a photo, or choose one from this device':'Use the new application photo, or choose one from this device'):_ru?(camAvailable()?'Use the candidate photo again, take a new photo, or choose one from this device':'Use the candidate photo again, or choose a new one from this device'):(camAvailable()?'Take a photo, or choose one from this device':'Choose one from this device'))+'</p>'+
         '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">'+
           (_app?'<button type="button" class="rh-btn secondary sm" onclick="useNewAppPhoto()">Use the new application photo ('+h(shortDay(String(_app.date).split(', ')[0]))+')</button>':'')+
-          (_ru?'<button type="button" class="rh-btn secondary sm" onclick="useReusedPhoto()">'+h(_ru.joiningDay?('Use candidate photo ('+_ru.day+')'):('Use photo from '+_ru.day))+'</button>':'')+
+          (_ru?'<button type="button" class="rh-btn secondary sm" onclick="useReusedPhoto()">'+h('Use candidate photo ('+_ru.day+')')+'</button>':'')+
           (camAvailable()?'<button class="rh-btn secondary sm" onclick="takePhoto()">Take photo</button>':'')+
           (IDV.upload.allowFile?'<button class="rh-btn secondary sm" onclick="openPicker()">Upload file</button>':'')+
         '</div>'+
@@ -2394,7 +2382,7 @@ function render(){
         right = '<div style="flex:1;min-width:250px;display:flex;flex-direction:column;justify-content:center;gap:18px">'+fileName+
           '<div style="display:flex;flex-direction:column;gap:16px">'+
             procStep(st1, 'Checking photo quality', step1Sub)+
-            procStep(st2, 'Comparing against previous photos', step2Sub)+
+            procStep(st2, 'Comparing with the other photos', step2Sub)+
           '</div>'+
         '</div>';
       } else {
@@ -2449,13 +2437,13 @@ function render(){
     html += '<div class="rh-card" style="padding:0'+(_busy?';opacity:.6;pointer-events:none':'')+'"'+(_busy?' aria-hidden="true"':'')+'><div style="border-radius:8px;overflow:hidden">';
     if(_busy){
       var busyLabel = s.running
-        ? ('Comparing against '+CP.length+' previous photo'+(CP.length===1?'':'s')+'…')
-        : ('Total '+CP.length+' previous photo'+(CP.length===1?'':'s'));
+        ? ('Comparing with '+CP.length+' photo'+(CP.length===1?'':'s')+'…')
+        : ('Total '+CP.length+' photo'+(CP.length===1?'':'s')+' to compare');
       html += '<div style="display:flex;align-items:center;gap:10px;padding:13px 20px;border-bottom:1px solid #E0E0E0;font-size:13px;color:#747474">'+(s.running?'<span class="rh-radar" aria-hidden="true"></span>':'')+h(busyLabel)+'</div>';
     } else if(_idle){
       var idleLabel = isFuture(c)
-        ? (CP.length+' previous photo'+(CP.length===1?'':'s'))
-        : ('Total '+CP.length+' previous photo'+(CP.length===1?'':'s'));
+        ? (CP.length+' photo'+(CP.length===1?'':'s')+' to compare')
+        : ('Total '+CP.length+' photo'+(CP.length===1?'':'s')+' to compare');
       html += '<div style="padding:13px 20px;border-bottom:1px solid #E0E0E0;font-size:13px;color:#747474">'+h(idleLabel)+'</div>';
     }
     if(_done){
@@ -2632,7 +2620,7 @@ function render(){
   if(s.confirmReshoot){
     html += '<div class="rh-scrim" onclick="scrimReshoot(event)"><div class="rh-dialog" style="width:420px">'+
       '<header><h2>Use a different photo?</h2><button class="x" onclick="cancelReshoot()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
-      '<div class="dbody"><p style="margin:0;font-size:16px;color:#2A2A2A;line-height:1.55">This deletes the current joining-day photo and its result. You’ll need to upload a new photo and run the check again.</p></div>'+
+      '<div class="dbody"><p style="margin:0;font-size:16px;color:#2A2A2A;line-height:1.55">This deletes the current candidate photo and its results. You’ll need to add a new photo and run the check again.</p></div>'+
       '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="cancelReshoot()">Cancel</button><button class="rh-btn primary sm" onclick="doReshoot()">Use a different photo</button></footer>'+
     '</div></div>';
   }

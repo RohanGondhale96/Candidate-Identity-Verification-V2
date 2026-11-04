@@ -91,7 +91,7 @@ var ICON = {
   sh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
 };
 var R = [
-  {k:'id',  t:'Joining-day identity check', stage:'Joining', ctx:'Joining day', date:'3 Aug 2026, 10:20', by:'A. Sharma', res:['Not a match','r'], note:'1 of 8 photos not a match'},
+  {k:'id',  t:'Identity check', stage:'Joining', ctx:'Candidate photo', date:'3 Aug 2026, 10:20', by:'A. Sharma', res:['Not a match','r'], note:'1 of 8 photos not a match'},
   {k:'auto',t:'Automated identity check',   stage:'Offer',   ctx:'Offer round automation', date:'25 Jul 2026, 18:02', by:'Agent Builder', res:['Not a match','r'], note:'Reference: application photo'},
   {k:'sh',  t:'RH Shield report',            stage:'Interviews', ctx:'Round 3: manager round', date:'18 Jun 2026, 11:52', by:'System', res:['2 flags','a'], note:'Tab switch, second voice'},
   {k:'imp', t:'Impersonation check',         stage:'Interviews', ctx:'Round 2: technical', date:'2 Jun 2026, 16:05', by:'System', res:['No issues','g'], note:'Same person throughout'},
@@ -133,7 +133,7 @@ function optA(){
     '<div class="card viewer">'+
       '<div class="vh" id="vh">'+viewerHead(r)+'</div>'+
       '<div class="vb">'+
-        '<div id="repwrap" class="repwrap"><div class="repload">Loading report…</div><iframe id="repframe" title="Joining-day identity check report" scrolling="no" src="'+REPORT_SRC+'" onload="fitFrame()"></iframe></div>'+
+        '<div id="repwrap" class="repwrap"><div class="repload">Loading report…</div><iframe id="repframe" title="Identity check report" scrolling="no" src="'+REPORT_SRC+'" onload="fitFrame()"></iframe></div>'+
         '<div id="ph" style="display:none"></div>'+
       '</div>'+
     '</div>'+

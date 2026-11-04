@@ -6,6 +6,33 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Copy pass: joining-day text, the check no longer assumes a joining day (2026-11-04)
+
+Second batch from the terminology audit (Joining-day references sheet). The check also runs when an offer is
+accepted, so the product stops assuming a joining day. Approved on before/after screens. Patches:
+`source/fix_copy_joining_text.py`, tests `source/fix_tests_joining_text.py`.
+
+- The photo everything is compared with is the **candidate photo**; the feature is the **Identity check**
+  (worklist turned-off notice, admin title, tab, toggle and save toast, candidate page, PDF file name
+  `<RHID>-IdentityCheck-<report id>.pdf`).
+- Worklist and admin intro: "Run an identity check by comparing the candidate photo with every other photo on
+  the candidate's profile."
+- **"Previous photos" goes** (with the application photo as the candidate photo, interview and document photos
+  come later): headers "Total n photos to compare", "Comparing with n photos...", step "Comparing with the other
+  photos", reason "No photo for this round.", banner "Recompare to compare the candidate photo with the updated
+  photos." Overrides the 3 Nov "on file" -> "previous photos" decision.
+- "Today's photo" -> "the candidate photo" in the match explanations; "The scan is probably..." -> "The photo is
+  probably ...".
+- The **"Joins on {date} / here early" notice is removed** from the check page (it existed because the check was
+  a joining-day step; copy deck #12 is reversed). The no-photos messages no longer mention joining.
+- Use a different photo pop-up: "This deletes the current candidate photo and its results."
+- The Recompare photo step always offers "Use candidate photo ({date})".
+- **Stays (facts):** Joining date field, Joins/Joined, Change joining date, Not joining, Stage filter, Excel column.
+
+**Not in this batch:** the confirmation checkbox and its "confirmed as the joining-day photo" lines (next batch);
+the Gemini prompts still say "joining-day photo" (change separately, it shapes live results); the admin access
+line still says "reverify candidates"; dead code.
+
 ## Copy pass: status words, one vocabulary (2026-11-04)
 
 First batch from the terminology audit (`copy-review/terminology-and-joining-day-audit.xlsx`, Status terms
