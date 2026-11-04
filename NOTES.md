@@ -6,6 +6,29 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Completed report header: Overall status, candidate details back, no photo dates (2026-11-04)
+
+Rohan marked up the completed report (manager review). Mocked in rounds, option A approved. Patch:
+`source/fix_report_layout.py` (variant A; B = icon strip, not chosen), tests `source/fix_tests_report_layout.py`.
+
+- **Candidate details are back** (manager: "where did email / phone / joining date go?"; dropped in the 25 Sep
+  summary-first redesign): **Email / Phone / Joining date** as labelled fields under the name, the same as the
+  candidate card on the check page ("Joined" once the date has passed; "-" when missing). The line under the
+  name is now `RHID · role`. Not chosen: one plain contact line (looked tacked on); an icon strip (B).
+- **Result panel:** left "**Overall status**" with "Submitted by X · time" under it (Inconclusive adds "Every
+  photo was marked Can't confirm." / "No photo could be compared."); right: the result as bold text with its
+  icon (green "✓ Match", red "✕ Not a match", grey when out of date or Inconclusive), lined up above the photo
+  badges. A badge for the overall result was tried and dropped.
+- The "**Candidate photo taken / uploaded / reused by X**" line under the panel is gone. "Run automatically ·
+  candidate photo: Application photo" stays (open: remove it too?).
+- **Photo comparison cards:** the photo date/time under the name is gone; the badge stays on the right (a badge
+  under the name was tried and dropped). The date is still in the caption under each photo. Removed-photo cards
+  keep "Removed by X · date".
+- Demo data: the seeded candidates (Vikram, Priya, Imran, Ananya, Rohit, Sana, Dev) have email and phone now
+  (they showed "-").
+
+**Open:** the automatic line; whether the check-page photo cards (before Submit) also drop the date.
+
 ## Copy pass: the joining-date confirmation checkbox is removed; consent is the only box (2026-11-04)
 
 Third batch from the terminology audit (Confirmation checkbox impact sheet). Approved on before/after screens.

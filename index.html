@@ -236,10 +236,12 @@
   .rpt-acts .rh-actbtn{width:38px;height:38px;margin-left:0}
   .rpt-vpanel{background:#F7F8FA;border:1px solid #E5E9F0;border-radius:12px;padding:14px 16px}
   .rpt-vpanel.stale{background:#F4F5F7}
-  .rpt-vhead{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+  .rpt-vhead{display:flex;align-items:center;gap:12px;padding:0 2px}
+  .rpt-vleft{flex:1;min-width:0}
+  .rpt-vbadge{flex-shrink:0;display:flex;align-items:center;gap:8px;justify-content:flex-end;font-size:16px;font-weight:700;padding-right:10px}
   .rpt-vico{display:inline-flex;flex-shrink:0}
-  .rpt-vtext{font-size:16px;font-weight:700}
-  .rpt-vsub{margin-left:auto;text-align:right;font-size:12px;color:#747474;line-height:1.4}
+  .rpt-vtext{font-size:15px;font-weight:700;color:#2A2A2A}
+  .rpt-vsub{font-size:12px;color:#747474;line-height:1.4;margin-top:2px}
   .rpt-stable{margin-top:12px;border-top:1px solid #E5E9F0}
   .rpt-srow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;font-family:inherit;padding:9px 2px;border-bottom:1px solid #EEF1F5;cursor:pointer}
   .rpt-srow:last-child{border-bottom:0}
@@ -247,6 +249,9 @@
   .rpt-srow .s-name{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
   .rpt-srow .s-lbl{min-width:0;font-size:13px;font-weight:600;color:#2A2A2A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .rpt-srow .s-badge{width:130px;flex-shrink:0;display:flex;align-items:center;gap:7px;justify-content:flex-end}
+  .rpt-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px 20px;margin:2px 0 18px}
+  .rpt-fields .k{font-size:13px;color:#747474;margin-bottom:3px}
+  .rpt-fields .v{font-size:14px;font-weight:600;color:#2A2A2A;word-break:break-word}
   .rpt-attest{margin-top:14px;font-size:12px;color:#1a6b34;display:flex;align-items:center;gap:6px}
   .rpt-seclabel{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#667085;margin:22px 4px 10px}
   .rpt-card{background:#fff;border:1px solid #E5E9F0;border-radius:16px;box-shadow:0 1px 2px rgba(20,30,50,.06),0 8px 22px rgba(20,30,50,.08);margin-bottom:14px;overflow:hidden;scroll-margin-top:14px}
@@ -275,7 +280,6 @@
   @media(max-width:600px){
     .rpt-headrow{flex-wrap:wrap}
     .rpt-acts{width:100%;justify-content:flex-start;flex-wrap:wrap}
-    .rpt-vsub{margin-left:0;width:100%;text-align:left}
     .rpt-ood{flex-wrap:wrap}
     .rpt-reverify{width:100%;justify-content:center}
   }
@@ -1747,7 +1751,7 @@ function completedCard(i, r, c, stale){
     :'<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" class="rpt-caret">'+chevron(open?'180deg':'0deg')+'</button>';
   var head='<div class="rpt-cardhead"'+(isCant?'':(' onclick="toggleRow('+i+')" style="cursor:pointer"'))+'>'+
     ((open||isCant)?'':reportThumbs(r,seed))+
-    '<div style="flex:1;min-width:0"><div class="rpt-cardname" style="display:flex;align-items:center;gap:8px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h(r.label)+'</span>'+(changed?changeTag(changeFor(c,r)):'')+'</div><div class="rpt-carddate">'+h(tz(r.date))+'</div></div>'+
+    '<div style="flex:1;min-width:0"><div class="rpt-cardname" style="display:flex;align-items:center;gap:8px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h(r.label)+'</span>'+(changed?changeTag(changeFor(c,r)):'')+'</div></div>'+
     '<div class="rpt-cardright">'+resultBadge(r,stale)+caret+'</div>'+
   '</div>';
   var body='';
@@ -1770,6 +1774,8 @@ function completedReport(s, c){
   var vv=reportVerdict(rows), confirmed=vv.confirmed, inconc=(vv.tier==='inconclusive');
   var vcol=(stale||inconc)?'#667085':(confirmed?'#1a8a3a':'#D93025');
   var vico=inconc?'<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.6v.1"/>':(confirmed?'<path d="M5 12.5l4.5 4.5L19 7.5"/>':'<path d="M7 7l10 10M17 7L7 17"/>');
+  var verdictWord=inconc?'Inconclusive':(confirmed?'Match':'Not a match');
+  var verdictNote=inconc?(reportSummary(rows).cant>0?'No photo could be compared.':'Every photo was marked Can’t confirm.'):'';
   var verdictText=stale
     ? ((inconc?'Inconclusive':(confirmed?'Match':'Not a match'))+' on '+submitShort(dec)+', before the '+(staleList(c).length>1?'photos':'photo')+' changed')
     : (inconc?(reportSummary(rows).cant>0?'Inconclusive: no photo could be compared':'Inconclusive: every photo was marked Can’t confirm'):(confirmed?'Match':'Not a match'));
@@ -1784,18 +1790,21 @@ function completedReport(s, c){
   }
   html+='<div style="padding:20px">';
   html+='<div class="rpt-headrow">'+avatar(c.name,44)+
-    '<div style="min-width:0;flex:1"><div class="rpt-name">'+h(c.name)+'</div><div class="rpt-meta">'+h(metaJoinLine(c))+'</div></div>'+
+    '<div style="min-width:0;flex:1"><div class="rpt-name">'+h(c.name)+'</div><div class="rpt-meta">'+h(c.rhid+' · '+c.req)+'</div></div>'+
     '<div class="rpt-acts">'+
       (!canDo('run')?'':'<button type="button" class="rh-btn '+(stale?'primary':'secondary')+' sm" onclick="'+(stale?'openReverify()':'openRerun()')+'"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Recompare</button>')+
       '<button type="button" class="rh-actbtn" aria-label="Download report" onclick="downloadReport()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg><span class="tip">Download report</span></button>'+
       '<button type="button" class="rh-actbtn" aria-label="View activity" onclick="openActivity()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span class="tip">View activity</span></button>'+
     '</div>'+
   '</div>';
+  html+='<div class="rpt-fields">'+[{k:'Email',v:c.email||'-'},{k:'Phone',v:c.phone||'-'},{k:(dayDiff(c)>0?'Joined':'Joining date'),v:c.joining||fmtDate(c.joiningISO)||'-'}].map(function(f){
+    return '<div><div class="k">'+h(f.k)+'</div><div class="v">'+h(f.v)+'</div></div>'; }).join('')+'</div>';
   html+='<div class="rpt-vpanel'+(stale?' stale':'')+'">'+
     '<div class="rpt-vhead">'+
-      '<span class="rpt-vico" style="color:'+vcol+'"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'+vico+'</svg></span>'+
-      '<span class="rpt-vtext" style="color:'+vcol+'">'+h(verdictText)+'</span>'+
-      '<span class="rpt-vsub">Submitted by '+h(by)+' · '+h(tz(submittedAt))+'</span>'+
+      '<div class="rpt-vleft"><div class="rpt-vtext">Overall status</div>'+
+        (verdictNote?'<div class="rpt-vsub">'+h(verdictNote)+'</div>':'')+
+        '<div class="rpt-vsub">Submitted by '+h(by)+' · '+h(tz(submittedAt))+'</div></div>'+
+      '<span class="rpt-vbadge" style="color:'+vcol+'"><span class="rpt-vico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">'+vico+'</svg></span>'+h(verdictWord)+'</span>'+
     '</div>'+
     '<div class="rpt-stable">'+ rows.map(function(r,i){
       return '<button type="button" class="rpt-srow" onclick="scrollToRow('+i+')">'+
@@ -1806,8 +1815,6 @@ function completedReport(s, c){
   '</div>';
   if(hh.auto){
     html+='<div class="rpt-attest" style="color:#5A6473">Run automatically · candidate photo: Application photo</div>';
-  } else {
-    html+='<div class="rpt-attest" style="color:#5A6473">'+(reusedInfo(hh)?('Candidate photo from '+h(shortDay(String(reusedInfo(hh).takenAt).split(', ')[0]))+' reused by '+h(by)+' · taken '+h(uploadStamp)):((hh.photoSource==='file'?'Candidate photo uploaded by ':'Candidate photo taken by ')+h(by)+' · '+h(uploadStamp)))+'</div>';
   }
   html+='</div></div>';
   html+='<div class="rpt-seclabel">'+(stale?('Photos compared on '+h(submitShort(dec))):'Photo comparisons')+'</div>';
@@ -3156,13 +3163,13 @@ var FACELESS_DOC='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAVQAAAG4CAAAAAA/
 function buildSeeds(){
   // Small demo set: 7 seeds + the 3 real candidates (Rahul, Arjun, Meera) = 10 total.
   var seeds=[
-    {name:'Vikram Nair',  req:'Data Engineer',     st:'toverify',    iso:'2026-08-15', reason:'', score:91, noface:true},
-    {name:'Priya Sharma', req:'QA Analyst',        st:'toverify',    iso:'2026-08-12', reason:'', score:88},
-    {name:'Imran Shaikh', req:'UX Designer',       st:'inreview',    iso:'2026-08-13', reason:'Checked · not submitted', score:63},
-    {name:'Ananya Rao',   req:'Product Manager',   st:'verified',    completed:'match',        iso:'2026-08-14', reason:'Submitted by A. Sharma · 14:35', score:94, sub:'14:35'},
-    {name:'Rohit Menon',  req:'SDET',              st:'verified',    completed:'inconclusive', iso:'2026-08-15', reason:'Submitted by A. Sharma · 15:42 · 1 couldn’t be confirmed', score:92, sub:'15:42', setAsideReason:'old photo, low resolution'},
-    {name:'Sana Kapoor',  req:'Frontend Engineer', st:'notverified', completed:'notmatch',     iso:'2026-08-13', reason:'Submitted by A. Sharma · 10:20', score:22, sub:'10:20'},
-    {name:'Dev Patel',    req:'Mobile Engineer',   st:'toverify',    iso:'2026-08-18', reason:'', score:90}
+    {name:'Vikram Nair', email:'vikram.nair@gmail.com', phone:'+91 98450 21376',  req:'Data Engineer',     st:'toverify',    iso:'2026-08-15', reason:'', score:91, noface:true},
+    {name:'Priya Sharma', email:'priya.sharma@outlook.com', phone:'+91 99201 66418', req:'QA Analyst',        st:'toverify',    iso:'2026-08-12', reason:'', score:88},
+    {name:'Imran Shaikh', email:'imran.shaikh@gmail.com', phone:'+91 98190 37752', req:'UX Designer',       st:'inreview',    iso:'2026-08-13', reason:'Checked · not submitted', score:63},
+    {name:'Ananya Rao', email:'ananya.rao@gmail.com', phone:'+91 97401 58823',   req:'Product Manager',   st:'verified',    completed:'match',        iso:'2026-08-14', reason:'Submitted by A. Sharma · 14:35', score:94, sub:'14:35'},
+    {name:'Rohit Menon', email:'rohit.menon@yahoo.in', phone:'+91 98864 10297',  req:'SDET',              st:'verified',    completed:'inconclusive', iso:'2026-08-15', reason:'Submitted by A. Sharma · 15:42 · 1 couldn’t be confirmed', score:92, sub:'15:42', setAsideReason:'old photo, low resolution'},
+    {name:'Sana Kapoor', email:'sana.kapoor@gmail.com', phone:'+91 99583 72140',  req:'Frontend Engineer', st:'notverified', completed:'notmatch',     iso:'2026-08-13', reason:'Submitted by A. Sharma · 10:20', score:22, sub:'10:20'},
+    {name:'Dev Patel', email:'dev.patel@outlook.com', phone:'+91 90049 31586',    req:'Mobile Engineer',   st:'toverify',    iso:'2026-08-18', reason:'', score:90}
   ];
   seeds.forEach(function(x,i){
     var key='s'+(i+1);
@@ -3173,7 +3180,7 @@ function buildSeeds(){
       {label:'Round 2: technical', src:'interview',   date:'02 May 2026, 15:20', by:'R. Menon', score:x.score, img:img}
     ];
     if(x.noface) photos.push({label:'Aadhaar card', src:'document', date:'Uploaded 20 Apr 2026, 18:30', by:null, score:x.score, img:FACELESS_DOC, cant:true});
-    CANDIDATES.push({ id:key, name:x.name, rhid:'RH'+(49001+i), req:x.req, reqid:'REQ-'+(2401+i), stage:'Onboarding', eligible:true, joiningISO:x.iso, joining:fmtLong(x.iso), owner:'me',
+    CANDIDATES.push({ id:key, name:x.name, email:x.email||'', phone:x.phone||'', rhid:'RH'+(49001+i), req:x.req, reqid:'REQ-'+(2401+i), stage:'Onboarding', eligible:true, joiningISO:x.iso, joining:fmtLong(x.iso), owner:'me',
       photos:photos,
       wl:{status:x.st, completed:x.completed||null, by:'A. Sharma', at:hhmm(i+2), submitTime:x.sub||null, setAsideReason:x.setAsideReason||null, reason:x.reason} });
   });
