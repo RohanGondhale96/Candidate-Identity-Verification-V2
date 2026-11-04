@@ -1523,6 +1523,7 @@ function pendingCard(i, r, c){
     '</div>'+
     '<div style="padding:0 16px 16px">'+comparePanes(r,seed,i,c)+
       '<div style="margin-top:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#FBF1DE;border:1px solid #F0DFB8;border-radius:10px;padding:12px 14px">'+
+        '<span style="width:28px;height:28px;flex-shrink:0;border-radius:8px;background:#F6E4BC;display:flex;align-items:center;justify-content:center;color:#8A6414"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>'+
         '<div style="flex:1 1 260px;font-size:13px;color:#6B4E0F;line-height:1.5"><b>'+(ch.verb==='added'?'This photo was added after the check ran.':'This photo was replaced after the check ran.')+'</b> It hasn’t been compared yet. Run the check for this photo before you submit.</div>'+
         '<button type="button" class="rh-btn primary sm" '+(running?'disabled':'')+' onclick="runOne('+i+')" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>'+(running?'Comparing…':'Run check')+'</button>'+
       '</div>'+
@@ -1567,6 +1568,22 @@ function reportCard(i, r, c){
   if(isCant){ body='<div style="padding:0 16px 16px">'+comparePanes(r,seed,i,c)+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }   // show the photos so the recruiter can see why
   else if(open){ var panel = st==='review' ? reasonCodes(i,r) : (st==='nomatch' ? nomatchOverride(i,r) : matchOverride(i,r)); body='<div style="padding:0 16px 16px">'+comparePanes(r,seed,i,c)+panel+'</div>'; }
   return '<article id="rpt-round-'+i+'" style="'+V2CARD+';scroll-margin-top:12px'+(st==='review'?';border-color:#D9DFE8':'')+'">'+head+body+'</article>';
+}
+/* amber band across the top of the candidate card while a check has photos that changed mid-check
+   (same pattern as the out-of-date band on a completed report) */
+function midChangeBand(s){
+  if(!s || !s.done || s.decision || !s.rows || !s.rows.length) return '';
+  var nPend=pendingCount(s.rows), nGone=removedCount(s.rows);
+  if(!nPend && !nGone) return '';
+  var title = nPend ? (nPend+' photo'+(nPend===1?'':'s')+' changed after the check ran') : (nGone+' photo'+(nGone===1?' was':'s were')+' removed after the check ran');
+  var lines = [];
+  if(nPend) lines.push('Run the check for '+(nPend===1?'it':'each one')+' before you submit. The other comparisons are kept.');
+  if(nGone) lines.push((nPend?(nGone+' photo'+(nGone===1?' was':'s were')+' removed. '):'')+(nGone===1?'It stays in the report as removed and is':'They stay in the report as removed and are')+' left out of the result.');
+  return '<div class="rpt-ood">'+
+    '<span class="ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>'+
+    '<div class="tx"><h3>'+h(title)+'</h3>'+lines.map(function(t){ return '<p>'+h(t)+'</p>'; }).join('')+'</div>'+
+    (nPend ? '<button type="button" class="rh-btn secondary sm" onclick="jumpToPending()" style="flex-shrink:0;align-self:center">Go to '+(nPend===1?'photo':'photos')+'</button>' : '')+
+  '</div>';
 }
 function reportFeed(s, c){
   var rows=s.rows, view=s.reportView||'all', html='';
@@ -1616,16 +1633,6 @@ function reportFeed(s, c){
     html += '</div>';
   }
   var nPend=s.decision?0:pendingCount(rows), nGone=s.decision?0:removedCount(rows);
-  if(nPend || nGone){
-    html += '<div class="rh-card" style="margin-top:14px;display:flex;gap:12px;align-items:flex-start;background:#FFFBF2;border:1px solid #F0DFB8;padding:14px 16px">'+
-      '<span style="color:#B7791F;flex-shrink:0;margin-top:1px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>'+
-      '<div style="flex:1;min-width:0;font-size:13.5px;color:#2A2A2A;line-height:1.55">'+
-        (nPend ? '<b>'+nPend+' photo'+(nPend===1?'':'s')+' changed after the check ran.</b> Run the check for '+(nPend===1?'it':'each one')+' before you submit. The other comparisons are kept.' : '')+
-        (nGone ? '<div style="'+(nPend?'margin-top:6px;':'')+'color:#5A6473">'+(nPend?'':'<b style="color:#2A2A2A">')+nGone+' photo'+(nGone===1?' was':'s were')+' removed.'+(nPend?'':'</b>')+' '+(nGone===1?'It stays in the report as removed and is':'They stay in the report as removed and are')+' left out of the result.</div>' : '')+
-      '</div>'+
-      (nPend ? '<button type="button" class="rh-btn secondary sm" onclick="jumpToPending()" style="flex-shrink:0">Go to '+(nPend===1?'photo':'photos')+'</button>' : '')+
-    '</div>';
-  }
   html += '<div style="height:14px"></div>';
   var groups=[{title:'Application &amp; interview photos', test:function(r){return r.src!=='document';}},{title:'Identity documents', test:function(r){return r.src==='document';}}];
   groups.forEach(function(g){
@@ -2322,7 +2329,8 @@ function render(){
 
   /* 2. CANDIDATE CARD (upload / review flow only; the completed report has its own header) */
   if(c && !completedView){
-    html += '<div class="rh-card">'+
+    var _band=midChangeBand(s);
+    html += '<div class="rh-card"'+(_band?' style="padding:0;overflow:hidden"':'')+'>'+_band+(_band?'<div style="padding:20px">':'')+
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">'+avatar(c.name,40)+
         '<div style="min-width:0"><div style="font-size:16px;font-weight:600;line-height:1.4">'+h(c.name)+'</div><div style="font-size:13px;color:#747474;line-height:1.4">'+h(c.rhid+' · '+c.req)+'</div></div>'+
         '<div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-shrink:0">'+
@@ -2341,7 +2349,7 @@ function render(){
         : 'No photos on this profile, so there’s nothing to compare the candidate photo with. Add at least one application, interview or document photo first.';
       html += '<div class="note" style="margin-top:18px">'+noPh+'</div>';
     }
-    html += '</div>';
+    html += (_band?'</div>':'')+'</div>';
   }
 
 

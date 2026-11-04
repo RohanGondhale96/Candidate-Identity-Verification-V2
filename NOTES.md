@@ -6,6 +6,20 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Changed-photos warning at the top of the check page (2026-11-04)
+
+Rohan: keep the pattern of the out-of-date banner, important things at the top of the page. Approved on
+before/after screens. Patch: `source/fix_midcheck_top.py`, tests `source/fix_tests_midcheck_top.py`.
+
+- When photos change during a check (before Submit), the warning is no longer a card below the candidate photo
+  card. It is an **amber band across the top of the candidate card** (`midChangeBand(s)`, same `.rpt-ood` look as
+  the out-of-date band on a completed report): title "n photos changed after the check ran", then "Run the
+  check for each one before you submit. The other comparisons are kept." and, if any, "n photo(s) removed. It
+  stays in the report as removed and is left out of the result."; **Go to photos** on the right.
+- Only removed photos: title "n photo(s) removed after the check ran", the removed sentence, no button.
+- The note on each changed photo ("This photo was replaced / added after the check ran...") gets the same
+  warning icon (amber triangle in its rounded box) before the text; Run check stays on the right.
+
 ## Completed report header: Overall status, candidate details back, no photo dates (2026-11-04)
 
 Rohan marked up the completed report (manager review). Mocked in rounds, option A approved. Patch:
