@@ -6,6 +6,23 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## One pattern for labels: sentence case everywhere (2026-11-05)
+
+Rohan: "in one page everything is in caps, in another page it's sentence case, there is no uniformity". RH design
+system (`D:\Codebase\RH DEsign system\readme.md`, Casing): sentence case everywhere, headings, labels, buttons,
+table headers. Approved on before/after screens. Patch: `source/fix_case_labels.py` (check page, admin, candidate
+page), tests `source/fix_tests_case_labels.py`.
+
+- **Section and group labels share one style:** 13px, semibold, `#667085`, sentence case, no letter-spacing.
+  "Application & interview photos (n)" / "Identity documents (n)" (before and after the run, same words and
+  style), "Photo comparisons" / "Photos compared on 14 Aug" / "Compared now" / "Carried over..." on the report,
+  "Is this the same person?" and "Change the result" in the review panel, "Reports (n)" on the candidate page.
+- **12px sentence case** for the submit table header ("Photo · Suggested result · Final result"), the Activity
+  day ("15 Aug 2026"), the worklist filter groups ("Stage", "Joining") and the admin's "Regex" / "Text" tags.
+- No `text-transform:uppercase` is left on any page.
+- Photo list header: "Total n photos to compare" -> "**Total n photos**" (also for candidates who join later,
+  which said "n photos to compare"). "Comparing with n photos..." while running is unchanged.
+
 ## Shorter photo frames (5:4) and no "replaced by / removed by" line (2026-11-05)
 
 Rohan: the photos were too tall (one comparison didn't fit on a laptop screen). Mocked today vs square vs 5:4 on
