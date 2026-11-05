@@ -11,8 +11,8 @@ looks like an accident.
 Rohan: show that consent was taken. Two options mocked (own line vs. appended to "Run by"); **A** chosen. Patch:
 `source/fix_consent_line.py` (variant A), tests `fix_tests_consent_line.py` + `fix_tests_consent_line2.py`.
 
-- On the check page, under "Run by A. Sharma · date": a green tick and "**Consent obtained by the candidate to use
-  this photo for identity verification**" (Rohan's wording). A reused photo: "Consent carried over from the earlier
+- On the check page, under "Run by A. Sharma · date": a green tick and "**Consent obtained from the candidate to use
+  this photo for identity verification**" (Rohan's wording; "by" -> "from" the same day). A reused photo: "Consent carried over from the earlier
   check".
 - Not on the completed report (it has no candidate photo card) and not for the automatic run (where its consent
   comes from is still open).

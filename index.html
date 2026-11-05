@@ -1618,7 +1618,7 @@ function reportFeed(s, c){
     '<div style="width:48px;height:60px;border-radius:8px;overflow:hidden;background:#EFEFEF;border:1px solid #DDD;flex-shrink:0;position:relative">'+uploadedImg('cover')+'</div>'+
     '<div style="flex:1 1 180px;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.4">'+h(joinPhotoLabel(s.entry))+'</div>'+
       '<div style="font-size:12.5px;color:#747474;margin-top:2px">'+(reusedInfo(s.entry)?('Taken '+h(tz(photoStamp(c, s.entry)))+' · reused by A. Sharma'):('Run by A. Sharma · '+h(photoStamp(c, s.entry))+' IST'))+'</div>'+
-      '<div style="font-size:12.5px;color:#1a6b34;margin-top:3px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'+(reusedInfo(s.entry)?'Consent carried over from the earlier check':'Consent obtained by the candidate to use this photo for identity verification')+'</div>'+
+      '<div style="font-size:12.5px;color:#1a6b34;margin-top:3px;display:flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1a8a3a" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'+(reusedInfo(s.entry)?'Consent carried over from the earlier check':'Consent obtained from the candidate to use this photo for identity verification')+'</div>'+
 
     '</div>'+
     '<div class="rpt-headacts" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'+
