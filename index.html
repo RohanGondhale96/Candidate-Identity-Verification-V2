@@ -1545,28 +1545,28 @@ function removedNote(r){
 function removedCard(i, r, c, completed){
   var ch=r.change||{};
   var sub='Removed by '+h(ch.by)+' · '+h(tz(ch.date+', '+ch.time));
-  var head='<div style="display:flex;align-items:center;gap:13px;padding:14px 16px">'+
+  var open=effectiveOpen(i,r);
+  var head='<div style="display:flex;align-items:center;gap:13px;padding:14px 16px;cursor:pointer" onclick="toggleRow('+i+')">'+
       '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.35;color:#475467">'+h(r.label)+'</div></div>'+
-      '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+_pill('Removed','#5F5E5A','#EFEFEF')+'<span style="width:30px;flex-shrink:0"></span></div>'+
+      '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+_pill('Removed','#5F5E5A','#EFEFEF')+'<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" style="width:30px;height:30px;border:0;background:none;cursor:pointer;display:grid;place-items:center;border-radius:7px;flex-shrink:0">'+chevron(open?'180deg':'0deg')+'</button>'+'</div>'+
     '</div>';
-  var body='<div style="padding:0 16px 16px">'+removedPanes(r,c)+removedNote(r)+'</div>';
+  var body=open ? '<div style="padding:0 16px 16px">'+removedPanes(r,c)+removedNote(r)+'</div>' : '';
   return '<article id="rpt-round-'+i+'" '+(completed?'class="rpt-card"':'style="'+V2CARD+';scroll-margin-top:12px"')+'>'+head+body+'</article>';
 }
 function reportCard(i, r, c){
   if(isPendingRow(r)) return pendingCard(i, r, c);
   if(isRemovedRow(r)) return removedCard(i, r, c);
   var st=photoState(r), flagged=(st==='review'||st==='nomatch'), isCant=(st==='cant');
-  var open=effectiveOpen(i,r), seed=(c?c.id:'')+r.label, chip=rowBadge(r), clickable=!isCant;
+  var open=effectiveOpen(i,r), seed=(c?c.id:'')+r.label, chip=rowBadge(r), clickable=true;
   var subline = [r.checkedAfterChange && r.change ? '<span style="color:#5A6473">'+(r.change.verb==='added'?'Added':'Replaced')+' after the check ran, checked separately</span>' : '', r.carried ? '<span style="color:#5A6473">Carried over from the '+h(r.carried)+' report</span>' : ''].filter(Boolean).join(' · ');
-  var caret = isCant ? '<span style="width:30px;flex-shrink:0"></span>'
-    : '<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" style="width:30px;height:30px;border:0;background:none;cursor:pointer;display:grid;place-items:center;border-radius:7px;flex-shrink:0">'+chevron(open?'180deg':'0deg')+'</button>';
+  var caret = '<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" style="width:30px;height:30px;border:0;background:none;cursor:pointer;display:grid;place-items:center;border-radius:7px;flex-shrink:0">'+chevron(open?'180deg':'0deg')+'</button>';
   var head='<div style="display:flex;align-items:center;gap:13px;padding:14px 16px'+(clickable?';cursor:pointer':'')+'"'+(clickable?(' onclick="toggleRow('+i+')"'):'')+'>'+
-    ((open||isCant)?'':reportThumbs(r,seed))+
+    (open?'':reportThumbs(r,seed))+
     '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.35">'+h(r.label)+'</div>'+(subline?'<div style="font-size:12px;color:#667085;margin-top:1px">'+subline+'</div>':'')+'</div>'+
     '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+chip+caret+'</div>'+
   '</div>';
   var body='';
-  if(isCant){ body='<div style="padding:0 16px 16px">'+comparePanes(r,seed,i,c)+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }   // show the photos so the recruiter can see why
+  if(isCant){ if(open) body='<div style="padding:0 16px 16px">'+comparePanes(r,seed,i,c)+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }   // open by default: the photos show why
   else if(open){ var panel = st==='review' ? reasonCodes(i,r) : (st==='nomatch' ? nomatchOverride(i,r) : matchOverride(i,r)); body='<div style="padding:0 16px 16px">'+comparePanes(r,seed,i,c)+panel+'</div>'; }
   return '<article id="rpt-round-'+i+'" style="'+V2CARD+';scroll-margin-top:12px'+(st==='review'?';border-color:#D9DFE8':'')+'">'+head+body+'</article>';
 }
@@ -1756,15 +1756,14 @@ function completedRowNote(r, c){
 function completedCard(i, r, c, stale){
   if(isRemovedRow(r)) return removedCard(i, r, c, true);
   var open=effectiveOpen(i,r), seed=(c?c.id:'')+r.label, isCant=(photoState(r)==='cant'), changed=isChangedRow(c,r);
-  var caret=isCant?'<span style="width:30px;flex-shrink:0"></span>'
-    :'<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" class="rpt-caret">'+chevron(open?'180deg':'0deg')+'</button>';
-  var head='<div class="rpt-cardhead"'+(isCant?'':(' onclick="toggleRow('+i+')" style="cursor:pointer"'))+'>'+
-    ((open||isCant)?'':reportThumbs(r,seed))+
+  var caret='<button type="button" onclick="event.stopPropagation();toggleRow('+i+')" aria-label="Expand or collapse" class="rpt-caret">'+chevron(open?'180deg':'0deg')+'</button>';
+  var head='<div class="rpt-cardhead" onclick="toggleRow('+i+')" style="cursor:pointer">'+
+    (open?'':reportThumbs(r,seed))+
     '<div style="flex:1;min-width:0"><div class="rpt-cardname" style="display:flex;align-items:center;gap:8px"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+h(r.label)+'</span>'+(changed?changeTag(changeFor(c,r)):'')+'</div></div>'+
     '<div class="rpt-cardright">'+resultBadge(r,stale)+caret+'</div>'+
   '</div>';
   var body='';
-  if(isCant){ body='<div class="rpt-cardbody">'+comparePanes(r,seed,i,c)+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
+  if(isCant){ if(open) body='<div class="rpt-cardbody">'+comparePanes(r,seed,i,c)+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
   else if(open){
     var note=changed ? amberNoteBox('This is the photo compared on '+submitShort(state.decision)+'. The new one hasn’t been compared yet.') : completedRowNote(r,c);
     body='<div class="rpt-cardbody">'+comparePanes(r,seed,i,c)+note+'</div>';   // same captions as the review screen
@@ -2280,7 +2279,7 @@ function worklistView(){
       var fut=isFuture(c), overdue=isOverdue(c), d=dayDiff(c), done=isCompleted(c);
       var div=firstRow?'':'border-top:1px solid #EEF1F5;'; firstRow=false;
       // Completed rows have no kebab; others keep a 30px spacer so pills stay aligned
-      var kebab = done ? '' : (showListKebab(c) ? listKebab(c) : '<span class="wl-kebab" style="width:30px;flex-shrink:0"></span>');
+      var kebab = '';   // row menu (Change joining date / Not joining) removed 2026-11-05
       var sub = h(c.rhid+' · '+c.req);
       var upTag = '<span class="wl-when">'+h(fmtLong(c.joiningISO))+'</span>'+timingBadge(c);
       html+='<div class="wl-row" role="button" tabindex="0" onclick="pick(\''+c.id+'\')" style="'+div+'">'+
@@ -2972,13 +2971,13 @@ function drop(e){ e.preventDefault(); setState({drag:false}); handleFile(e.dataT
 /* accordion: every comparison row is open by default (the reviewer sees them all); the caret still lets
    a user collapse an individual row. cant rows never expand (their note shows inline instead). */
 function effectiveOpen(i, r){
-  if(!r || photoState(r)==='cant') return false;
+  if(!r) return false;
   if(state.openRows && Object.prototype.hasOwnProperty.call(state.openRows, i)) return !!state.openRows[i];
   return true;
 }
 function toggleRow(i){
   if(!state.done) return;
-  var r=state.rows[i]; if(!r || photoState(r)==='cant') return;
+  var r=state.rows[i]; if(!r) return;
   var m=Object.assign({}, state.openRows); m[i]=!effectiveOpen(i, r);
   setState({openRows:m});
 }

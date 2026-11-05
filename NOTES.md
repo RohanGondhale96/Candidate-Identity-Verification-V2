@@ -6,6 +6,18 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Chevron on Couldn't compare and Removed cards; no worklist row menu (2026-11-05)
+
+Rohan: "why is there no accordion to this?" and "remove this kebab menu". Patch: `source/fix_chevron_kebab.py`,
+tests `source/fix_tests_chevron_kebab.py`.
+
+- **Couldn't compare** and **Removed** photo cards now have the same chevron as every other photo card, on the check
+  page and the completed report. They open by default (the photos and the reason show straight away) and
+  collapse / expand like the rest. They used to be always open with no chevron (no recorded decision; the code
+  only kept them open so the reason was visible).
+- **Worklist:** the three-dot row menu on To verify rows is gone. Its actions, **Change joining date** and **Not
+  joining**, are no longer reachable from the worklist (the functions are still in the code).
+
 ## One radio pattern: choice cards in all three choice pop-ups (2026-11-05)
 
 Rohan: "design inconsistency, all 3 have radio buttons". The new-check pop-up used bordered choice cards; the two
