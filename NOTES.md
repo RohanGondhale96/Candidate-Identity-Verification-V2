@@ -6,6 +6,33 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## "Run new check" replaces "Recompare"; the new-check pop-up; reason pop-ups (2026-11-05)
+
+Rohan's design for the pop-up; all changes approved on screens. Patches (in order): `fix_reason_popup_note.py`,
+`fix_run_new_check.py`, `fix_new_check_wording.py`, `fix_popup_design_v3.py`; tests `fix_tests_new_check.py`.
+
+- **Report button** "Recompare" -> "**Run new check**" (normal and out-of-date). The out-of-date banner ends "Run a
+  new check to include it." (several changes: "...to include them.").
+- **Pop-up "Run a new identity check"** (600 px wide):
+  - "1 photo has changed since the 14 Aug report." / "No photos have been added or changed since the 15 Aug
+    report." / "The application photo, used as the candidate photo in the 14 Aug report, has changed." No View
+    changes list (each change is tagged on the report).
+  - "**Which photos should be checked?**"
+  - "Only the changed photos (n): Checks the n updated photos against the current candidate photo." (greyed:
+    "Nothing has changed." / "Not possible: the candidate photo itself changed.")
+  - "All photos (n): Starts a new check. You'll take or upload a new photo of the candidate." (candidate photo
+    replaced: "...with the new application photo, or another photo of the candidate.")
+  - Footer: history icon + "**The 14 Aug report stays in Activity.**" on the left; Cancel / **Run check** (was
+    Next).
+  - The optional reason field (admin setting, off by default) sits inside the body as an underlined field.
+- **"Recompare" is gone everywhere:** worklist "Needs a new check" (row, Outcome filter, "1 needs a new check");
+  Activity and toast "New check started"; "New check: choose the candidate photo"; "Leave this new check? ... You
+  can continue the check from there."; admin "...submit reports and run new checks", hidden section "New checks",
+  "Ask for a reason when running a new check".
+- **Reason pop-ups:** titles "**Can't confirm this photo**" and "**Mark as not a match**"; reason "Appearance
+  changed (age)" -> "**Appearance has changed**" (admin default too; saved admin lists keep their own text); the
+  note field appears **only for Other** (required then); other reasons save no note.
+
 ## Recompare pop-up redesign: "What do you want to recompare?" (2026-11-05)
 
 Rohan: "on file" must go everywhere; the pop-up "looks very bad"; "Compare with" and "Choose the candidate

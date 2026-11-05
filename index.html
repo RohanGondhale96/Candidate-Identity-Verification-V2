@@ -157,6 +157,8 @@
   .rh-dialog .rh-btn.tertiary{font-size:16px;padding:0 4px}
   /* radio (components/forms/Radio): 16px ring, 2px border, blue with an 8px dot when chosen */
   .rc-sum{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:16px;color:#2A2A2A;line-height:1.5}
+  .rc-hist{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#747474;min-width:0;white-space:nowrap}
+  .rc-hist svg{flex-shrink:0}
   .rc-sum .lnk{border:0;background:none;padding:0;color:var(--rh-primary);font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
   .rc-sum .lnk svg{transition:transform .15s}
   .rc-sum .lnk[aria-expanded="true"] svg{transform:rotate(180deg)}
@@ -866,7 +868,7 @@ var IDV_DEFAULTS = {
   reverify: { outdatedOn:{ replaced:true, deleted:true, added:true }, requireReason:false, notify:{ roles:['Recruiter'], users:[] } },
   report: { timezone:'IST' },
   reasons: { notmatch:['Clearly a different person','Facial features don\'t match'],
-             ignore:['The photo is blurry','Appearance changed (age)','The document photo isn\u2019t clear'] }   // "Other" is always added last
+             ignore:['The photo is blurry','Appearance has changed','The document photo isn\u2019t clear'] }   // "Other" is always added last
 };
 function idvMerge(base, over){
   if(Array.isArray(base)) return Array.isArray(over) ? over.slice() : base.slice();
@@ -1332,15 +1334,15 @@ function _pill(txt,color,bg){ return '<span style="display:inline-flex;align-ite
 function pill2(txt,color,bg){ return '<span style="background:'+bg+';color:'+color+';border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;white-space:nowrap">'+h(txt)+'</span>'; }
 /* the row status pills: base status + a modifier (Delayed) / outcome (Match / Not a match) */
 /* worklist stage: one label over a 3-segment bar (Not joined yet / Ready to check / Check in progress /
-   Check completed / Needs recomparing). Shown on both tabs. */
+   Check completed / Needs a new check). Shown on both tabs. */
 var WL_SEG={g:'#12B76A',b:'#0076FB',l:'#BFD7F7',n:'#E5E7EB',a:'#F59E0B'};
 /* The bar only shows how far along the check is: done stages are blue, the rest grey, so it never
    competes with the result. The result colour lives in the text (Match green, Not a match red,
-   Needs recomparing amber). */
+   Needs a new check amber). */
 /* To verify has two steps (joined, check started); a finished check moves to Completed, so a third
    segment would never fill. Completed rows show no bar, only the status and the result. */
 function stageInfo(c){
-  if(isCompleted(c)) return c.staleInfo ? {label:'Needs recomparing',col:'#8A6414',segs:''} : {label:'Check completed',col:'#2A2A2A',segs:''};
+  if(isCompleted(c)) return c.staleInfo ? {label:'Needs a new check',col:'#8A6414',segs:''} : {label:'Check completed',col:'#2A2A2A',segs:''};
   if(isFuture(c) && wlStatus(c)!=='inreview') return {label:'Ready to check',col:'#2A2A2A',segs:'bn'};
   if(wlStatus(c)==='inreview') return {label:'Check in progress',col:'#2A2A2A',segs:'bb'};
   return {label:'Ready to check',col:'#2A2A2A',segs:'bn'};
@@ -1356,7 +1358,7 @@ function inPendingFilter(c,stages,join){
   return true;
 }
 /* Completed rows: the outcome sits after the stage ("Check completed · Match"); an out-of-date
-   report says what changed instead ("Needs recomparing · Application photo changed") */
+   report says what changed instead ("Needs a new check · Application photo changed") */
 function stageOutcome(c){
   if(!isCompleted(c)) return '';
   if(c.staleInfo){ var l=staleList(c), txt;
@@ -1405,7 +1407,7 @@ function inWhen(c,w,v){
   if(w==='all') return true;
   if(v==='completed'){
     if(w==='stale') return !!c.staleInfo;                              // "Out of date" sub-filter
-    if(c.staleInfo) return false;   // out-of-date reports only sit under "Needs recomparing" (the row no longer shows the old result)
+    if(c.staleInfo) return false;   // out-of-date reports only sit under "Needs a new check" (the row no longer shows the old result)
     return completedStatus(c)===w;   // match / notmatch / inconclusive
   }
   if(w==='today')    return dayDiff(c)===0;
@@ -1594,15 +1596,15 @@ function reportFeed(s, c){
   if(s.decision && c && c.reverifying){
     html += '<div class="rh-reverifying">'+
       '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>'+
-      'Recompare started. This candidate has moved back to In progress while the report is refreshed against the current photos.'+
+      'New check started. This candidate has moved back to In progress while the report is refreshed against the current photos.'+
     '</div>';
   } else if(s.decision && c && c.staleInfo){
     var si=c.staleInfo;
     html += '<div class="rh-stale">'+
       '<div class="bud"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>'+
       '<div style="flex:1;min-width:0"><h3>This report may be out of date</h3>'+
-        '<p>The <b>'+h(si.what)+'</b> was updated on <b>'+h(si.date)+'</b> by <b>'+h(si.by)+'</b>, after this report was submitted. Recompare to compare the candidate photo with the updated photos.</p>'+
-        '<div style="margin-top:11px"><button class="rh-btn primary sm" onclick="openReverify()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Recompare</button></div>'+
+        '<p>The <b>'+h(si.what)+'</b> was updated on <b>'+h(si.date)+'</b> by <b>'+h(si.by)+'</b>, after this report was submitted. Run a new check to compare the candidate photo with the updated photos.</p>'+
+        '<div style="margin-top:11px"><button class="rh-btn primary sm" onclick="openReverify()" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Run new check</button></div>'+
       '</div>'+
     '</div>';
   }
@@ -1724,9 +1726,9 @@ function staleBannerVerb(si){ var v=staleVerb(si); return v==='replaced'?'update
 function staleTitle(c){ var list=staleList(c); if(list.length!==1) return list.length+' photos changed after the report was submitted'; return list[0].what+' '+staleBannerVerb(list[0])+' after the report was submitted'; }
 /* one change: who and when. Several: name the first two, count the rest; each is tagged in the list below */
 function staleSentence(c){ var list=staleList(c); if(!list.length) return '';
-  if(list.length===1) return staleActor(list[0])+' '+staleBannerVerb(list[0])+' it on '+tz(list[0].date+', '+list[0].time)+'. Recompare to run the check again.';
+  if(list.length===1) return staleActor(list[0])+' '+staleBannerVerb(list[0])+' it on '+tz(list[0].date+', '+list[0].time)+'. Run a new check to include it.';
   var n=list.map(function(ch){ return ch.what; });
-  return (n.length===2 ? n[0]+' and '+n[1] : n[0]+', '+n[1]+' and '+(n.length-2)+' more')+'. Each one is tagged in the list below. Recompare to run the check again.'; }
+  return (n.length===2 ? n[0]+' and '+n[1] : n[0]+', '+n[1]+' and '+(n.length-2)+' more')+'. Each one is tagged in the list below. Run a new check to include them.'; }
 function reportVerdict(rows){ var v=reportSummary(rows); return {confirmed:(v.tier==='match'||v.tier==='reviewed'), tier:v.tier}; }
 /* single source for a row's result label + colours (mirrors rowBadge, but re-usable as a grey variant) */
 function badgeInfo(r){
@@ -1801,7 +1803,7 @@ function completedReport(s, c){
   html+='<div class="rpt-headrow">'+avatar(c.name,44)+
     '<div style="min-width:0;flex:1"><div class="rpt-name">'+h(c.name)+'</div><div class="rpt-meta">'+h(c.rhid+' · '+c.req)+'</div></div>'+
     '<div class="rpt-acts">'+
-      (!canDo('run')?'':'<button type="button" class="rh-btn '+(stale?'primary':'secondary')+' sm" onclick="'+(stale?'openReverify()':'openRerun()')+'"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Recompare</button>')+
+      (!canDo('run')?'':'<button type="button" class="rh-btn '+(stale?'primary':'secondary')+' sm" onclick="'+(stale?'openReverify()':'openRerun()')+'"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v5h-5"/></svg>Run new check</button>')+
       '<button type="button" class="rh-actbtn" aria-label="Download report" onclick="downloadReport()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg><span class="tip">Download report</span></button>'+
       '<button type="button" class="rh-actbtn" aria-label="View activity" onclick="openActivity()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg><span class="tip">View activity</span></button>'+
     '</div>'+
@@ -1854,28 +1856,28 @@ function rcState(s, c){
 function rcBody(s, c){
   var st=rcState(s,c), open=!!s.rcOpen, list=st.list;
   var chev='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
-  var when = (st.last && st.last.decision) ? ('the '+submitShort(st.last.decision)+' report') : 'the last report';
-  var sum = list.length
-    ? '<div class="rc-sum"><span>'+((st.refChanged && list.length===1) ? ('The '+h(st.ref.toLowerCase())+', which '+h(when)+' used as the candidate photo, has changed') : (list.length+' photo'+(list.length===1?'':'s')+' changed since '+h(when)+(st.refChanged?(', including the '+h(st.ref.toLowerCase())+' that report used as the candidate photo'):'')))+'.</span><button type="button" class="lnk" aria-expanded="'+open+'" onclick="setState({rcOpen:!state.rcOpen})">'+(open?'Hide':'View')+' changes'+chev+'</button></div>'+
-      (open ? '<div class="rc-chg">'+list.map(function(ch){ var v=staleVerb(ch);
-          return '<div><span class="w">'+h(ch.what)+(ch.what===st.ref?' <span style="display:inline-block;margin-left:6px;font-size:11.5px;font-weight:600;color:#8A6414;background:#FBF1DE;border-radius:999px;padding:1px 8px">candidate photo</span>':'')+'</span><span class="v">'+(v==='deleted'?'Removed':(v==='added'?'Added':'Replaced'))+' · '+h(shortDay(ch.date))+'</span></div>'; }).join('')+'</div>' : '')
-    : '<div class="rc-sum"><span>No photos have changed since '+h(when)+'.</span></div>';
+  var rep = rcReportName(st);
+  var sum = '<div class="rc-sum"><span>'+(!list.length ? ('No photos have been added or changed since '+h(rep)+'.')
+    : ((st.refChanged && list.length===1) ? ('The '+h(st.ref.toLowerCase())+', used as the candidate photo in '+h(rep)+', has changed.')
+    : (list.length+' photo'+(list.length===1?' has':'s have')+' changed since '+h(rep)+(st.refChanged?(', including the '+h(st.ref.toLowerCase())+' it used as the candidate photo'):'')+'.')))+'</span></div>';
   var opt=function(v, title, desc, off){
     return '<label class="rc-opt'+(off?' off':'')+'"><input type="radio" name="rc-scope" '+(st.mode===v&&!off?'checked':'')+(off?' disabled':'')+' onchange="setState({rvMode:\''+v+'\'})"><span class="dot"></span><span><div class="t">'+title+'</div><div class="d">'+desc+'</div></span></label>';
   };
-  var newDesc = st.canNew ? ('Uses the same candidate photo as '+h(when)+'. The other '+st.nKeep+' result'+(st.nKeep===1?'':'s')+' stay as they are.')
+  var newDesc = st.canNew ? ('Checks the '+st.nNew+' updated photo'+(st.nNew===1?'':'s')+' against the current candidate photo.')
               : (st.refChanged ? 'Not possible: the candidate photo itself changed.' : 'Nothing has changed.');
   var fullDesc = st.refChanged ? ('Starts a new check with the new '+h(st.ref.toLowerCase())+', or another photo of the candidate.')
                : 'Starts a new check. You\u2019ll take or upload a new photo of the candidate.';
-  return sum+'<div class="rc-q">What do you want to recompare?</div><div class="rc-opts">'+
+  return sum+'<div class="rc-q">Which photos should be checked?</div><div class="rc-opts">'+
     opt('new', 'Only the changed photos'+(st.canNew?' ('+st.nNew+')':''), newDesc, !st.canNew)+
     opt('full', 'All photos ('+st.nAll+')', fullDesc, false)+
   '</div>';
 }
+/* "the 15 Aug report" for the pop-up (falls back to "the last report") */
+function rcReportName(st){ var d=(st && st.last && st.last.decision) ? submitShort(st.last.decision) : ''; return d ? ('the '+d+' report') : 'the last report'; }
 function reverifyIntro(c){
   var si=c&&c.staleInfo, list=(si&&(si.changes||[si]))||[];
   var n=list.length;
-  return n+' photo'+(n===1?'':'s')+' changed after the report was submitted. Recomparing checks them against the latest photos on the profile.';
+  return n+' photo'+(n===1?'':'s')+' changed after the report was submitted. A new check compares them with the latest photos on the profile.';
 }
 function reverifyChanges(c){
   var si=c&&c.staleInfo; if(!si) return '';
@@ -1910,13 +1912,13 @@ function startReverify(){
 }
 function startReverify0(){
   var c=state.cand; if(!c) return;
-  var why=''; if(IDV.reverify.requireReason){ var el=document.getElementById('rv-reason'); why=el?el.value.trim():''; if(!why){ setState({reverifyErr:'Add a reason to recompare.'}); return; } }
+  var why=''; if(IDV.reverify.requireReason){ var el=document.getElementById('rv-reason'); why=el?el.value.trim():''; if(!why){ setState({reverifyErr:'Add a reason for the new check.'}); return; } }
   var lc=latestCheck(c.id), last=lc&&lc.hh, nowP=nowStamp().replace(/ IST$/,'').split(', ');
   (c.reverifyLog=c.reverifyLog||[]).push({day:nowP[0], time:nowP[1], by:'A. Sharma', fromVersion:last&&last.decision?reportVersion(last):null, changed:!!c.staleInfo, reason:why});
   applyPhotoChanges(c);
   clearTimers(); _runToken++; _qtoken++;
   setState({ done:false, running:false, photo:null, photoOriginal:null, cropRect:null, photoName:null, photoSource:null, reusedFrom:null, consent:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false, reverifyOpen:false, repPreview:null, reverifyRun:true });
-  toast('Recompare: choose the photo to check');
+  toast('New check: choose the candidate photo');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 /* ---- downloadable report (browser print-to-PDF; A4, black & white) ---- */
@@ -2188,7 +2190,7 @@ function worklistView(){
   /* sub-filter values (timing for open work, outcome for completed) */
   var statusRows=wlStatusRows(view);
   var SEG = view==='completed'
-    ? [['all','All'],['match','Match'],['notmatch','Not a match'],['inconclusive','Inconclusive'],['stale','Needs recomparing']]
+    ? [['all','All'],['match','Match'],['notmatch','Not a match'],['inconclusive','Inconclusive'],['stale','Needs a new check']]
     : [['all','All'],['today','Today'],['upcoming','Upcoming'],['delayed','Delayed']];
   var segCount=function(val){ return statusRows.filter(function(c){ return inWhen(c,val,view); }).length; };
   /* To verify: one Filter (Stage + Joining tick boxes); each option counts within the other group's ticks */
@@ -2264,7 +2266,7 @@ function worklistView(){
   var nStale=wlStatusRows('completed').filter(function(c){return c.staleInfo;}).length;
   function wlTab(key,label,n){ var on=view===key;
     return '<button type="button" role="tab" aria-selected="'+on+'" class="wl-tab'+(on?' on':'')+'" onclick="setWlView(\''+key+'\')">'+h(label)+'<span class="cnt">'+n+'</span></button>'; }
-  var hint = view==='pending' ? '' : (nStale ? nStale+' need'+(nStale===1?'s':'')+' recomparing' : '');
+  var hint = view==='pending' ? '' : (nStale ? nStale+' need'+(nStale===1?'s':'')+' a new check' : '');
   html+='<div class="wl-tabs" role="tablist" aria-label="Candidates by status">'+wlTab('pending','To verify',nPending)+wlTab('completed','Completed',nDone)+
     (hint?'<span class="wl-tabhint'+(view==='completed'?' warn':'')+'">'+h(hint)+'</span>':'')+'</div>';
 
@@ -2648,16 +2650,16 @@ function render(){
   if(s.rmodal){
     var rm = s.rmodal;
     var rmReasons = reasonList(rm.action);
-    var rmTitle = rm.action==='notmatch' ? 'Not a match' : 'Can’t confirm';
+    var rmTitle = rm.action==='notmatch' ? 'Mark as not a match' : 'Can’t confirm this photo';
     html += '<div class="rh-scrim" onclick="scrimReason(event)"><div class="rh-dialog" style="width:560px">'+
       '<header><h2>'+rmTitle+'</h2><button class="x" onclick="cancelReason()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
         '<p style="margin:0 0 16px;font-size:14px;color:#5A6473">Select reason:</p>'+
         '<div class="rh-radios" role="radiogroup" aria-label="Reason">'+rmReasons.map(function(rz,idx){ var on=rm.reason===rz;
           return '<label class="rh-radio"><input type="radio" name="rh-reason" '+(on?'checked':'')+' onchange="pickModalReason('+idx+')"><span class="dot"></span><span>'+h(rz)+'</span></label>'; }).join('')+'</div>'+
-        '<div class="rh-ufld'+(rm.err?' err':'')+'" style="margin-top:24px"><label for="rh-reason-note">Note'+(rm.reason==='Other'?' (required)':' (optional)')+'</label>'+
-          '<textarea id="rh-reason-note" rows="1" placeholder="Add a note">'+h(rm.note||'')+'</textarea>'+
-          (rm.err ? '<div class="msg">'+h(rm.err)+'</div>' : '')+'</div>'+
+        (rm.reason==='Other' ? '<div class="rh-ufld'+(rm.err?' err':'')+'" style="margin-top:20px"><label for="rh-reason-note">Note</label>'+
+          '<textarea id="rh-reason-note" rows="1" placeholder="Describe the reason">'+h(rm.note||'')+'</textarea>'+
+          (rm.err ? '<div class="msg">'+h(rm.err)+'</div>' : '')+'</div>' : '')+
       '</div>'+
       '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="cancelReason()">Cancel</button><button class="rh-btn primary sm" '+(rm.reason?'':'disabled')+' onclick="confirmReason()">Confirm</button></footer>'+
     '</div></div>';
@@ -2739,8 +2741,8 @@ function render(){
   /* LEAVE an unsubmitted reverify */
   if(s.leaveOpen && c){
     html += '<div class="rh-scrim" onclick="scrimLeave(event)"><div class="rh-dialog" role="alertdialog" aria-labelledby="lv-t" style="width:480px;max-width:calc(100vw - 32px)">'+
-      '<header><h2 id="lv-t">Leave this recompare?</h2><button class="x" onclick="closeLeave()" aria-label="Close"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
-      '<div class="dbody"><p style="margin:0;font-size:16px;color:#2A2A2A;line-height:1.6">'+h(c.name)+' will move to <b>Check in progress</b> on the To verify tab. You can continue the recompare from there.</p>'+
+      '<header><h2 id="lv-t">Leave this new check?</h2><button class="x" onclick="closeLeave()" aria-label="Close"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
+      '<div class="dbody"><p style="margin:0;font-size:16px;color:#2A2A2A;line-height:1.6">'+h(c.name)+' will move to <b>Check in progress</b> on the To verify tab. You can continue the check from there.</p>'+
         '<p style="margin:10px 0 0;font-size:14px;color:#5A6473;line-height:1.6">'+(s.rows&&s.rows.length?'The comparisons so far are saved. ':(s.photo?'The photo you added isn’t saved yet. ':''))+'The current report stays as it is until you submit the new one.</p></div>'+
       '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeLeave()">Stay</button><button class="rh-btn primary sm" onclick="confirmLeave()">Leave</button></footer>'+
     '</div></div>';
@@ -2748,13 +2750,13 @@ function render(){
 
   /* REVERIFY confirm */
   if(s.reverifyOpen && c){
-    html += '<div class="rh-scrim" onclick="scrimReverify(event)"><div class="rh-dialog" style="width:520px;max-width:calc(100vw - 32px)">'+
-      '<header><h2>Recompare photos</h2><button class="x" onclick="closeReverify()" aria-label="Close"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
-      '<div class="dbody">'+rcBody(s,c)+'</div>'+
-      (IDV.reverify.requireReason ? '<div style="padding:0 20px 4px"><label for="rv-reason" style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Reason for recomparing <span style="color:#D93025">*</span></label>'+
-        '<textarea id="rv-reason" class="rh-utext" rows="2" placeholder="For example: new application photo uploaded"></textarea>'+
-        (s.reverifyErr?'<div style="color:#D93025;font-size:12.5px;margin-top:4px">'+h(s.reverifyErr)+'</div>':'')+'</div>' : '')+
-      '<footer><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeReverify()">Cancel</button><button class="rh-btn primary sm rpt-reverify" onclick="startReverify()">Next</button></footer>'+
+    html += '<div class="rh-scrim" onclick="scrimReverify(event)"><div class="rh-dialog" style="width:600px;max-width:calc(100vw - 32px)">'+
+      '<header><h2>Run a new identity check</h2><button class="x" onclick="closeReverify()" aria-label="Close"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
+      '<div class="dbody">'+rcBody(s,c)+
+      (IDV.reverify.requireReason ? '<div class="rh-ufld'+(s.reverifyErr?' err':'')+'" style="margin-top:20px"><label for="rv-reason">Reason for the new check <span style="color:#D93025">*</span></label>'+
+        '<textarea id="rv-reason" rows="1" placeholder="For example: new application photo uploaded"></textarea>'+
+        (s.reverifyErr?'<div class="msg">'+h(s.reverifyErr)+'</div>':'')+'</div>' : '')+'</div>'+
+      '<footer><span class="rc-hist"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>'+h(cap(rcReportName(rcState(s,c))))+' stays in Activity.</span><span style="flex:1"></span><button class="rh-btn secondary sm" onclick="closeReverify()">Cancel</button><button class="rh-btn primary sm rpt-reverify" onclick="startReverify()">Run check</button></footer>'+
     '</div></div>';
   }
 
@@ -2915,7 +2917,7 @@ function cancelReason(){ setState({rmodal:null}); }
 function scrimReason(e){ if(e.target===e.currentTarget) cancelReason(); }
 function confirmReason(){
   var m=state.rmodal; if(!m || !m.reason) return;
-  var el=document.getElementById('rh-reason-note'); var note=el?el.value.trim():((m.note||'').trim());
+  var el=document.getElementById('rh-reason-note'); var note=m.reason!=='Other' ? '' : (el?el.value.trim():((m.note||'').trim()));
   if(m.reason==='Other' && !note){ setState({rmodal:Object.assign({}, m, {note:note, err:'Add a note describing the reason.'})}); return; }
   var rows=state.rows.slice();
   rows[m.i]=Object.assign({}, rows[m.i], {review:m.action, reasonLabel:m.reason, reasonNote:note, reviewedBy:'A. Sharma', reviewedAt:nowTime()});
@@ -3085,7 +3087,7 @@ function openReverify(){ setState({reverifyOpen:true, rerunMode:false, reverifyE
 function openRerun(){ setState({reverifyOpen:true, rerunMode:true, reverifyErr:''}); }
 function closeReverify(){ setState({reverifyOpen:false}); }
 function scrimReverify(e){ if(e.target===e.currentTarget) closeReverify(); }
-function confirmReverify(){ if(state.cand){ state.cand.reverifying=true; } setState({reverifyOpen:false}); toast('Recompare started'); }
+function confirmReverify(){ if(state.cand){ state.cand.reverifying=true; } setState({reverifyOpen:false}); toast('New check started'); }
 /* Activity (audit) timeline for a candidate. Append-only: built from every check on file for this
    candidate (state.history keeps old reports when a reverify starts), every photo change (current
    and already-resolved ones), and every reverify started. Newest first, grouped by day. */
@@ -3105,7 +3107,7 @@ function photoEventText(reverify, source, takenAt){
 function activityLog(s, c){
   var evs=[], seq=0;
   // step: where an event sits in the flow, so events in the same minute keep their real order
-  var STEP=[['Identity check enabled',0],['Recompare started',2],['Candidate photo',3],['Joining-day photo',3],['Photo uploaded',3],['Photo taken',3],['Quality check',4],['Comparison run',5],['Review ',6],['Report submitted',7]];
+  var STEP=[['Identity check enabled',0],['New check started',2],['Candidate photo',3],['Joining-day photo',3],['Photo uploaded',3],['Photo taken',3],['Quality check',4],['Comparison run',5],['Review ',6],['Report submitted',7]];
   function stepOf(e){ if(e.k==='ext') return 1; for(var i=0;i<STEP.length;i++){ if(e.t.indexOf(STEP[i][0])===0) return STEP[i][1]; } return 6; }
   function add(day, time, e){ e.day=day; e.time=time; e.key=alKey(day,time); e.step=stepOf(e); e.seq=seq++; evs.push(e); }
   var actor=function(n){ return 'by <span class="actor">'+h(n)+'</span>'; };
@@ -3152,7 +3154,7 @@ function activityLog(s, c){
   });
   // reverifies started
   (c.reverifyLog||[]).forEach(function(r){
-    add(r.day, r.time, {k:'human', ic:'&#8635;', t:'Recompare started', m:actor(r.by)+(r.reason?' &middot; reason: '+h(r.reason):'')+(r.fromVersion?' &middot; version '+r.fromVersion+' report kept':''), ts:h(tzTime(r.day,r.time))});
+    add(r.day, r.time, {k:'human', ic:'&#8635;', t:'New check started', m:actor(r.by)+(r.reason?' &middot; reason: '+h(r.reason):'')+(r.fromVersion?' &middot; version '+r.fromVersion+' report kept':''), ts:h(tzTime(r.day,r.time))});
   });
   // newest first; same minute keeps the order things happened in (later step first)
   evs.sort(function(x,y){ return (y.key-x.key) || (y.step-x.step) || (y.seq-x.seq); });
