@@ -175,8 +175,10 @@
   .rc-opt .t{font-size:15px;font-weight:600;color:#2A2A2A;line-height:1.45}
   .rc-opt .d{font-size:13.5px;color:#747474;line-height:1.45;margin-top:2px}
   .rc-opt.off{cursor:not-allowed;background:#FAFAFB}.rc-opt.off .t,.rc-opt.off .d{color:#A0A7B2}.rc-opt.off .dot{border-color:#C9CDD3}
-  .rh-radios{display:flex;flex-direction:column;gap:14px}
-  .rh-radio{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:16px;color:var(--rh-text-primary)}
+  .rh-radios{display:flex;flex-direction:column;gap:8px}
+  .rh-radio{display:flex;align-items:center;gap:10px;cursor:pointer;font-size:15px;font-weight:600;color:var(--rh-text-primary);position:relative;border:1px solid #DDD;border-radius:6px;padding:11px 12px;line-height:1.45}
+  .rh-radio:has(input:checked){border-color:var(--rh-primary);background:#F5F9FF}
+  .rh-radio:hover{border-color:#B9C3D0}
   .rh-radio input{position:absolute;opacity:0;width:0;height:0}
   .rh-radio .dot{width:16px;height:16px;border-radius:50%;border:2px solid rgba(0,0,0,.54);box-sizing:border-box;flex-shrink:0;display:grid;place-items:center;transition:border-color .12s}
   .rh-radio input:checked+.dot{border-color:var(--rh-primary)}
@@ -2650,7 +2652,7 @@ function render(){
     html += '<div class="rh-scrim" onclick="scrimReason(event)"><div class="rh-dialog" style="width:560px">'+
       '<header><h2>'+rmTitle+'</h2><button class="x" onclick="cancelReason()"><svg viewBox="25 25 22 22" width="16" height="16" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button></header>'+
       '<div class="dbody">'+
-        '<p style="margin:0 0 16px;font-size:14px;color:#5A6473">Select reason:</p>'+
+        '<div class="rc-q" style="margin-top:0">Select a reason</div>'+
         '<div class="rh-radios" role="radiogroup" aria-label="Reason">'+rmReasons.map(function(rz,idx){ var on=rm.reason===rz;
           return '<label class="rh-radio"><input type="radio" name="rh-reason" '+(on?'checked':'')+' onchange="pickModalReason('+idx+')"><span class="dot"></span><span>'+h(rz)+'</span></label>'; }).join('')+'</div>'+
         (rm.reason==='Other' ? '<div class="rh-ufld'+(rm.err?' err':'')+'" style="margin-top:20px"><label for="rh-reason-note">Note</label>'+

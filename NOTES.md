@@ -6,6 +6,19 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## One radio pattern: choice cards in all three choice pop-ups (2026-11-05)
+
+Rohan: "design inconsistency, all 3 have radio buttons". The new-check pop-up used bordered choice cards; the two
+reason pop-ups used a plain radio list with a different label and text size. Two options mocked (A cards
+everywhere, B plain list everywhere); **A** chosen. Patch: `source/fix_radio_pattern.py A`, tests
+`source/fix_tests_radio_pattern.py`.
+
+- "Can't confirm this photo" and "Mark as not a match": each reason is a bordered card (15px semibold, 6px
+  corners); the chosen one is outlined in blue on a light-blue fill, the same as the new-check choices.
+- "Select reason:" -> "**Select a reason**", in the same small grey label style as "Which photos should be
+  checked?".
+- The note for "Other" is unchanged (appears under the cards, required).
+
 ## Consent shown on the candidate photo card (2026-11-05)
 
 Rohan: show that consent was taken. Two options mocked (own line vs. appended to "Run by"); **A** chosen. Patch:
