@@ -6,6 +6,15 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Activity: photo changed events without the source tag and "notified" (2026-11-05)
+
+Rohan: remove the "Candidate profile" tag and "· notified Recruiter" from "Application photo replaced". Patch:
+`source/fix_activity_photo_event.py`, test `source/fix_tests_activity_photo_event.py`.
+
+- Photo changed after a report: "Application photo replaced / by Ananya Rao / 16:40 IST" (no "Candidate profile" or
+  "Recruiter" tag, no "· notified ...").
+- Photo changed during a check: same, no tag; keeps "· after the check ran".
+
 ## The worklist doesn't know a report is out of date (2026-11-05)
 
 Developers' constraint (Rohan): for performance, changed or added photos are only checked when a candidate is

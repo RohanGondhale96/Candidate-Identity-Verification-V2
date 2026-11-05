@@ -3123,7 +3123,7 @@ function activityLog(s, c){
   // photos that changed while a check was in progress, and the single-photo runs that followed
   (c.midChanges||[]).forEach(function(ch){
     var t = ch.verb==='added' ? ('New photo added: '+ch.what) : (ch.verb==='deleted' ? (cap(photoPhrase(ch.what))+' removed') : (cap(ch.what)+' photo '+ch.verb));
-    add(ch.date, ch.time, {k:'ext', ic:'&#9998;', t:h(t)+' <span class="bext">'+(ch.byRole==='recruiter'?'Recruiter':'Candidate profile')+'</span>', m:actor(ch.by)+' &middot; after the check ran', ts:h(tzTime(ch.date,ch.time))});
+    add(ch.date, ch.time, {k:'ext', ic:'&#9998;', t:h(t), m:actor(ch.by)+' &middot; after the check ran', ts:h(tzTime(ch.date,ch.time))});
   });
   (c.singleRuns||[]).forEach(function(x){
     add(x.day, x.time, {k:'sys', ic:'&#9737;', t:'Comparison run: '+h(x.what)+' only', m:'system &middot; '+(x.verb==='added'?'photo added':'photo replaced')+' after the check ran', ts:h(tzTime(x.day,x.time))});
@@ -3131,7 +3131,7 @@ function activityLog(s, c){
   // photo changes, resolved or not
   (c.pastChanges||[]).concat(staleList(c)).forEach(function(si){
     var src=si.byRole==='recruiter'?'Recruiter':'Candidate profile', tm=si.time||'16:40';
-    add(si.date, tm, {k:'ext', ic:'&#9998;', t:h(si.what)+' '+h(staleVerb(si))+' <span class="bext">'+h(src)+'</span>', m:actor(si.by)+notifyLine(), ts:h(tzTime(si.date,tm))});
+    add(si.date, tm, {k:'ext', ic:'&#9998;', t:h(si.what)+' '+h(staleVerb(si)), m:actor(si.by), ts:h(tzTime(si.date,tm))});
   });
   // reverifies started
   (c.reverifyLog||[]).forEach(function(r){
