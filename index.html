@@ -1339,7 +1339,7 @@ var WL_SEG={g:'#12B76A',b:'#0076FB',l:'#BFD7F7',n:'#E5E7EB',a:'#F59E0B'};
 /* To verify has two steps (joined, check started); a finished check moves to Completed, so a third
    segment would never fill. Completed rows show no bar, only the status and the result. */
 function stageInfo(c){
-  if(isCompleted(c)) return c.staleInfo ? {label:'Needs a new check',col:'#8A6414',segs:''} : {label:'Check completed',col:'#2A2A2A',segs:''};
+  if(isCompleted(c)) return {label:'Check completed',col:'#2A2A2A',segs:''};   // the worklist can't know a report is out of date (checked on open)
   if(isFuture(c) && wlStatus(c)!=='inreview') return {label:'Ready to check',col:'#2A2A2A',segs:'bn'};
   if(wlStatus(c)==='inreview') return {label:'Check in progress',col:'#2A2A2A',segs:'bb'};
   return {label:'Ready to check',col:'#2A2A2A',segs:'bn'};
@@ -1358,13 +1358,6 @@ function inPendingFilter(c,stages,join){
    report says what changed instead ("Needs a new check · Application photo changed") */
 function stageOutcome(c){
   if(!isCompleted(c)) return '';
-  if(c.staleInfo){ var l=staleList(c), txt;
-    if(l.length>1){ // "2 photos replaced", or per action when mixed: "1 photo replaced, 1 deleted"
-      var cnt={}, order=[]; l.forEach(function(x){ var v=staleVerb(x); if(!cnt[v]){ cnt[v]=0; order.push(v); } cnt[v]++; });
-      var vb=function(v){ return v==='replaced'?'updated':(v==='deleted'?'removed':v); };
-      txt=order.map(function(v,i){ return cnt[v]+(i===0?(' photo'+(cnt[v]===1?'':'s')):'')+' '+vb(v); }).join(', '); }
-    else { var w=String((l[0]&&l[0].what)||'Photo'), v0=staleVerb(l[0]); txt=w.charAt(0).toUpperCase()+w.slice(1)+' '+(v0==='replaced'?'updated':(v0==='deleted'?'removed':v0)); }
-    return '<span class="wl-stage-o" style="color:#5A6473;font-weight:400">'+h(txt)+'</span>'; }
   var cs=completedStatus(c);
   if(cs==='inconclusive') return '<span class="wl-stage-o" style="color:#5A6473">Inconclusive</span>';
   return cs==='notmatch'
@@ -1386,11 +1379,6 @@ function timingBadge(c){
 function rowPills(c){
   if(isCompleted(c)){
     // on the Completed tab we drop the "Completed" pill (the tab already says so)
-    if(c.staleInfo){   // out of date: needs reverifying, with the old result greyed out
-      var lc=latestCheck(c.id), dec=lc&&lc.hh&&lc.hh.decision, when=submitShort(dec)||shortDay(c.joining);
-      var oldOut=completedStatus(c)==='notmatch'?'Not matched':(completedStatus(c)==='inconclusive'?'Inconclusive':'Matched');
-      return pill2(oldOut+' on '+when,'#8A97A8','#ECEEF1');
-    }
     if(completedStatus(c)==='inconclusive') return pill2('Inconclusive','#5A6473','#ECEEF1');
     return completedStatus(c)==='notmatch'
       ? pill2('Not a match','#B42318','#FDECEC')
@@ -1403,8 +1391,6 @@ function rowPills(c){
 function inWhen(c,w,v){
   if(w==='all') return true;
   if(v==='completed'){
-    if(w==='stale') return !!c.staleInfo;                              // "Out of date" sub-filter
-    if(c.staleInfo) return false;   // out-of-date reports only sit under "Needs a new check" (the row no longer shows the old result)
     return completedStatus(c)===w;   // match / notmatch / inconclusive
   }
   if(w==='today')    return dayDiff(c)===0;
@@ -2015,7 +2001,6 @@ function wlList(){
   var v=state.wlView||'pending', w=state.wlWhen||'all';
   var list = wlSortList(wlStatusRows(v).filter(function(c){ return inWhen(c,w,v) && (v!=='pending' || inPendingFilter(c,state.wlStages,state.wlJoin)); }));
   // On Completed, always float "Needs recomparing" (stale) rows to the top, keeping the chosen sort within each group.
-  if(v==='completed'){ var stale=[], rest=[]; list.forEach(function(c){ (c.staleInfo?stale:rest).push(c); }); list=stale.concat(rest); }
   return list;
 }
 function fmtDate(iso){
@@ -2187,7 +2172,7 @@ function worklistView(){
   /* sub-filter values (timing for open work, outcome for completed) */
   var statusRows=wlStatusRows(view);
   var SEG = view==='completed'
-    ? [['all','All'],['match','Match'],['notmatch','Not a match'],['inconclusive','Inconclusive'],['stale','Needs a new check']]
+    ? [['all','All'],['match','Match'],['notmatch','Not a match'],['inconclusive','Inconclusive']]
     : [['all','All'],['today','Today'],['upcoming','Upcoming'],['delayed','Delayed']];
   var segCount=function(val){ return statusRows.filter(function(c){ return inWhen(c,val,view); }).length; };
   /* To verify: one Filter (Stage + Joining tick boxes); each option counts within the other group's ticks */
@@ -2260,10 +2245,9 @@ function worklistView(){
   '</div>';
   /* To verify / Completed as underline tabs, under the search */
   var nReady=wlStatusRows('pending').filter(function(c){return stageInfo(c).label==='Ready to check';}).length;
-  var nStale=wlStatusRows('completed').filter(function(c){return c.staleInfo;}).length;
   function wlTab(key,label,n){ var on=view===key;
     return '<button type="button" role="tab" aria-selected="'+on+'" class="wl-tab'+(on?' on':'')+'" onclick="setWlView(\''+key+'\')">'+h(label)+'<span class="cnt">'+n+'</span></button>'; }
-  var hint = view==='pending' ? '' : (nStale ? nStale+' need'+(nStale===1?'s':'')+' a new check' : '');
+  var hint = '';   // the worklist can't know a report is out of date
   html+='<div class="wl-tabs" role="tablist" aria-label="Candidates by status">'+wlTab('pending','To verify',nPending)+wlTab('completed','Completed',nDone)+
     (hint?'<span class="wl-tabhint'+(view==='completed'?' warn':'')+'">'+h(hint)+'</span>':'')+'</div>';
 

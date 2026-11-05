@@ -6,6 +6,19 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## The worklist doesn't know a report is out of date (2026-11-05)
+
+Developers' constraint (Rohan): for performance, changed or added photos are only checked when a candidate is
+opened. So the worklist can't tell that a report is out of date. Patch: `source/fix_worklist_no_stale.py`, tests
+`source/fix_tests_worklist_no_stale.py`.
+
+- Completed rows always read "**Check completed · <result>**" (e.g. Ananya: "Check completed · Match"); no
+  "Needs a new check · Application photo updated".
+- No "1 needs a new check" hint by the tabs; no "Needs a new check" option in the Outcome filter (All, Match, Not a
+  match, Inconclusive); out-of-date reports no longer float to the top of the Completed list. The Excel stage column
+  follows ("Check completed").
+- Opening the candidate still shows the out-of-date banner, the "Updated 16 Aug" tags and the blue "Run new check".
+
 ## Chevron on Couldn't compare and Removed cards; no worklist row menu (2026-11-05)
 
 Rohan: "why is there no accordion to this?" and "remove this kebab menu". Patch: `source/fix_chevron_kebab.py`,
