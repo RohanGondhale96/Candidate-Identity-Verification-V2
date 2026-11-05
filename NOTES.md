@@ -6,6 +6,18 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Pop-up buttons look like every other button in Verify identity (2026-11-05)
+
+Rohan: "Why are Cancel and Run check bold and not like other buttons? Keep it consistent across Verify identity."
+The 2 Nov dialog pass gave pop-up buttons their own style (16px bold, 40px, lift shadow on hover). Now they use
+the page button: **14px, semibold, 38px, the same border and hover** as "Run new check", "Upload file" or "Go to
+photos". Applies to every pop-up on the check page, report and worklist. Patch: `source/fix_dialog_buttons.py`,
+test `source/fix_tests_dialog_buttons.py`.
+
+Not changed: the admin (16px bold buttons, per the RH design system) and the candidate page (13px). For reference,
+the real RippleHire frontends use bold 16px buttons (Source-frontend `src/styles.css`, admin-angular
+`src/styles.scss` `.btn-primary` / `.btn-light`).
+
 ## "Run new check" replaces "Recompare"; the new-check pop-up; reason pop-ups (2026-11-05)
 
 Rohan's design for the pop-up; all changes approved on screens. Patches (in order): `fix_reason_popup_note.py`,
