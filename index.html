@@ -2360,8 +2360,8 @@ function render(){
         '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">'+
           (_app?'<button type="button" class="rh-btn secondary sm" onclick="useNewAppPhoto()">Use the new application photo ('+h(shortDay(String(_app.date).split(', ')[0]))+')</button>':'')+
           (_ru?'<button type="button" class="rh-btn secondary sm" onclick="useReusedPhoto()">'+h('Use candidate photo ('+_ru.day+')')+'</button>':'')+
-          (camAvailable()?'<button class="rh-btn secondary sm" onclick="takePhoto()">Take photo</button>':'')+
-          (IDV.upload.allowFile?'<button class="rh-btn secondary sm" onclick="openPicker()">Upload file</button>':'')+
+          (camAvailable()?'<button class="rh-btn secondary sm" onclick="takePhoto()">'+((_app||_ru)?'Take new photo':'Take photo')+'</button>':'')+
+          (IDV.upload.allowFile?'<button class="rh-btn secondary sm" onclick="openPicker()">'+((_app||_ru)?'Upload new photo':'Upload file')+'</button>':'')+
         '</div>'+
         '</div>';
     } else {

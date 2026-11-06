@@ -6,6 +6,14 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Photo step: "Take new photo" and "Upload new photo" next to an existing photo (2026-11-06)
+
+Rohan: "Here when we are show 3 options, Make it Take new photo, Upload new photo".
+
+- When the photo step also offers an existing photo ("Use candidate photo (date)" or "Use the new application photo (date)"), the other buttons read **Take new photo** and **Upload new photo**.
+- A first check, with no earlier photo, keeps **Take photo** and **Upload file**.
+- Patch `source/fix_new_photo_buttons.py`; test `fix_tests_new_photo_buttons.py` (324 pass).
+
 ## One toaster from the RH design system; Reviewed line without the time (2026-11-06)
 
 Rohan: "Use the toasters that we have in our design system, and they usually come from the top", then "Those are success and error toasters will come only when some action happens successfully or there is some thing fails like download fails, We dont want it for new check started", and "remove this" on the time after "Reviewed: Match".
