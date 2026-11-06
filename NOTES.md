@@ -6,6 +6,23 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Run new check redesign, round 1: full dates, "Check 1 changed photo", split photo list (2026-11-06)
+
+Start of the Run new check redesign (Rohan's priority). Patches: `source/fix_newcheck_step_v1.py`,
+`source/fix_newcheck_list_v1.py`, tests `source/fix_tests_newcheck_v1.py`.
+
+- **Pop-up:** the report is named with its full date: "1 photo has changed since the 14 Aug 2026 report." and
+  "The 14 Aug 2026 report stays in Activity."
+- **"Only the changed photos" step:** title "**Check 1 changed photo**" (was "Compare 1 new and changed photo");
+  label "**Candidate photo · 14 Aug 2026**"; body "**This photo from the last report will be used again. The changed
+  photo is checked against it, and the other 2 results stay the same.**" (plural / no-other-results forms handled).
+- **Photo list under that step** (it said "Total 3 photos" and "Not compared yet" on all three): split into
+  "**● Will be checked (1)**" (the changed photo with an Updated / Added tag, no badge) and "**● Results kept from the
+  14 Aug 2026 report (2)**" (with the results they keep). A first check and an "All photos" check keep the normal
+  list.
+
+**Open:** the toast "New check: choose the candidate photo" is wrong in the changed-only mode (no photo is chosen).
+
 ## Activity: photo changed events without the source tag and "notified" (2026-11-05)
 
 Rohan: remove the "Candidate profile" tag and "· notified Recruiter" from "Application photo replaced". Patch:
