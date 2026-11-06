@@ -6,6 +6,16 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Admin: hide rules move into the Add documents pop-up (2026-11-06)
+
+Rohan: "move the hide documents regex inside the Identity documents + Add more pop up itself, there will be a button next to cross icon, on click of it a pop up will open where i can see the input field and add regex there, i should also be able to see the previous regex that i have added".
+
+- The "Hide documents from the list" block is gone from the Identity documents settings (which now end with "+ Add more").
+- Add documents header: **Hide documents (n)** (eye-off icon, n = rules) next to the ×.
+- It opens a pop-up on top, "Hide documents from the list": the explanation, **Add a rule** (text, or .* for a regular expression, with the live "Matches n documents" preview), **Rules added (n)** (Text / Regex, pattern, hides n, × to remove), "17 of 141 documents hidden · Show list"; Cancel / Save.
+- The pop-up works on a draft; Save writes `S.photos.hideRules` and the Add documents list and its "n hidden by rules" update. Cancel drops the changes.
+- Patch `source/fix_hide_rules_popup.py` (admin.src.html); test `fix_tests_hide_rules_popup.py` (329 pass).
+
 ## Photo step: "Take new photo" and "Upload new photo" next to an existing photo (2026-11-06)
 
 Rohan: "Here when we are show 3 options, Make it Take new photo, Upload new photo".

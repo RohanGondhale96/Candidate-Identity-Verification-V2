@@ -110,6 +110,17 @@
   .matchprev{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.5;max-width:560px}
   .hidlist{margin-top:8px;font-size:13px;color:var(--muted);line-height:1.7;columns:3 180px;max-width:760px}
   .dlg.wide{width:720px;height:min(760px,calc(100vh - 32px))}
+  /* Add documents header: Hide documents button next to the x */
+  .dlg .hd-r{display:flex;align-items:center;gap:6px}
+  .dlg .hd-btn{display:inline-flex;align-items:center;gap:6px;border:0;background:none;color:var(--blue);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:7px 10px;border-radius:4px;white-space:nowrap}
+  .dlg .hd-btn:hover{background:#EBF5FF}
+  .dlg .hd-btn:focus-visible{outline:0;box-shadow:0 0 0 2px #FFFFFF,0 0 0 4px var(--blue)}
+  /* hide rules pop-up, on top of Add documents */
+  .scrim.top{z-index:50}
+  .dlg.mid{width:620px}
+  .dlg.mid .rule-add,.dlg.mid .matchprev{max-width:none}
+  .dlg.mid .hidlist{columns:2 200px;max-height:180px;overflow:auto;max-width:none}
+  .hd-sum{margin-top:16px;font-size:13px;color:var(--muted)}
   .dlg.wide .dbody{display:flex;flex-direction:column;overflow:hidden;flex:1;padding-bottom:0}
   .dlg.wide footer{border-top:1px solid #EEF0F3}
   .dlg .btn{border-radius:4px;transition:box-shadow .12s}
@@ -321,8 +332,7 @@ function secPhotos(){
     toggle('photos.documents','Identity documents','Photo on an ID document the candidate uploaded.')+
     (S.photos.documents ? '<div class="sub" style="padding-bottom:10px"><div class="lbl">Documents compared <span class="req">*</span></div>'+docRows()+
       (ERR['photos.documentTypes']?'<div class="err">'+ERR['photos.documentTypes']+'</div>':'')+
-      '<button type="button" class="addmore" onclick="openDocs()">+ Add more</button></div>'+
-      hiddenBlock() : '')+
+      '<button type="button" class="addmore" onclick="openDocs()">+ Add more</button></div>' : '')+
     (ERR.photos?'<div class="err">'+ERR.photos+'</div>':'');
 }
 /* Candidate Portal documents (demo data, about 150): each upload's document name and the kits that collect it.
@@ -384,8 +394,10 @@ function docRows(){
 }
 function dropDoc(n){ delete S.photos.docSel[n]; syncDocTypes(); draw(); }
 
-/* "Hide documents from the list": rules in plain text or regex, with a live preview */
-var RULE = {p:'', re:false}, SHOW_HIDDEN = false;
+/* "Hide documents from the list": a pop-up from the Add documents header. Rules in plain text or regex, with a
+   live preview; works on a draft (HIDE.rules) until Save. */
+var HIDE = null;   // {rules:[{p,re}], p:'', re:false, show:false}
+var I_EYEOFF='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-2.6 3.6M6.6 6.6C3.6 8.5 2 12 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/><path d="M3 3l18 18"/></svg>';
 function previewLine(r){
   if(!r.p) return '';
   var m=ruleMatches(r);
@@ -393,25 +405,37 @@ function previewLine(r){
   if(!m.length) return '<div class="matchprev">Matches no documents.</div>';
   return '<div class="matchprev">Matches '+m.length+' document'+(m.length===1?'':'s')+': '+esc(m.slice(0,8).join(', '))+(m.length>8?' and '+(m.length-8)+' more':'')+'</div>';
 }
-function hiddenBlock(){
-  var R=S.photos.hideRules, hid=hiddenNames();
-  return '<div class="block" style="margin-top:18px"><h3 style="margin-bottom:2px">Hide documents from the list</h3>'+
-    '<div class="hint" style="margin:0 0 4px">Documents whose name matches a rule don’t appear in Add more, for example bills or test uploads. Turn on <b>.*</b> to write a regular expression. Documents already compared stay compared.</div>'+
-    (R.length ? '<div class="rules">'+R.map(function(r,i){ var m=ruleMatches(r);
-        return '<div class="rule"><span class="kind">'+(r.re?'Regex':'Text')+'</span><code>'+esc(r.p)+'</code><span class="n">'+(m===null?'invalid':'hides '+m.length)+'</span><button type="button" aria-label="Remove rule '+esc(r.p)+'" onclick="rmRule('+i+')">&#10005;</button></div>'; }).join('')+'</div>' : '')+
-    '<div class="rule-add"><div style="flex:1"><div class="lbl">Add a rule</div><div class="rx'+(RULE.re?' re':'')+'"><input id="rule-in" type="text" placeholder="'+(RULE.re?'e.g. ^(marksheet|certificate)':'e.g. certificate')+'" value="'+esc(RULE.p)+'" oninput="ruleType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addRule()}">'+
-      '<button type="button" class="rxt" aria-pressed="'+RULE.re+'" title="Use a regular expression" onclick="ruleRe()">.*</button></div></div>'+
-      '<button type="button" class="btn sec sm" onclick="addRule()" '+(RULE.p && ruleMatches(RULE)!==null?'':'disabled')+'>Add</button></div>'+
-    '<div id="rule-prev">'+previewLine(RULE)+'</div>'+
-    '<div style="margin-top:14px;font-size:13px;color:var(--muted)">'+hid.length+' of '+CP_DOCS.length+' documents hidden'+(hid.length?' · <button type="button" class="lnk" style="font-size:13px" onclick="SHOW_HIDDEN=!SHOW_HIDDEN;draw()">'+(SHOW_HIDDEN?'Hide list':'Show list')+'</button>':'')+'</div>'+
-    (SHOW_HIDDEN && hid.length ? '<div class="hidlist">'+hid.map(esc).join('<br>')+'</div>' : '')+
-  '</div>';
+function openHide(){
+  HIDE = {rules:S.photos.hideRules.map(function(r){ return {p:r.p, re:r.re}; }), p:'', re:false, show:false};
+  draw(); setTimeout(function(){ var f=document.getElementById('rule-in'); if(f) f.focus(); }, 0);
 }
-function ruleType(v){ RULE.p=v; var pv=document.getElementById('rule-prev'); if(pv) pv.innerHTML=previewLine(RULE);
-  var btn=document.querySelector('.rule-add .btn'); if(btn) btn.disabled=!(RULE.p && ruleMatches(RULE)!==null); }
-function ruleRe(){ RULE.re=!RULE.re; draw(); var f=document.getElementById('rule-in'); if(f){ f.focus(); f.setSelectionRange(f.value.length,f.value.length); } }
-function addRule(){ if(!RULE.p || ruleMatches(RULE)===null) return; S.photos.hideRules.push({p:RULE.p, re:RULE.re}); RULE={p:'',re:false}; draw(); }
-function rmRule(i){ S.photos.hideRules.splice(i,1); draw(); }
+function closeHide(){ HIDE = null; draw(); }
+function saveHide(){ S.photos.hideRules = HIDE.rules; HIDE = null; draw(); }
+function hideDialog(){
+  if(HIDE===null) return '';
+  var R=HIDE.rules, hid=hiddenNames(R), cur={p:HIDE.p, re:HIDE.re};
+  return '<div class="scrim top" onclick="if(event.target===this)closeHide()"><div class="dlg mid" role="dialog" aria-modal="true" aria-labelledby="hd-t">'+
+    '<header><h2 id="hd-t">Hide documents from the list</h2><button type="button" class="x" onclick="closeHide()" aria-label="Close">&#10005;</button></header>'+
+    '<div class="dbody"><p class="hint" style="margin:0">Documents whose name matches a rule don’t appear in Add documents, for example bills or test uploads. Turn on <b>.*</b> to write a regular expression. Documents already compared stay compared.</p>'+
+      '<div class="rule-add"><div style="flex:1"><div class="lbl">Add a rule</div><div class="rx'+(cur.re?' re':'')+'"><input id="rule-in" type="text" placeholder="'+(cur.re?'e.g. ^(marksheet|certificate)':'e.g. certificate')+'" value="'+esc(cur.p)+'" oninput="ruleType(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addRule()}">'+
+        '<button type="button" class="rxt" aria-pressed="'+cur.re+'" title="Use a regular expression" onclick="ruleRe()">.*</button></div></div>'+
+        '<button type="button" class="btn sec sm" onclick="addRule()" '+(cur.p && ruleMatches(cur)!==null?'':'disabled')+'>Add</button></div>'+
+      '<div id="rule-prev">'+previewLine(cur)+'</div>'+
+      '<div class="lbl" style="margin-top:22px">Rules added ('+R.length+')</div>'+
+      (R.length ? '<div class="rules" style="margin-top:6px">'+R.map(function(r,i){ var m=ruleMatches(r);
+          return '<div class="rule"><span class="kind">'+(r.re?'Regex':'Text')+'</span><code>'+esc(r.p)+'</code><span class="n">'+(m===null?'invalid':'hides '+m.length)+'</span><button type="button" aria-label="Remove rule '+esc(r.p)+'" onclick="rmRule('+i+')">&#10005;</button></div>'; }).join('')+'</div>'
+        : '<div class="hint" style="margin-top:6px">No rules yet.</div>')+
+      '<div class="hd-sum">'+hid.length+' of '+CP_DOCS.length+' documents hidden'+(hid.length?' · <button type="button" class="lnk" style="font-size:13px" onclick="HIDE.show=!HIDE.show;draw()">'+(HIDE.show?'Hide list':'Show list')+'</button>':'')+'</div>'+
+      (HIDE.show && hid.length ? '<div class="hidlist">'+hid.map(esc).join('<br>')+'</div>' : '')+
+    '</div>'+
+    '<footer><button type="button" class="btn sec" onclick="closeHide()">Cancel</button><button type="button" class="btn pri" onclick="saveHide()">Save</button></footer>'+
+  '</div></div>';
+}
+function ruleType(v){ HIDE.p=v; var cur={p:HIDE.p, re:HIDE.re}, pv=document.getElementById('rule-prev'); if(pv) pv.innerHTML=previewLine(cur);
+  var btn=document.querySelector('.rule-add .btn'); if(btn) btn.disabled=!(cur.p && ruleMatches(cur)!==null); }
+function ruleRe(){ HIDE.re=!HIDE.re; draw(); var f=document.getElementById('rule-in'); if(f){ f.focus(); f.setSelectionRange(f.value.length,f.value.length); } }
+function addRule(){ var cur={p:HIDE.p, re:HIDE.re}; if(!cur.p || ruleMatches(cur)===null) return; HIDE.rules.push(cur); HIDE.p=''; HIDE.re=false; draw(); var f=document.getElementById('rule-in'); if(f) f.focus(); }
+function rmRule(i){ HIDE.rules.splice(i,1); draw(); }
 
 /* "Add more" pop-up: documents with their kits underneath; search (plain or regex), counts, selected only */
 var DOCPICK = null;
@@ -456,7 +480,7 @@ function docDialog(){
         return '<label class="cb"><input type="checkbox" '+(on?'checked':'')+' onchange="dpKit(\''+jsq(name)+'\',\''+jsq(k)+'\',this.checked)">'+esc(k)+'</label>'; }).join('')+'</div>' : '');
   }).join('') : '<div class="dp-empty">'+(DOCPICK.only&&!DOCPICK.q?'No documents selected yet.':'No documents match “'+esc(DOCPICK.q)+'”.')+'</div>';
   return '<div class="scrim" onclick="if(event.target===this)closeDocs()"><div class="dlg wide" role="dialog" aria-modal="true" aria-labelledby="dlg-t">'+
-    '<header><h2 id="dlg-t">Add documents</h2><button type="button" class="x" onclick="closeDocs()" aria-label="Close">&#10005;</button></header>'+
+    '<header><h2 id="dlg-t">Add documents</h2><div class="hd-r"><button type="button" class="hd-btn" onclick="openHide()">'+I_EYEOFF+'Hide documents'+(S.photos.hideRules.length?' ('+S.photos.hideRules.length+')':'')+'</button><button type="button" class="x" onclick="closeDocs()" aria-label="Close">&#10005;</button></div></header>'+
     '<div class="dbody"><p class="hint" style="margin:0 0 12px">Documents collected in Candidate Portal kits. Tick a document to compare it in every kit that collects it, or open it to choose kits.</p>'+
       '<div class="rx"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A97A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>'+
         '<input id="dp-q" type="text" placeholder="Search documents or kits" value="'+esc(DOCPICK.q)+'" oninput="dpSearch(this.value)"></div>'+
@@ -573,7 +597,7 @@ function draw(){
   document.getElementById('side').innerHTML=SECTIONS.map(function(x){ return '<button type="button" role="tab" aria-selected="'+(x[0]===SEC)+'" class="'+(x[0]===SEC?'on':'')+'" onclick="go(\''+x[0]+'\')">'+x[1]+'</button>'; }).join('');
   var body={basic:secBasic,photos:secPhotos,match:secMatch,reasons:secReasons,upload:secUpload,reverify:secReverify,report:secReport}[SEC]||secBasic;
   document.getElementById('card').innerHTML=body()+
-    '<div class="foot">'+(SEC==='match'||SEC==='reasons'?'<button type="button" class="lnk" onclick="'+(SEC==='reasons'?'resetReasons()':'resetDefaults()')+'">Reset to defaults</button>':'<span></span>')+'<button type="button" class="btn pri" onclick="submit()">Submit</button></div>'+docDialog();
+    '<div class="foot">'+(SEC==='match'||SEC==='reasons'?'<button type="button" class="lnk" onclick="'+(SEC==='reasons'?'resetReasons()':'resetDefaults()')+'">Reset to defaults</button>':'<span></span>')+'<button type="button" class="btn pri" onclick="submit()">Submit</button></div>'+docDialog()+hideDialog();
   Array.prototype.forEach.call(document.querySelectorAll('input[data-ind]'), function(el){ el.indeterminate=true; });
   window.scrollTo(0,y);
 }
