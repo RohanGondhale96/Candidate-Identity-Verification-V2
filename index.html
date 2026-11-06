@@ -285,17 +285,18 @@
     .rpt-reverify{width:100%;justify-content:center}
   }
   .rpt-print{display:none}
-  /* RippleHire toaster (DS: bottom-right, 420px, radius 12, 2px left accent) */
-  .rh-toaster{position:fixed;top:24px;left:0;right:0;margin:0 auto;z-index:80;width:420px;max-width:calc(100vw - 32px);background:#FFFFFF;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.12);border-left:2px solid #12B76A;display:flex;align-items:flex-start;gap:12px;padding:16px;animation:rhToastIn .2s ease-out}
-  .rh-toaster .ti{width:32px;height:32px;border-radius:50%;background:#D1FAE5;color:#12B76A;display:grid;place-items:center;flex-shrink:0}
-  .rh-toaster .ti svg{width:18px;height:18px}
+  /* RH design system Toast (components/feedback/Toast.jsx): top-centre, 325px, radius 6, 2px tone border + 10px left */
+  .rh-toaster{position:fixed;top:24px;left:0;right:0;margin:0 auto;z-index:80;box-sizing:border-box;width:325px;max-width:calc(100vw - 32px);background:#FFFFFF;border:2px solid #44C25C;border-left:10px solid #44C25C;border-radius:6px;box-shadow:0 0 5px #999;display:flex;align-items:center;gap:10px;padding:8px 6px 8px 12px;animation:rhToastIn .2s ease-out}
+  .rh-toaster.err{border-color:#FF4B4B}
+  .rh-toaster .ti{width:26px;height:26px;flex-shrink:0;display:inline-flex;color:#44C25C}
+  .rh-toaster.err .ti{color:#FF4B4B}
   .rh-toaster .tb{flex:1;min-width:0}
-  .rh-toaster .tt{font-size:15px;font-weight:700;color:#2A2A2A;line-height:1.35}
-  .rh-toaster .tm{font-size:13px;color:#5A6473;margin-top:2px;line-height:1.45}
-  .rh-toaster .ta{margin-top:6px;padding:0;border:0;background:none;font-family:inherit;font-size:13px;font-weight:600;color:#0076FB;cursor:pointer}
+  .rh-toaster .tt{font-size:15px;font-weight:600;color:#2A2A2A;line-height:1.35}
+  .rh-toaster .tm{font-size:12px;color:#828282;margin-top:2px;line-height:1.5}
+  .rh-toaster .ta{margin-top:4px;padding:0;border:0;background:none;font-family:inherit;font-size:12px;font-weight:600;color:#0076FB;cursor:pointer}
   .rh-toaster .ta:hover{text-decoration:underline}
   .rh-toaster .ta:focus-visible{outline:0;box-shadow:0 0 0 2px #FFFFFF,0 0 0 4px #0076FB;border-radius:2px}
-  .rh-toaster .tx{width:28px;height:28px;border:0;background:none;color:#747474;border-radius:6px;display:grid;place-items:center;cursor:pointer;flex-shrink:0;margin:-4px -4px 0 0}
+  .rh-toaster .tx{width:28px;height:28px;border:0;background:none;color:#9E9E9E;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex-shrink:0;font-size:18px;line-height:1}
   .rh-toaster .tx:hover{background:#F7F8FA;color:#2A2A2A}
   .rh-toaster .tx:focus-visible{box-shadow:0 0 0 2px #FFFFFF,0 0 0 4px #0076FB;outline:0}
   @keyframes rhToastIn{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:none}}
@@ -599,7 +600,7 @@ function setState(patch, cb){
   Object.assign(state, patch); render();
   if(cb) cb();
 }
-function toast(msg){ setState({toast:msg}); clearTimeout(_tt); _tt=setTimeout(function(){ setState({toast:''}); },2400); }
+function toast(msg){ if(/failed/i.test(msg)) rhError(msg); else rhSuccess(msg); }   // one toaster: the DS one, top-centre
 /* eased smooth-scroll to an element top (native behavior:'smooth' is unreliable in some webviews) */
 function smoothScrollToEl(id, offset, duration){
   var el=document.getElementById(id); if(!el) return;
@@ -1180,7 +1181,7 @@ function reasonCodes(i, r){
     var lead = 'Reviewed: '+(r.review==='same' ? 'Match' : (r.review==='notmatch' ? 'Not a match' : 'Can’t confirm'));
     var tail = r.reasonLabel ? (' · '+r.reasonLabel) : '';
     out += '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:16px;border-top:1px solid #E0E0E0;padding-top:12px">'+
-      '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#747474"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex-shrink:0"></span><span><b style="font-weight:600;color:#2A2A2A">'+h(lead)+'</b>'+h(tail)+(r.reviewedAt?(' · '+h(r.reviewedAt)):'')+'</span></span>'+
+      '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#747474"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex-shrink:0"></span><span><b style="font-weight:600;color:#2A2A2A">'+h(lead)+'</b>'+h(tail)+'</span></span>'+
       '<button type="button" onclick="clearRowVerdict('+i+')" style="margin-left:auto;border:0;background:none;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Change</button>'+
       (r.reasonNote ? '<div style="flex-basis:100%;font-size:12px;color:#6E6E6E">“'+h(r.reasonNote)+'”</div>' : '')+
     '</div>';
@@ -1230,7 +1231,7 @@ function matchOverride(i, r){
     var tail=r.reasonLabel?(' · '+r.reasonLabel):'';
     return matchBand(r,'')+
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;border-top:1px solid #E0E0E0;padding-top:12px">'+
-        '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#747474"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex-shrink:0"></span><span><b style="font-weight:600;color:#2A2A2A">'+h(lead)+'</b>'+h(tail)+(r.reviewedAt?(' · '+h(r.reviewedAt)):'')+'</span></span>'+
+        '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#747474"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex-shrink:0"></span><span><b style="font-weight:600;color:#2A2A2A">'+h(lead)+'</b>'+h(tail)+'</span></span>'+
         '<button type="button" onclick="clearRowVerdict('+i+')" style="margin-left:auto;border:0;background:none;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Change</button>'+
         (r.reasonNote?'<div style="flex-basis:100%;font-size:12px;color:#6E6E6E">“'+h(r.reasonNote)+'”</div>':'')+
       '</div>';
@@ -1265,7 +1266,7 @@ function nomatchOverride(i, r){
     var tail=r.reasonLabel?(' · '+r.reasonLabel):'';
     return notMatchBand(r,'')+
       '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;border-top:1px solid #E0E0E0;padding-top:12px">'+
-        '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#747474"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex-shrink:0"></span><span><b style="font-weight:600;color:#2A2A2A">'+h(lead)+'</b>'+h(tail)+(r.reviewedAt?(' · '+h(r.reviewedAt)):'')+'</span></span>'+
+        '<span style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#747474"><span style="width:8px;height:8px;border-radius:50%;background:'+dot+';flex-shrink:0"></span><span><b style="font-weight:600;color:#2A2A2A">'+h(lead)+'</b>'+h(tail)+'</span></span>'+
         '<button type="button" onclick="clearRowVerdict('+i+')" style="margin-left:auto;border:0;background:none;color:#0076FB;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer">Change</button>'+
         (r.reasonNote?'<div style="flex-basis:100%;font-size:12px;color:#6E6E6E">“'+h(r.reasonNote)+'”</div>':'')+
       '</div>';
@@ -1901,7 +1902,6 @@ function startReverify0(){
   applyPhotoChanges(c);
   clearTimers(); _runToken++; _qtoken++;
   setState({ done:false, running:false, photo:null, photoOriginal:null, cropRect:null, photoName:null, photoSource:null, reusedFrom:null, consent:false, quality:null, qualityChecking:false, rows:[], open:null, openRows:{}, decision:null, decisionErr:'', entry:null, viewingHistory:false, activityOpen:false, reverifyOpen:false, repPreview:null, reverifyRun:true });
-  toast('New check: choose the candidate photo');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 /* ---- downloadable report (browser print-to-PDF; A4, black & white) ---- */
@@ -2767,16 +2767,15 @@ function render(){
 
   /* RippleHire success toaster */
   if(s.rhToast){
-    html += '<div class="rh-toaster" role="status" aria-live="polite">'+
-      '<span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>'+
+    var _err=s.rhToast.tone==='err';
+    html += '<div class="rh-toaster'+(_err?' err':'')+'" role="'+(_err?'alert':'status')+'" aria-live="'+(_err?'assertive':'polite')+'">'+
+      '<span class="ti"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/>'+(_err?'<path d="M12 7v6M12 16.5v.5"/>':'<path d="M7.5 12.5l3 3 6-6.5"/>')+'</svg></span>'+
       '<div class="tb"><div class="tt">'+h(s.rhToast.title)+'</div>'+(s.rhToast.msg?'<div class="tm">'+h(s.rhToast.msg)+'</div>':'')+
         (s.rhToast.action?'<button type="button" class="ta" onclick="'+s.rhToast.action.onclick+'">'+h(s.rhToast.action.label)+'</button>':'')+'</div>'+
-      '<button type="button" class="tx" onclick="closeRhToast()" aria-label="Dismiss"><svg viewBox="25 25 22 22" width="14" height="14" fill="currentColor"><path d="M30.4 43L29 41.6L34.6 36L29 30.4L30.4 29L36 34.6L41.6 29L43 30.4L37.4 36L43 41.6L41.6 43L36 37.4L30.4 43Z"></path></svg></button>'+
+      '<button type="button" class="tx" onclick="closeRhToast()" aria-label="Close">&times;</button>'+
     '</div>';
   }
 
-  /* TOAST */
-  if(s.toast){ html += '<div role="status" style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#2A2A2A;color:#fff;padding:11px 18px;border-radius:4px;font-size:13.5px;z-index:60;box-shadow:0 3px 6px rgba(0,0,0,.2)">'+h(s.toast)+'</div>'; }
 
   document.getElementById('app').innerHTML = html;
 
@@ -2847,7 +2846,8 @@ function retake(){ clearTimers(); _runToken++; _qtoken++; setState({photo:null, 
    review the flagged comparisons, then SUBMIT the report, confirming they've reviewed everything.
    Submitting never auto-executes an adverse action; the hire/no-hire call is downstream. */
 var _rhtt=null;
-function rhSuccess(title, msg, action){ clearTimeout(_rhtt); setState({rhToast:{title:title, msg:msg||'', action:action||null}}); _rhtt=setTimeout(function(){ setState({rhToast:null}); }, 5000); }
+function rhError(title, msg){ clearTimeout(_rhtt); setState({rhToast:{tone:'err', title:title, msg:msg||'', action:null}}); }   // errors stay until closed
+function rhSuccess(title, msg, action){ clearTimeout(_rhtt); setState({rhToast:{tone:'ok', title:title, msg:msg||'', action:action||null}}); _rhtt=setTimeout(function(){ setState({rhToast:null}); }, 5000); }
 /* toaster action after a submit: back to the worklist, Completed tab */
 function viewCompleted(){ closeRhToast(); changeCandidate(); setWlView('completed'); }
 function closeRhToast(){ clearTimeout(_rhtt); setState({rhToast:null}); }
@@ -3001,7 +3001,7 @@ function downloadPdf(){ toast('PDF downloaded'); }
 function downloadReport(){
   var hh = state.repPreview!=null ? state.history[state.repPreview] : state.entry, c = (hh && hh.cand) || state.cand;
   var prev=document.title;
-  try{ if(c) document.title=reportFileName(c, hh); window.print(); }catch(e){ toast('Use your browser to print / save as PDF'); }
+  try{ if(c) document.title=reportFileName(c, hh); window.print(); }catch(e){ rhError('Download failed', 'Use your browser’s print to save it as a PDF.'); }
   setTimeout(function(){ document.title=prev; }, 1000);
 }
 function revoke(id){ var u=state.shared.find(function(x){return x.id===id;}); setState({shared:state.shared.filter(function(x){return x.id!==id;})}); if(u) toast('Access revoked for '+u.name); }
@@ -3077,7 +3077,7 @@ function openReverify(){ setState({reverifyOpen:true, rerunMode:false, reverifyE
 function openRerun(){ setState({reverifyOpen:true, rerunMode:true, reverifyErr:''}); }
 function closeReverify(){ setState({reverifyOpen:false}); }
 function scrimReverify(e){ if(e.target===e.currentTarget) closeReverify(); }
-function confirmReverify(){ if(state.cand){ state.cand.reverifying=true; } setState({reverifyOpen:false}); toast('New check started'); }
+function confirmReverify(){ if(state.cand){ state.cand.reverifying=true; } setState({reverifyOpen:false}); }
 /* Activity (audit) timeline for a candidate. Append-only: built from every check on file for this
    candidate (state.history keeps old reports when a reverify starts), every photo change (current
    and already-resolved ones), and every reverify started. Newest first, grouped by day. */

@@ -6,6 +6,16 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## One toaster from the RH design system; Reviewed line without the time (2026-11-06)
+
+Rohan: "Use the toasters that we have in our design system, and they usually come from the top", then "Those are success and error toasters will come only when some action happens successfully or there is some thing fails like download fails, We dont want it for new check started", and "remove this" on the time after "Reviewed: Match".
+
+- **One toaster, the DS Toast** (`components/feedback/Toast.jsx`): white, 325px, radius 6, 2px tone border with a 10px left border (success #44C25C, error #FF4B4B), outline status icon, title 15px/600, message 12px #828282, × close, shadow `0 0 5px #999`, top-centre. Success closes after 5s; errors stay until closed and announce as alerts.
+- The old dark bottom message is gone. `toast(msg)` now uses the DS toaster: messages with "failed" are errors (`rhError`), the rest are successes (`rhSuccess`).
+- **Toasters only report an action that succeeded or failed.** No toaster when a new check starts (both "Only the changed photos" and "All photos"). The print fallback is now an error: "Download failed / Use your browser’s print to save it as a PDF."
+- **Reviewed line:** "Reviewed: Match" (or Not a match / Can’t confirm, plus the reason if given). The time is no longer shown, on all three reviewed lines (flagged row, overridden Match, overridden Not a match).
+- Patches: `source/fix_ds_toaster.py`, `source/fix_reviewed_no_time.py`; tests `fix_tests_ds_toaster.py`, `fix_tests_reviewed_no_time.py` (322 pass).
+
 ## Run new check redesign, round 1: full dates, "Check 1 changed photo", split photo list (2026-11-06)
 
 Start of the Run new check redesign (Rohan's priority). Patches: `source/fix_newcheck_step_v1.py`,
