@@ -6,6 +6,17 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Admin: Documents compared as a table (2026-11-13)
+
+Rohan: "This section ... we need to show in the table form" (reference: the "Add fields from other kits" pop-up), then "There won't be checkbox in the table ... other 2 columns i need are type and the kit", "There will only be 1 Aadhaar card entry, 1 driving licence and 1 PAN card entry and for Aadhaar the type is Aadhaar itself, rest type is identity documents", and "It will always be from 1 kit".
+
+- Identity documents → Documents compared is now a table in the RH design system Table style (grey #EFEFEF header, #DDDDDD hairlines, hover #F9F9F9): **Document | Type | Kit**, one row per document.
+- No checkbox and no kit line under the name: documents are picked and removed in the Add more pop-up.
+- **Type** (grey tag): "Aadhaar" for any Aadhaar document, "Identity document" for the rest.
+- **Kit**: the kit it is compared in. Demo defaults now pick one kit each (Aadhaar card · Onboarding kit, Driving licence · Joining formalities, PAN card · BGV kit).
+- Open: the Add documents pop-up still allows several kits per document (and says "compare it in every kit that collects it"); making it one kit per document is a follow-up (option A: pick one kit per row; option B: one row per document and kit, like the reference).
+- Patch `source/fix_docs_table.py` (admin.src.html); test `fix_tests_docs_table.py` (334 pass).
+
 ## Copy: "Captured photo" for a laptop-camera photo (2026-11-13)
 
 - After a photo is taken with the laptop camera, the name shown next to it on the photo step is **Captured photo**

@@ -91,6 +91,14 @@
   .drs{display:flex;flex-direction:column;gap:14px;margin-top:8px}
   .dr-k{font-size:13px;color:var(--muted);margin:3px 0 0 25px;line-height:1.5}
   .dr-k .off{color:#8A97A8}
+  /* Documents compared: RH design system Table (grey #EFEFEF header, #DDDDDD dividers, hover #F9F9F9) */
+  .dtbl-w{margin-top:8px;max-width:820px;border:1px solid #DDDDDD;border-radius:4px;overflow-x:auto}
+  .dtbl{width:100%;border-collapse:collapse;font-size:14px}
+  .dtbl th{background:#EFEFEF;text-align:left;font-weight:600;color:#2A2A2A;padding:11px 16px;border-bottom:1px solid #DDDDDD;white-space:nowrap}
+  .dtbl td{padding:12px 16px;border-bottom:1px solid #DDDDDD;color:#2A2A2A;vertical-align:middle;line-height:1.5}
+  .dtbl tbody tr:last-child td{border-bottom:0}
+  .dtbl tbody tr:hover td{background:#F9F9F9}
+  .dtbl .ty{display:inline-block;font-size:12px;font-weight:600;color:#5A6473;background:#F1F1F3;border-radius:4px;padding:2px 8px;white-space:nowrap}
   .rx{display:flex;align-items:center;gap:8px;border-bottom:1px solid #9AA1AC;padding:2px 0}
   .rx:focus-within{border-bottom-color:var(--blue)}
   .rx input{flex:1;min-width:0;border:0;outline:0;font-size:14.5px;padding:7px 0;background:none;color:var(--ink)}
@@ -367,7 +375,7 @@ var CP_DOCS = CP_NAMES.map(function(n, i){
   return [n, kits.filter(function(k,x){ return kits.indexOf(k)===x; })];
 });
 /* picked documents: {name: {off:[kits left out]}} (null in the defaults = not set yet); hide rules (S.photos.hideRules): [{p:pattern, re:isRegex}] */
-if(!S.photos.docSel) S.photos.docSel = {'Aadhaar card':{off:['BGV kit']}, 'PAN card':{off:[]}, 'Driving licence':{off:[]}};
+if(!S.photos.docSel) S.photos.docSel = {'Aadhaar card':{off:['Pre-joining kit','BGV kit']}, 'PAN card':{off:['Onboarding kit']}, 'Driving licence':{off:['Onboarding kit']}};   // one kit each
 function syncDocTypes(){ S.photos.documentTypes = Object.keys(S.photos.docSel); }
 syncDocTypes();
 function kitsOf(name){ for(var i=0;i<CP_DOCS.length;i++){ if(CP_DOCS[i][0]===name) return CP_DOCS[i][1]; } return []; }
@@ -382,15 +390,15 @@ function hiddenNames(rules){
   var tests=(rules||S.photos.hideRules).map(ruleTest).filter(Boolean);
   return CP_DOCS.filter(function(d){ return tests.some(function(t){ return t(d[0]); }); }).map(function(d){ return d[0]; });
 }
+/* the document's type: Aadhaar for any Aadhaar upload, Identity document for the rest */
+function docKind(n){ return /^aadh?aa?r/i.test(n) ? 'Aadhaar' : 'Identity document'; }
 function docRows(){
   var names=Object.keys(S.photos.docSel).sort(function(a,b){ return a.localeCompare(b); });
   if(!names.length) return '<div class="hint">No documents yet.</div>';
-  return '<div class="drs">'+names.map(function(n){
-    var all=kitsOf(n), off=S.photos.docSel[n].off||[], on=all.filter(function(k){ return off.indexOf(k)<0; });
-    var line = (off.length ? esc(on.join(', '))+' <span class="off">· '+esc(off.join(', '))+' left out</span>' : (all.length>1?'All '+all.length+' kits: ':'')+esc(all.join(', ')));
-    return '<div><label class="cb"><input type="checkbox" checked onchange="dropDoc(\''+jsq(n)+'\')">'+esc(n)+'</label>'+
-      '<div class="dr-k">'+line+'</div></div>';
-  }).join('')+'</div>';
+  return '<div class="dtbl-w"><table class="dtbl"><thead><tr><th>Document</th><th>Type</th><th>Kit</th></tr></thead><tbody>'+
+    names.map(function(n){ var off=S.photos.docSel[n].off||[], on=kitsOf(n).filter(function(k){ return off.indexOf(k)<0; });
+      return '<tr><td>'+esc(n)+'</td><td><span class="ty">'+docKind(n)+'</span></td><td>'+esc(on.join(', '))+'</td></tr>'; }).join('')+
+  '</tbody></table></div>';
 }
 function dropDoc(n){ delete S.photos.docSel[n]; syncDocTypes(); draw(); }
 
