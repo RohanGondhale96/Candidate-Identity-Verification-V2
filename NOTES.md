@@ -6,6 +6,28 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Photo step: formats line, 5 MB / JPG / PNG, one layout for photo errors; worklist filter trimmed (2026-11-13)
+
+- **Worklist filter (To verify):** the Stage group lists only Ready to check and Check in progress ("Not joined
+  yet" removed; those candidates still show when no stage is ticked). "Clear filters" removed from the menu.
+- **Photo step buttons:** first check = **Take photo · Upload photo** (was "Upload file"); when an earlier photo
+  can be reused (reverify) they stay **Take new photo · Upload new photo**.
+- **Supported formats line** under "Take a photo, or choose one from this device": "Supported formats: JPG, JPEG,
+  PNG · File size: under 5 MB" (from the product screenshot). The rules now match it: the picker accepts only
+  JPG / PNG, and files of 5 MB or more are rejected (was JPEG / PNG / HEIC / WEBP up to 10 MB).
+- **One layout for every photo error** (option A of a mocked Today / A / B / C, then "single solution, no mix"):
+  what was added stays on screen (the photo, or a grey file placeholder when it can't be shown), the file name,
+  a red error, and **Change photo** as the only (primary, full-width) action. No consent checkbox, no Submit,
+  no Crop. Multiple faces keeps Change photo + Crop.
+  - File problems (`rejectFile`): wrong format "This file can't be used. Use a JPG, JPEG or PNG photo."; too
+    large "This photo is 6.2 MB. Use a photo under 5 MB."; too small "…(W × H px). Use a photo at least 200 px
+    wide and high."; unreadable "This photo couldn't be opened. Use a JPG, JPEG or PNG photo." These used to be a
+    line under the upload box.
+  - Quality problems (no face, blurry, not facing, face covered) use the same layout with their own message.
+  - Rejected options: B (back to the upload box with the error inside it) and C (shrink oversized photos
+    automatically).
+- Harness: 338 pass.
+
 ## Admin: Documents compared as a table (2026-11-13)
 
 Rohan: "This section ... we need to show in the table form" (reference: the "Add fields from other kits" pop-up), then "There won't be checkbox in the table ... other 2 columns i need are type and the kit", "There will only be 1 Aadhaar card entry, 1 driving licence and 1 PAN card entry and for Aadhaar the type is Aadhaar itself, rest type is identity documents", and "It will always be from 1 kit".
