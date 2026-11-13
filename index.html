@@ -1126,19 +1126,18 @@ function photoStamp(c, hh){
   return joinStamp(c);
 }
 /* full-sentence "likely cause" - seeded per flagged photo for the demo; live version comes from the model */
-function causeText(r){ return aiReason(r); }   // fixed text from the score band only (AWS returns a score, not an explanation)
+function causeText(r){
+  var st=photoState(r);
+  if(st==='review')  return 'The photos are a partial match and need a manual check before you confirm.';
+  if(st==='nomatch') return 'The facial features are different, please confirm before submitting.';
+  return aiReason(r);
+}   // fixed text from the score band only (AWS returns a score, not an explanation)
 /* positive explanation for a model match (seeded per-photo via r.matchCause; the live version comes from the model) */
-function matchReason(r){
-  if(r && r.matchCause) return r.matchCause;
-  var score=(r&&r.score)||0;
-  if(score>=93) return 'the eyes, nose and jaw all line up with the candidate photo, with nothing that looks off.';
-  if(score>=88) return 'the main features line up with the candidate photo; the small differences are down to lighting or angle.';
-  return 'enough of the face matches the candidate photo to count as the same person.';
-}
+function matchReason(r){ return 'The faces line up closely on the key facial features, so this looks like the same person.'; }
 /* plain-language reason a reference couldn’t be compared */
 function cantReason(r){
   var base=(r&&r.err) || 'We couldn’t find a face in this photo.';
-  if(/no face/i.test(base)) return 'We couldn’t find a face in this photo. It’s probably too dark, blurry or cropped, so there’s nothing to compare with the candidate photo.';
+  if(/no face/i.test(base)) return 'No face detected in the photo.';
   return base;
 }
 /* small tinted callout for the match / couldn’t-compare explanations (mirrors the amber "needs a look" note) */
@@ -1556,7 +1555,7 @@ function reportCard(i, r, c){
     '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'+chip+caret+'</div>'+
   '</div>';
   var body='';
-  if(isCant){ if(open) body='<div style="padding:0 16px 16px">'+comparePanes(r,seed,i,c)+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }   // open by default: the photos show why
+  if(isCant){ if(open) body='<div style="padding:0 16px 16px">'+comparePanes(r,seed,i,c)+reasonNote('cant','Couldn’t compare:', cantReason(r))+'</div>'; }   // open by default: the photos show why
   else if(open){ var panel = st==='review' ? reasonCodes(i,r) : (st==='nomatch' ? nomatchOverride(i,r) : matchOverride(i,r)); body='<div style="padding:0 16px 16px">'+comparePanes(r,seed,i,c)+panel+'</div>'; }
   return '<article id="rpt-round-'+i+'" style="'+V2CARD+';scroll-margin-top:12px'+(st==='review'?';border-color:#D9DFE8':'')+'">'+head+body+'</article>';
 }
@@ -1753,7 +1752,7 @@ function completedCard(i, r, c, stale){
     '<div class="rpt-cardright">'+resultBadge(r,stale)+caret+'</div>'+
   '</div>';
   var body='';
-  if(isCant){ if(open) body='<div class="rpt-cardbody">'+comparePanes(r,seed,i,c)+reasonNote('cant','Why we couldn’t compare:', cantReason(r))+'</div>'; }
+  if(isCant){ if(open) body='<div class="rpt-cardbody">'+comparePanes(r,seed,i,c)+reasonNote('cant','Couldn’t compare:', cantReason(r))+'</div>'; }
   else if(open){
     var note=changed ? amberNoteBox('This is the photo compared on '+submitShort(state.decision)+'. The new one hasn’t been compared yet.') : completedRowNote(r,c);
     body='<div class="rpt-cardbody">'+comparePanes(r,seed,i,c)+note+'</div>';   // same captions as the review screen
@@ -2336,7 +2335,7 @@ function render(){
       '</div>';
     if(!c.photos.length){
       var noPh = isFuture(c)
-        ? 'No photos on this profile yet. Once application or interview photos are added, you can run the check.'
+        ? 'No photos to compare. The identity check will be available once a photo is captured at any stage of the candidate’s hiring.'
         : 'No photos on this profile, so there’s nothing to compare the candidate photo with. Add at least one application, interview or document photo first.';
       html += '<div class="note" style="margin-top:18px">'+noPh+'</div>';
     }

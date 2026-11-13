@@ -6,6 +6,23 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Copy from the review sheet: comparison explanations and the no-photos note (2026-11-13)
+
+Mocked before / after on the real page, then approved.
+- **Match:** "The faces line up closely on the key facial features, so this looks like the same person." One line
+  for every match (`matchReason`; it used to vary by score band, plus seeded per-photo text in the demo).
+- **Needs review:** "The photos are a partial match and need a manual check before you confirm." (was "Low photo
+  quality" / "Borderline similarity").
+- **Not a match:** "The facial features are different, please confirm before submitting." (was "Looks like a
+  different person"). Both via `causeText`; the short labels (badge, submit table) are unchanged.
+- **Couldn't compare:** label "Couldn't compare:" (was "Why we couldn't compare:") and "No face detected in the
+  photo." (was a longer "probably too dark, blurry or cropped" sentence).
+- **No photos on the profile:** "No photos to compare. The identity check will be available once a photo is
+  captured at any stage of the candidate's hiring." for a candidate who hasn't joined yet.
+- **Kept as it was** (asked): "This photo was replaced after the check ran. It hasn't been compared yet. Run the
+  check for this photo before you submit."
+- Harness: 339 pass.
+
 ## Photo step: formats line, 5 MB / JPG / PNG, one layout for photo errors; worklist filter trimmed (2026-11-13)
 
 - **Worklist filter (To verify):** the Stage group lists only Ready to check and Check in progress ("Not joined
