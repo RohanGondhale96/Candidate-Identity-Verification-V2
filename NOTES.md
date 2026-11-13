@@ -6,6 +6,11 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Copy: photo-too-large message (2026-11-13)
+
+- A photo of 5 MB or more now says "This image is 5 MB or larger. Please upload a photo under 5 MB." (was "This
+  photo is 6.2 MB. Use a photo under 5 MB."). The unused `fileMB` helper was removed.
+
 ## Copy from the review sheet: comparison explanations and the no-photos note (2026-11-13)
 
 Mocked before / after on the real page, then approved.

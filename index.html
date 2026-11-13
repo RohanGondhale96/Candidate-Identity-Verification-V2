@@ -686,7 +686,6 @@ function searchHits(){
 }
 /* a file we can't use: kept on screen with the reason, and Change photo as the only action */
 function rejectFile(f, text, img){ setState({photo:null, rejectFile:{name:f.name, text:text, img:img||null}, quality:null, consent:false, upErr:''}); }
-function fileMB(f){ return (Math.round(f.size/1024/1024*10)/10)+' MB'; }
 function handleFile(f){
   if(!f) return;
   setState({upErr:'', rejectFile:null});
@@ -695,7 +694,7 @@ function handleFile(f){
   r.onload = function(){
     var img = new Image();
     img.onload = function(){
-      if(f.size >= 5*1024*1024) return rejectFile(f, 'This photo is '+fileMB(f)+'. Use a photo under 5 MB.', r.result);
+      if(f.size >= 5*1024*1024) return rejectFile(f, 'This image is 5 MB or larger. Please upload a photo under 5 MB.', r.result);
       if(img.width<200 || img.height<200) return rejectFile(f, 'This photo is too small to compare ('+img.width+' \u00d7 '+img.height+' px). Use a photo at least 200 px wide and high.', r.result);
       // downscale so the request stays well under the serverless body limit (mobile cameras shoot several MB)
       setState({photo:downscalePhoto(img, 1280, 0.85), photoOriginal:null, cropRect:null, photoName:f.name, photoSource:'file', consent:false, quality:null, qualityChecking:false, upErr:'', rejectFile:null});
