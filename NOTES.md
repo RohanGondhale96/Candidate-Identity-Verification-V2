@@ -6,6 +6,11 @@ looks like an accident.
 > See `DECISIONS.md` for the chronological log — the research and discussions that led to each
 > change. This file is the current state; that one is the story.
 
+## Copy: "Captured photo" for a laptop-camera photo (2026-11-13)
+
+- After a photo is taken with the laptop camera, the name shown next to it on the photo step is **Captured photo**
+  (was "Laptop camera photo"). Activity wording is unchanged.
+
 ## Admin: hide rules move into the Add documents pop-up (2026-11-06)
 
 Rohan: "move the hide documents regex inside the Identity documents + Add more pop up itself, there will be a button next to cross icon, on click of it a pop up will open where i can see the input field and add regex there, i should also be able to see the previous regex that i have added".

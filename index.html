@@ -2836,7 +2836,7 @@ function captureWebcam(){
   c.getContext('2d').drawImage(v,0,0,c.width,c.height);   // the photo is not mirrored, even though the preview is
   var data=downscalePhoto(c, 1280, 0.85);
   stopWebcam();
-  setState({camOpen:false, camReady:false, camErr:'', photo:data, photoOriginal:null, cropRect:null, photoName:'Laptop camera photo', photoSource:'webcam', consent:false, quality:null, qualityChecking:false, upErr:''});
+  setState({camOpen:false, camReady:false, camErr:'', photo:data, photoOriginal:null, cropRect:null, photoName:'Captured photo', photoSource:'webcam', consent:false, quality:null, qualityChecking:false, upErr:''});
 }
 function openCamera(){ var el=document.getElementById('rh-cam'); if(el) el.click(); }
 function openPicker(){ if(!IDV.upload.allowFile && IDV.upload.allowCamera && state.hasCamera){ openCamera(); return; } var el=document.getElementById('rh-file'); if(el){ el.value=''; el.click(); } }
